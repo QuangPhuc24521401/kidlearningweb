@@ -7,35 +7,26 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 
-// Đăng ký
-window.register = async () => {
-  await createUserWithEmailAndPassword(
-    auth,
-    emailInput.value,
-    passwordInput.value
-  );
+export const register = async (email, password) => {
+  await createUserWithEmailAndPassword(auth, email, password);
   window.location.href = "/index.html";
 };
 
-// Đăng nhập
-window.login = async () => {
-  await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+export const login = async (email, password) => {
+  await signInWithEmailAndPassword(auth, email, password);
   window.location.href = "/index.html";
 };
 
-// Đăng xuất
-window.logout = async () => {
+export const logout = async () => {
   await signOut(auth);
   window.location.href = "/auth/login.html";
 };
 
-// Quên mật khẩu
-window.resetPassword = async () => {
-  await sendPasswordResetEmail(auth, emailInput.value);
+export const resetPassword = async (email) => {
+  await sendPasswordResetEmail(auth, email);
   alert("📧 Đã gửi email");
 };
 
-// auth protect
 export function protectPage() {
   onAuthStateChanged(auth, user => {
     if (!user) {
