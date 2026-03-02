@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Kid Learning</title>
+<link rel="stylesheet" href="./menu.css">
+</head>
+<body>
+
+<div class="menu-container">
+  <h1>📚 Bé học gì hôm nay?</h1>
+
+  <button onclick="go('nhan_biet')">👀 Nhận biết</button>
+  <button onclick="go('tu_duy')">🧠 Tư duy</button>
+  <button onclick="logout()">🚪 Đăng xuất</button>
+</div>
+
+<script type="module">
+import { protectPage } from "./auth/auth.js";
+import "./menu.js";
+
+protectPage();
+</script>
+
+</body>
+</html>
