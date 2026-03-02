@@ -5,45 +5,61 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
 .menu-container {
   background: white;
-  padding: 40px;
-  border-radius: 25px;
+  padding: 45px 40px;
+  border-radius: 28px;
   text-align: center;
-  width: 360px;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+  width: 380px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
 }
 
 .menu-container h1 {
-  margin-bottom: 30px;
+  margin-bottom: 35px;
+  font-size: 26px;
 }
 
+/* ===== BUTTON ===== */
 .menu-btn {
   width: 100%;
-  padding: 20px;
-  margin: 12px 0;
-  font-size: 24px;
+  padding: 18px;
+  margin: 14px 0;
+  font-size: 22px;
+  font-weight: bold;
   border: none;
-  border-radius: 18px;
+  border-radius: 20px;
   cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
 
+/* Màu riêng */
 .menu-btn.blue {
-  background: #4fc3f7;
-}
-
-.menu-btn.orange {
-  background: #ffb74d;
-}
-
-.menu-btn.red {
-  background: #ef5350;
+  background: linear-gradient(135deg, #4fc3f7, #0288d1);
   color: white;
 }
 
+.menu-btn.orange {
+  background: linear-gradient(135deg, #ffcc80, #fb8c00);
+  color: white;
+}
+
+.menu-btn.red {
+  background: linear-gradient(135deg, #ef5350, #c62828);
+  color: white;
+}
+
+/* Hover */
 .menu-btn:hover {
-  opacity: 0.9;
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+  opacity: 0.95;
+}
+
+/* Click */
+.menu-btn:active {
+  transform: scale(0.97);
 }
