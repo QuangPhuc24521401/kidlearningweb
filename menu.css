@@ -1,0 +1,49 @@
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(135deg, #f6d365, #fda085);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+
+.menu-container {
+  background: white;
+  padding: 40px;
+  border-radius: 25px;
+  text-align: center;
+  width: 360px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+}
+
+.menu-container h1 {
+  margin-bottom: 30px;
+}
+
+.menu-btn {
+  width: 100%;
+  padding: 20px;
+  margin: 12px 0;
+  font-size: 24px;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+}
+
+.menu-btn.blue {
+  background: #4fc3f7;
+}
+
+.menu-btn.orange {
+  background: #ffb74d;
+}
+
+.menu-btn.red {
+  background: #ef5350;
+  color: white;
+}
+
+.menu-btn:hover {
+  opacity: 0.9;
+}
