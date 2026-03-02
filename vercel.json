@@ -1,7 +1,4 @@
 {
   "public": true,
-  "cleanUrls": true,
-  "routes": [
-    { "src": "/(.*)", "dest": "/public/$1" }
-  ]
+  "rootDirectory": "public"
 }
