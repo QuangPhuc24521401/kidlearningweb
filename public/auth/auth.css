@@ -8,13 +8,34 @@ body {
   font-family: Arial, sans-serif;
 }
 
-.auth-container {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  width: 320px;
-  text-align: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+.input-group {
+  display: flex;
+  align-items: center;
+  background: white; /* đổi thành trắng */
+  border-radius: 12px;
+  padding: 0 14px;
+  margin: 12px 0;
+  border: 1px solid #ccc;
+  transition: 0.2s;
+  height: 50px; /* cố định chiều cao cho cân */
+}
+
+.input-group:focus-within {
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76,175,80,0.2);
+}
+
+.input-group .icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.input-group input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  background: transparent;
 }
 
 .auth-container h1 {
