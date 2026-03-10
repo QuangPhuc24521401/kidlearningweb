@@ -1,0 +1,35 @@
+.menu-card{
+  padding:40px 40px 44px;width:560px;
+  box-shadow:0 0 0 4px #fff,0 8px 0 4px #e0c8ff,0 24px 70px rgba(180,100,255,.2),0 50px 90px rgba(0,0,0,.08);
+}
+.menu-card h1{font-weight:800;font-size:30px;color:#3a2d6e;margin-bottom:4px}
+.menu-card .subtitle{font-family:'Nunito',sans-serif;font-size:16px;color:#9b8abf;margin-bottom:28px}
+
+.logout-btn{
+  position:absolute;top:16px;left:16px;
+  border:none;background:linear-gradient(135deg,#ff8a80,#d32f2f);color:#fff;
+  border-radius:50px;padding:10px 18px;
+  font-family:'Baloo 2',cursive;font-size:15px;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 0 #b71c1c,0 6px 16px rgba(211,47,47,.3);
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1);
+  display:flex;align-items:center;gap:6px;
+}
+.logout-btn:hover{transform:translateY(-3px) scale(1.04)}
+.logout-btn:active{transform:translateY(2px);box-shadow:none}
+
+.menu-tiles{display:flex;gap:18px;margin-top:8px}
+.menu-tile{
+  flex:1;aspect-ratio:1/1;
+  border:none;border-radius:32px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  font-family:'Baloo 2',cursive;font-size:26px;font-weight:800;color:#fff;
+  position:relative;overflow:hidden;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s;
+}
+.menu-tile::after{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.28) 0%,transparent 55%);border-radius:inherit;pointer-events:none}
+.menu-tile .tile-icon{font-size:72px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.18));transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.menu-tile:hover .tile-icon{transform:scale(1.18) translateY(-6px)}
+.menu-tile:hover{transform:translateY(-8px) scale(1.03)}
+.menu-tile:active{transform:translateY(3px) scale(.97);box-shadow:none!important}
+.menu-tile.blue{background:linear-gradient(145deg,#42d1f5,#0288d1);box-shadow:0 10px 0 #0277bd,0 16px 32px rgba(2,136,209,.35)}
+.menu-tile.orange{background:linear-gradient(145deg,#ffda6a,#ff8c00);box-shadow:0 10px 0 #e65100,0 16px 32px rgba(255,140,0,.35)}
