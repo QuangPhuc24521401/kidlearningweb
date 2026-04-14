@@ -1,0 +1,288 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap');
+
+/* ═══════════ BASE ═══════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+
+:root{
+  /* Brand */
+  --blue:#4fc3f7;
+  --orange:#ffb347;
+  --red:#ff6b6b;
+  --yellow:#ffe066;
+  --green:#7ee8a2;
+  --purple:#c9b1ff;
+
+  /* Theme tokens */
+  --bg1:#b3d9ff;
+  --bg2:#d4eaff;
+  --bg3:#fef3e2;
+  --ink:#1a1a2e;
+  --muted:#6b7280;
+  --card:rgba(255,255,255,.94);
+  --card-border:rgba(255,255,255,.9);
+  --ring:rgba(108,142,255,.25);
+  --radius-xl:42px;
+  --radius-lg:28px;
+  --radius-md:18px;
+  --shadow-card:0 0 0 4px #fff,0 10px 28px rgba(0,0,0,.08);
+}
+
+body{
+  min-height:100vh;
+  font-family:'Baloo 2',cursive;
+  overflow:hidden;
+  position:relative;
+  background:var(--bg2);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:var(--ink);
+  text-rendering:optimizeLegibility;
+}
+
+/* Allow scrolling on pages with long content (e.g. menu grid) */
+body.page-scroll{
+  overflow:auto;
+  align-items:flex-start;
+  padding:24px 0 34px;
+  -webkit-overflow-scrolling:touch;
+}
+
+a{color:inherit}
+button,input{font:inherit}
+button{touch-action:manipulation}
+
+:focus{outline:none}
+:focus-visible{box-shadow:0 0 0 4px var(--ring)}
+
+/* ═══════════ SKY BACKGROUND ═══════════ */
+.sky{position:fixed;inset:0;z-index:0;background:linear-gradient(175deg,var(--bg1) 0%,var(--bg2) 45%,var(--bg3) 100%);overflow:hidden}
+.sun{position:absolute;top:-40px;right:80px;width:140px;height:140px;background:radial-gradient(circle,var(--sun1,#ffe082),var(--sun2,#ffca28));border-radius:50%;box-shadow:0 0 60px 20px rgba(255,202,40,.4);animation:sunPulse 4s ease-in-out infinite}
+.sun::after{content:'';position:absolute;inset:0;border-radius:50%;opacity:var(--moonCraterOpacity,0);background:
+  radial-gradient(circle at 38% 42%,rgba(0,0,0,.10) 0 10px,transparent 11px),
+  radial-gradient(circle at 62% 58%,rgba(0,0,0,.08) 0 8px,transparent 9px),
+  radial-gradient(circle at 52% 30%,rgba(0,0,0,.06) 0 6px,transparent 7px);}
+@keyframes sunPulse{0%,100%{box-shadow:0 0 60px 20px rgba(255,202,40,var(--sunGlow,.4))}50%{box-shadow:0 0 90px 40px rgba(255,202,40,calc(var(--sunGlow,.4) + .1))}}
+.sun-ray{position:absolute;top:50%;left:50%;width:160px;height:4px;background:linear-gradient(90deg,var(--ray,#ffd54f),transparent);transform-origin:left center;border-radius:2px;animation:rayRotate 12s linear infinite;opacity:var(--rayOpacity,.6)}
+@keyframes rayRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.cloud{position:absolute;background:var(--cloud,rgba(255,255,255,.82));border-radius:60px;animation:cloudDrift linear infinite}
+.cloud::before,.cloud::after{content:'';position:absolute;background:inherit;border-radius:50%}
+.cloud::before{width:55%;height:170%;top:-45%;left:12%}
+.cloud::after{width:40%;height:130%;top:-35%;left:50%}
+.c1{width:140px;height:52px;top:8%;left:-160px;animation-duration:30s;animation-delay:0s;opacity:.9}
+.c2{width:180px;height:64px;top:20%;left:-210px;animation-duration:38s;animation-delay:8s;opacity:.75}
+.c3{width:110px;height:40px;top:5%;left:-130px;animation-duration:25s;animation-delay:14s;opacity:.85}
+.c4{width:200px;height:70px;top:30%;left:-230px;animation-duration:44s;animation-delay:5s;opacity:.65}
+@keyframes cloudDrift{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 280px))}}
+.ground{position:fixed;bottom:0;left:0;right:0;height:80px;background:linear-gradient(180deg,var(--ground1,#a8d5a2),var(--ground2,#7bb874));border-radius:60% 60% 0 0/20px 20px 0 0;z-index:0}
+.ground::after{content:'';position:absolute;top:-6px;left:0;right:0;height:14px;background:rgba(255,255,255,.25);border-radius:50%}
+.sprinkles{position:fixed;inset:0;pointer-events:none;z-index:1}
+.sprinkles span{position:absolute;font-size:16px;animation:twink 3s ease-in-out infinite alternate;opacity:.6}
+@keyframes twink{from{transform:scale(1) rotate(-5deg);opacity:.4}to{transform:scale(1.3) rotate(10deg);opacity:.9}}
+
+/* ═══════════ CARD BASE ═══════════ */
+.card{position:relative;background:var(--card);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:var(--radius-xl);text-align:center;border:3px solid var(--card-border);box-shadow:var(--shadow-card);animation:cardPop .55s cubic-bezier(.34,1.56,.64,1) both;z-index:10}
+
+/* ═══════════ BUTTON SYSTEM ═══════════ */
+.btn{border:none;cursor:pointer;border-radius:22px;padding:16px 20px;display:inline-flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:18px;transition:transform .15s cubic-bezier(.34,1.56,.64,1),box-shadow .15s,filter .15s;user-select:none}
+.btn:hover{transform:translateY(-4px)}
+.btn:active{transform:translateY(2px)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn--primary{background:linear-gradient(135deg,#6c8eff,#3355e0);color:#fff;box-shadow:0 8px 0 #1a35c0,0 14px 28px rgba(60,90,255,.3)}
+.btn--danger{background:linear-gradient(135deg,#ff8a80,#d32f2f);color:#fff;box-shadow:0 6px 0 #b71c1c,0 12px 22px rgba(211,47,47,.28)}
+.btn--success{background:linear-gradient(135deg,#43e97b,#38f9d7);color:#1a4d2e;box-shadow:0 6px 0 #1a9e5e,0 12px 22px rgba(56,214,138,.28)}
+.btn--pink{background:linear-gradient(145deg,#f093fb,#f5576c);color:#fff;box-shadow:0 8px 0 #c0392b,0 14px 28px rgba(245,87,108,.3)}
+
+.icon-btn{width:52px;height:52px;border-radius:50%;padding:0;font-size:22px}
+@keyframes cardPop{from{transform:scale(.68) translateY(50px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+/* ═══════════ MASCOT ANIMATIONS ═══════════ */
+.mascot-wrap{display:block;margin:0 auto 6px;animation:mascotFloat 3s ease-in-out infinite}
+@keyframes mascotFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+.owl-eyes .eyelid{animation:owlBlink 4.5s ease-in-out infinite}
+@keyframes owlBlink{0%,90%,100%{transform:scaleY(1)}93%,97%{transform:scaleY(0.05)}}
+.bear-paw-r{animation:bearWave 2.5s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes bearWave{0%,100%{transform:rotate(0deg)}30%{transform:rotate(-25deg)}60%{transform:rotate(15deg)}}
+.fox-tail{animation:foxTailWag 1.8s ease-in-out infinite;transform-origin:20% 50%}
+@keyframes foxTailWag{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(15deg)}}
+
+/* ═══════════ MUSIC BUTTON ═══════════ */
+#musicBtn{position:fixed;top:18px;left:18px;z-index:9999;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#ffec6e,#ffc107);box-shadow:0 4px 0 #e65100,0 8px 20px rgba(255,193,7,.4);font-size:22px;transition:transform .15s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;justify-content:center}
+#musicBtn:hover{transform:scale(1.15) rotate(10deg)}
+#musicBtn:active{transform:scale(.9) translateY(3px);box-shadow:none}
+
+/* ═══════════ SETTINGS BUTTON ═══════════ */
+#settingsBtn{position:fixed;top:18px;right:18px;z-index:9999;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#b0bec5,#546e7a);box-shadow:0 4px 0 #37474f,0 8px 20px rgba(0,0,0,.2);font-size:22px;transition:transform .2s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;justify-content:center}
+#settingsBtn:hover{transform:scale(1.12) rotate(60deg)}
+
+/* ═══════════ TTS STATUS PILL ═══════════ */
+#ttsStatus{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(30,30,50,.82);backdrop-filter:blur(10px);color:white;padding:8px 20px;border-radius:30px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;display:none;align-items:center;gap:8px;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+#ttsStatus.show{display:flex}
+.tts-dot{width:8px;height:8px;border-radius:50%;background:#4caf50;flex-shrink:0}
+.tts-dot.loading{background:#ff9800;animation:dotPulse .7s ease-in-out infinite}
+.tts-dot.error{background:#f44336}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+
+/* ═══════════ SETTINGS MODAL ═══════════ */
+#settingsModal{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);display:none;justify-content:center;align-items:center}
+#settingsModal.open{display:flex}
+.settings-card{background:white;border-radius:32px;padding:36px 38px 38px;width:460px;max-width:92vw;box-shadow:0 0 0 4px #fff,0 8px 0 4px #ccc,0 30px 80px rgba(0,0,0,.25);animation:cardPop .4s cubic-bezier(.34,1.56,.64,1) both;position:relative}
+.settings-card h2{font-size:22px;color:#2d3a8c;margin-bottom:6px}
+.settings-card p{font-family:'Nunito',sans-serif;font-size:14px;color:#888;line-height:1.6;margin-bottom:18px}
+.settings-close{position:absolute;top:16px;right:18px;border:none;background:none;font-size:26px;cursor:pointer;color:#bbb;transition:color .15s}
+.settings-close:hover{color:#555}
+.key-input-wrap{display:flex;gap:8px;margin-bottom:12px}
+.key-input{flex:1;padding:14px 16px;border:2px dashed #ffb74d;border-radius:14px;font-size:15px;font-family:'Courier New',monospace;outline:none;background:#fff9f0;color:#5d4037;transition:border .2s}
+.key-input:focus{border-style:solid;border-color:#ff9800;box-shadow:0 0 0 3px rgba(255,152,0,.2)}
+.save-btn{padding:14px 20px;border:none;border-radius:14px;font-family:'Baloo 2',cursive;font-size:17px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ffb74d,#f57c00);color:white;box-shadow:0 5px 0 #e65100;transition:transform .15s cubic-bezier(.34,1.56,.64,1)}
+.save-btn:hover{transform:translateY(-3px)}
+.save-btn:active{transform:translateY(2px);box-shadow:none}
+.voice-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.chip{padding:8px 16px;border:2px solid #e0e7ff;border-radius:30px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:#f8f9ff;color:#3a2d6e;transition:all .15s}
+.chip:hover{border-color:#6c8eff;background:#eef2ff}
+.chip.active{border-color:#6c8eff;background:linear-gradient(135deg,#6c8eff,#3355e0);color:white}
+.settings-link{font-family:'Nunito',sans-serif;font-size:13px;color:#888;margin-top:4px}
+.settings-link a{color:#6c8eff;font-weight:700;text-decoration:none}
+.settings-link a:hover{text-decoration:underline}
+.key-saved{display:flex;align-items:center;gap:6px;font-family:'Nunito',sans-serif;font-size:13px;color:#2e7d32;background:#e8f5e9;padding:8px 14px;border-radius:10px;margin-top:8px}
+.key-saved.hidden{display:none}
+
+/* Theme controls in Settings */
+.theme-row{margin-top:14px}
+.theme-row .theme-label{font-family:'Nunito',sans-serif;font-size:13px;color:#555;font-weight:800;margin-bottom:8px}
+.theme-choices{display:flex;gap:8px;flex-wrap:wrap}
+.theme-btn{
+  border:2px solid rgba(108,142,255,.25);
+  background:rgba(255,255,255,.75);
+  padding:9px 12px;
+  border-radius:14px;
+  cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  font-size:13px;
+  font-weight:800;
+  color:#3a2d6e;
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1),background .12s,border-color .12s;
+}
+.theme-btn:hover{transform:translateY(-2px)}
+.theme-btn.active{border-color:#6c8eff;background:linear-gradient(135deg,#6c8eff,#3355e0);color:#fff}
+
+/* Slim settings layout */
+.settings-section{margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,.06)}
+.settings-title{font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;color:#3a2d6e;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.settings-row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.settings-row-actions{justify-content:space-between}
+.settings-label{font-family:'Nunito',sans-serif;font-size:12.5px;color:#555;font-weight:800;width:72px;flex-shrink:0}
+.settings-hint{font-family:'Nunito',sans-serif;font-size:12px;color:#9ca3af}
+.settings-val{font-family:'Nunito',sans-serif;font-size:12px;color:#6b7280;font-weight:800;min-width:44px;text-align:right}
+.settings-range{flex:1}
+.settings-action{
+  border:none;
+  border-radius:14px;
+  padding:10px 12px;
+  cursor:pointer;
+  background:rgba(108,142,255,.12);
+  border:1px solid rgba(108,142,255,.22);
+  color:#3a2d6e;
+  font-family:'Nunito',sans-serif;
+  font-size:13px;
+  font-weight:900;
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1),filter .12s,background .12s;
+}
+.settings-action:hover{transform:translateY(-2px);filter:saturate(1.06)}
+.settings-action.danger{background:rgba(244,67,54,.10);border-color:rgba(244,67,54,.18);color:#b71c1c}
+
+/* ═══════════ CONFETTI ═══════════ */
+.cft{position:fixed;pointer-events:none;z-index:9999;border-radius:3px;animation:cftFall 1.3s ease-in forwards}
+@keyframes cftFall{0%{opacity:1;transform:translateY(0) rotate(0) scale(1)}100%{opacity:0;transform:translateY(280px) rotate(800deg) scale(.5)}}
+
+/* ═══════════ RESPONSIVE + REDUCED MOTION ═══════════ */
+@media (max-width:560px){
+  body{padding:14px}
+  .card{border-radius:34px}
+  #musicBtn,#settingsBtn{top:14px}
+  #musicBtn{left:14px}
+  #settingsBtn{right:14px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
+/* ═══════════ FIX SELECTORS (compat) ═══════════
+   Một số đoạn cũ dùng ::root / ::focus khiến browser bỏ qua.
+   Block dưới đây đảm bảo token + focus hoạt động ổn định. */
+:root{
+  --blue:#4fc3f7;--orange:#ffb347;--red:#ff6b6b;--yellow:#ffe066;--green:#7ee8a2;--purple:#c9b1ff;
+  --bg1:#b3d9ff;--bg2:#d4eaff;--bg3:#fef3e2;
+  --ink:#1a1a2e;--muted:#6b7280;
+  --card:rgba(255,255,255,.94);--card-border:rgba(255,255,255,.9);
+  --ring:rgba(108,142,255,.25);
+  --radius-xl:42px;--radius-lg:28px;--radius-md:18px;
+  --shadow-card:0 0 0 4px #fff,0 10px 28px rgba(0,0,0,.08);
+  --sun1:#ffe082;--sun2:#ffca28;--sunGlow:.4;
+  --ray:rgba(255,202,40,.6);--rayOpacity:.6;
+  --cloud:rgba(255,255,255,.82);
+  --ground1:#a8d5a2;--ground2:#7bb874;
+}
+:focus{outline:none}
+:focus-visible{box-shadow:0 0 0 4px var(--ring)}
+
+/* Dark theme variables (applied when html[data-theme="dark"]) */
+:root[data-theme="dark"]{
+  --bg1:#0b1530;
+  --bg2:#0a1b3d;
+  --bg3:#101827;
+  --ink:#e8eefc;
+  --muted:#b7c3de;
+  --card:rgba(18,26,46,.62);
+  --card-border:rgba(255,255,255,.14);
+  --shadow-card:0 0 0 1px rgba(255,255,255,.10),0 18px 50px rgba(0,0,0,.45);
+  --ring:rgba(124,58,237,.28);
+  --sun1:#e9f1ff;--sun2:#bcd1ff;--sunGlow:.22;
+  --ray:rgba(190,210,255,.45);--rayOpacity:.35;
+  --cloud:rgba(220,230,255,.16);
+  --ground1:#132a2a;--ground2:#0f2d1f;
+}
+
+/* Auto dark by OS (when no manual override) */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg1:#0b1530;
+    --bg2:#0a1b3d;
+    --bg3:#101827;
+    --ink:#e8eefc;
+    --muted:#b7c3de;
+    --card:rgba(18,26,46,.62);
+    --card-border:rgba(255,255,255,.14);
+    --shadow-card:0 0 0 1px rgba(255,255,255,.10),0 18px 50px rgba(0,0,0,.45);
+    --ring:rgba(124,58,237,.28);
+    --sun1:#e9f1ff;--sun2:#bcd1ff;--sunGlow:.22;
+    --ray:rgba(190,210,255,.45);--rayOpacity:.35;
+    --cloud:rgba(220,230,255,.16);
+    --ground1:#132a2a;--ground2:#0f2d1f;
+  }
+}
+
+/* Day/Night sky logic */
+:root{
+  --rayOpacity:.6;
+  --sunGlow:.4;
+  --moonCraterOpacity:0;
+}
+:root[data-sky="day"]{
+  --sun1:#ffe082;
+  --sun2:#ffca28;
+  --ray:rgba(255,202,40,.75);
+  --rayOpacity:.75;
+  --sunGlow:.45;
+  --moonCraterOpacity:0;
+}
+:root[data-sky="night"]{
+  --sun1:#eef4ff;
+  --sun2:#bcd1ff;
+  --ray:rgba(190,210,255,.0);
+  --rayOpacity:0;
+  --sunGlow:.18;
+  --moonCraterOpacity:1;
+}
