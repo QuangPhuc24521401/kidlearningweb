@@ -1,13 +1,19 @@
-import { protectPage, logout } from "./auth/auth.js";
+// menu.js
+function goLesson(type){
+  playPop();
+  window.location.href = 'lessons/lesson.html?type=' + type;
+}
+function handleLogout(){
+  playPop();
+  try{ firebase.auth().signOut().then(()=>{ window.location.href='auth/login.html'; }); }
+  catch(e){ window.location.href='auth/login.html'; }
+}
 
-protectPage();
-
-document.getElementById("btn-nhanbiet").onclick = () => {
-  window.location.href = "/lessons/lesson.html?type=nhan_biet";
-};
-
-document.getElementById("btn-tuduy").onclick = () => {
-  window.location.href = "/lessons/lesson.html?type=tu_duy";
-};
-
-document.getElementById("btn-logout").onclick = logout;
+// Kiểm tra đăng nhập chỉ khi Firebase được cấu hình thật
+try{
+  if(firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_')){
+    firebase.auth().onAuthStateChanged(user=>{
+      if(!user) window.location.href='auth/login.html';
+    });
+  }
+}catch(e){}

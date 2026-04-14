@@ -41,6 +41,47 @@ body{
   text-rendering:optimizeLegibility;
 }
 
+/* ═══════════ LIQUID GLASS BACKDROP ═══════════ */
+.liquid-bg{
+  position:fixed;
+  inset:-18%;
+  z-index:0; /* above .sky (0) but below cards (10) */
+  pointer-events:none;
+  filter:blur(18px) saturate(1.12);
+  opacity:.92;
+  transform:translateZ(0);
+}
+.liquid-bg .blob{
+  position:absolute;
+  width:clamp(280px, 34vw, 560px);
+  height:clamp(240px, 30vw, 520px);
+  border-radius:42% 58% 62% 38% / 46% 44% 56% 54%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.86) 0%, rgba(255,255,255,0) 62%),
+             radial-gradient(circle at 70% 60%, rgba(120,160,255,.52) 0%, rgba(120,160,255,0) 64%),
+             radial-gradient(circle at 40% 80%, rgba(255,120,190,.40) 0%, rgba(255,120,190,0) 66%);
+  mix-blend-mode:screen;
+  opacity:.82;
+  animation:blobDrift 12s ease-in-out infinite alternate;
+}
+.liquid-bg .b1{left:6%;top:10%;animation-duration:14s}
+.liquid-bg .b2{right:4%;top:8%;animation-duration:16s;animation-delay:-3s;transform:rotate(18deg)}
+.liquid-bg .b3{left:28%;bottom:2%;animation-duration:18s;animation-delay:-6s;transform:rotate(-12deg)}
+
+@keyframes blobDrift{
+  from{transform:translate3d(-1.4%, -1.2%, 0) scale(1.02) rotate(-4deg)}
+  to{transform:translate3d(1.6%, 1.4%, 0) scale(1.06) rotate(6deg)}
+}
+
+/* Dark mode: blobs shift to cooler neon + lower intensity */
+::root[data-theme="dark"] .liquid-bg{filter:blur(20px) saturate(1.22);opacity:.78}
+::root[data-theme="dark"] .liquid-bg .blob{
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.38) 0%, rgba(255,255,255,0) 62%),
+             radial-gradient(circle at 70% 60%, rgba(124,58,237,.46) 0%, rgba(124,58,237,0) 64%),
+             radial-gradient(circle at 40% 80%, rgba(56,249,215,.26) 0%, rgba(56,249,215,0) 66%);
+  mix-blend-mode:screen;
+  opacity:.72;
+}
+
 /* Allow scrolling on pages with long content (e.g. menu grid) */
 body.page-scroll{
   overflow:auto;

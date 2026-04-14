@@ -1,28 +1,146 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Kid Learning</title>
-  <link rel="stylesheet" href="./menu.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kid Learning 🌟</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="menu.css">
 </head>
-<body>
+<body class="page-scroll">
 
-<div class="menu-container">
-  <h1>📚 Bé học gì hôm nay?</h1>
+<div class="sky">
+  <div class="sun">
+    <div class="sun-ray" style="transform:rotate(0deg)"></div><div class="sun-ray" style="transform:rotate(45deg)"></div>
+    <div class="sun-ray" style="transform:rotate(90deg)"></div><div class="sun-ray" style="transform:rotate(135deg)"></div>
+    <div class="sun-ray" style="transform:rotate(180deg)"></div><div class="sun-ray" style="transform:rotate(225deg)"></div>
+    <div class="sun-ray" style="transform:rotate(270deg)"></div><div class="sun-ray" style="transform:rotate(315deg)"></div>
+  </div>
+  <div class="cloud c1"></div><div class="cloud c2"></div>
+  <div class="cloud c3"></div><div class="cloud c4"></div>
+</div>
+<div class="liquid-bg" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+<div class="ground"></div>
+<div class="sprinkles" id="sprinkles"></div>
+<button id="musicBtn">🎵</button>
+<button id="settingsBtn">⚙️</button>
+<div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
 
-  <button id="btn-nhanbiet" class="menu-btn blue">
-    👀 Nhận biết
-  </button>
-
-  <button id="btn-tuduy" class="menu-btn orange">
-    🧠 Tư duy
-  </button>
-
-  <button id="btn-logout" class="menu-btn red">
-    🚪 Đăng xuất
-  </button>
+<!-- Settings modal -->
+<div id="settingsModal">
+  <div class="settings-card">
+    <button class="settings-close" onclick="closeSettings()">×</button>
+    <h2>🎙️ Cài đặt giọng đọc</h2>
+    <p>Dùng <strong>FPT.AI</strong> để có giọng Tiếng Việt tự nhiên nhất.<br>Miễn phí 2.000 lượt/ngày sau khi đăng ký.</p>
+    <div class="key-input-wrap">
+      <input class="key-input" id="fptKeyInput" type="password" placeholder="Paste FPT.AI API key vào đây...">
+      <button class="save-btn" onclick="saveKey()">💾 Lưu</button>
+    </div>
+    <div class="key-saved hidden" id="keySavedMsg">✅ API key đã được lưu!</div>
+    <p style="font-family:Nunito,sans-serif;font-size:14px;color:#555;margin:16px 0 6px"><strong>Chọn giọng đọc:</strong></p>
+    <div class="voice-chips" id="voiceChips">
+      <div class="chip active" onclick="setVoice('lannhi',this)">🌸 Lan Nhi (nữ Nam)</div>
+      <div class="chip" onclick="setVoice('linhsan',this)">💐 Linh San (nữ Bắc)</div>
+      <div class="chip" onclick="setVoice('minhquang',this)">🎯 Minh Quang (nam Bắc)</div>
+      <div class="chip" onclick="setVoice('giahuy',this)">🚀 Gia Huy (nam Nam)</div>
+    </div>
+    <p class="settings-link">Chưa có API key? <a href="https://fpt.ai/tts" target="_blank">Đăng ký miễn phí tại fpt.ai →</a></p>
+  </div>
 </div>
 
-<script type="module" src="./menu.js"></script>
+<!-- Menu card -->
+<div class="card menu-card">
+  <button class="logout-btn" onclick="handleLogout()">🚪 Đăng xuất</button>
+
+  <svg class="mascot-wrap" width="120" height="118" viewBox="0 0 130 120">
+    <circle cx="28" cy="28" r="18" fill="#c47a5a"/><circle cx="102" cy="28" r="18" fill="#c47a5a"/>
+    <circle cx="28" cy="28" r="11" fill="#b06040"/><circle cx="102" cy="28" r="11" fill="#b06040"/>
+    <ellipse cx="65" cy="98" rx="36" ry="26" fill="#d4956a"/>
+    <ellipse cx="65" cy="100" rx="22" ry="18" fill="#e8b880"/>
+    <circle class="bear-paw-r" cx="105" cy="88" r="16" fill="#d4956a"/>
+    <circle cx="25" cy="88" r="16" fill="#d4956a"/>
+    <circle cx="65" cy="52" r="40" fill="#d4956a"/>
+    <ellipse cx="65" cy="66" rx="18" ry="14" fill="#c47a5a"/>
+    <circle cx="50" cy="44" r="9" fill="#1a1a2e"/><circle cx="80" cy="44" r="9" fill="#1a1a2e"/>
+    <circle cx="53" cy="41" r="3.5" fill="white"/><circle cx="83" cy="41" r="3.5" fill="white"/>
+    <ellipse cx="65" cy="62" rx="7" ry="5" fill="#1a1a2e"/>
+    <path d="M56,70 Q65,80 74,70" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="42" cy="60" r="10" fill="#e89888" opacity="0.55"/>
+    <circle cx="88" cy="60" r="10" fill="#e89888" opacity="0.55"/>
+  </svg>
+
+  <h1>Bé học gì hôm nay?</h1>
+  <p class="subtitle">Chọn môn học và cùng bắt đầu nào! 🌟</p>
+
+  <div class="menu-grid" style="margin-top:12px">
+    <button class="menu-item mi-language" onclick="goLesson('nhan_biet')">
+      <div class="mi-top">
+        <span class="mi-badge">Cơ bản</span>
+        <span class="mi-tag">👀</span>
+      </div>
+      <div class="mi-title">Nhận biết</div>
+      <div class="mi-sub">Màu sắc • Hình dạng • Đếm số</div>
+    </button>
+
+    <button class="menu-item mi-puzzle" onclick="goLesson('tu_duy')">
+      <div class="mi-top">
+        <span class="mi-badge">Logic</span>
+        <span class="mi-tag">🧠</span>
+      </div>
+      <div class="mi-title">Tư duy</div>
+      <div class="mi-sub">Tìm khác biệt • Dãy số • So sánh</div>
+    </button>
+
+    <button class="menu-item mi-music" onclick="goLesson('am_nhac')">
+      <div class="mi-top">
+        <span class="mi-badge">Âm thanh</span>
+        <span class="mi-tag">🎵</span>
+      </div>
+      <div class="mi-title">Âm nhạc</div>
+      <div class="mi-sub">Nhạc cụ • Nhịp điệu • Nốt nhạc</div>
+    </button>
+
+    <button class="menu-item mi-puzzle" onclick="goLesson('ghep_hinh')">
+      <div class="mi-top">
+        <span class="mi-badge">Không gian</span>
+        <span class="mi-tag">🧩</span>
+      </div>
+      <div class="mi-title">Ghép hình</div>
+      <div class="mi-sub">Hình khối • Mẫu lặp • Chọn mảnh đúng</div>
+    </button>
+
+    <button class="menu-item mi-art" onclick="goLesson('my_thuat')">
+      <div class="mi-top">
+        <span class="mi-badge">Sáng tạo</span>
+        <span class="mi-tag">🎨</span>
+      </div>
+      <div class="mi-title">Mỹ thuật</div>
+      <div class="mi-sub">Màu sắc • Cảm xúc • Trộn màu</div>
+    </button>
+
+    <button class="menu-item mi-math" onclick="goLesson('ngon_ngu')">
+      <div class="mi-top">
+        <span class="mi-badge">Từ vựng</span>
+        <span class="mi-tag">📚</span>
+      </div>
+      <div class="mi-title">Ngôn ngữ</div>
+      <div class="mi-sub">Đồ vật • Con vật • Từ đơn giản</div>
+    </button>
+  </div>
+  <div style="margin-top:14px">
+    <button onclick="window.location.href='mentor.html'" style="width:100%;padding:18px 20px;border:none;border-radius:22px;cursor:pointer;background:linear-gradient(145deg,#f093fb,#f5576c);box-shadow:0 8px 0 #c0392b,0 14px 28px rgba(245,87,108,.3);display:flex;align-items:center;justify-content:center;gap:12px;font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;color:white;transition:transform .18s cubic-bezier(.34,1.56,.64,1)" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
+      <span style="font-size:32px">👩‍🏫</span> Gặp Cô Giáo AI
+    </button>
+  </div>
+</div>
+
+<script src="firebase.js"></script>
+<script src="../shared.js"></script>
+<script src="menu.js"></script>
 </body>
 </html>
