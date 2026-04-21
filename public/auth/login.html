@@ -2,33 +2,41 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Đăng nhập</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Đăng nhập · Kid Learning</title>
 <link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
-<div class="auth-container">
+<form id="loginForm" class="auth-container" autocomplete="on" action="#" method="post" novalidate>
   <h1>Kid Learning</h1>
   <p>Dành cho phụ huynh</p>
 
   <div class="input-group">
-  <span class="icon">📧</span>
-  <input id="emailInput" type="email" placeholder="Email">
-</div>
+    <span class="icon">📧</span>
+    <input id="emailInput" name="email" type="email" autocomplete="username"
+           placeholder="Email" required>
+  </div>
 
-<div class="input-group">
-  <span class="icon">🔑</span>
-  <input id="passwordInput" type="password" placeholder="Mật khẩu">
-</div>
+  <div class="input-group">
+    <span class="icon">🔑</span>
+    <input id="passwordInput" name="password" type="password" autocomplete="current-password"
+           placeholder="Mật khẩu" required>
+  </div>
 
-  <button class="btn main" id="loginBtn">Đăng nhập</button>
+  <label class="remember">
+    <input id="rememberMe" type="checkbox" checked>
+    <span>Ghi nhớ đăng nhập</span>
+  </label>
 
-<script type="module" src="./auth.js"></script>
+  <button class="btn main" id="loginBtn" type="submit">Đăng nhập</button>
 
   <div class="links">
     <a href="register.html">Đăng ký</a> |
     <a href="forgot.html">Quên mật khẩu?</a>
   </div>
-</div>
+</form>
+
+<script type="module" src="./auth.js"></script>
 </body>
 </html>

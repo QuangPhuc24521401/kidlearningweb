@@ -5,15 +5,26 @@ function goLesson(type){
 }
 function handleLogout(){
   playPop();
-  try{ firebase.auth().signOut().then(()=>{ window.location.href='auth/login.html'; }); }
+  try{
+    firebase.auth().signOut().then(()=>{ window.location.href='auth/login.html'; });
+  }
   catch(e){ window.location.href='auth/login.html'; }
 }
 
-// Kiểm tra đăng nhập chỉ khi Firebase được cấu hình thật
-try{
-  if(firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_')){
-    firebase.auth().onAuthStateChanged(user=>{
-      if(!user) window.location.href='auth/login.html';
-    });
-  }
-}catch(e){}
+(function(){
+  var revealed = false;
+  function reveal(){ if(!revealed){ revealed = true; document.documentElement.style.visibility=''; } }
+
+  try{
+    if(firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_')){
+      firebase.auth().onAuthStateChanged(function(user){
+        if(!user) window.location.href='auth/login.html';
+        else reveal();
+      });
+    } else {
+      reveal();
+    }
+  }catch(e){ reveal(); }
+
+  setTimeout(reveal, 4000);
+})();

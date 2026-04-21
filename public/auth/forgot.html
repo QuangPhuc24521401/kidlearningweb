@@ -2,24 +2,27 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Quên mật khẩu</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quên mật khẩu · Kid Learning</title>
 <link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
-<div class="auth-container">
+<form id="forgotForm" class="auth-container" action="#" method="post" novalidate>
   <h1>🔁 Quên mật khẩu</h1>
 
   <div class="input-group">
-  <span class="icon">📧</span>
-  <input id="emailInput" type="email" placeholder="Email">
-</div>
-  <button class="btn main" id="resetBtn">Gửi email</button>
+    <span class="icon">📧</span>
+    <input id="emailInput" name="email" type="email" autocomplete="username"
+           placeholder="Email" required>
+  </div>
+
+  <button class="btn main" id="resetBtn" type="submit">Gửi email</button>
 
   <div class="links">
     <a href="login.html">← Quay lại</a>
   </div>
-</div>
+</form>
 
 <script type="module" src="./auth.js"></script>
 </body>

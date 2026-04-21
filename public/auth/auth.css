@@ -1,33 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;900&display=swap');
+
+*{box-sizing:border-box}
+html,body{height:100%}
 body {
   margin: 0;
-  height: 100vh;
-  background: linear-gradient(135deg, #8fd3f4, #84fab0);
+  min-height: 100vh;
+  background: linear-gradient(135deg,#8fd3f4 0%, #84fab0 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: Arial, sans-serif;
+  font-family: 'Nunito', Arial, sans-serif;
+  padding: 20px;
+}
+
+.auth-container {
+  background: rgba(255,255,255,.95);
+  backdrop-filter: blur(12px);
+  padding: 36px 32px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  width: min(400px, 100%);
+  text-align: center;
+}
+
+.auth-container h1 {
+  font-family: 'Baloo 2', cursive;
+  font-size: 32px;
+  color: #2d3748;
+  margin: 0 0 8px;
+}
+
+.auth-container p {
+  color: #718096;
+  margin: 0 0 24px;
+  font-size: 15px;
 }
 
 .input-group {
   display: flex;
   align-items: center;
-  background: white; /* đổi thành trắng */
-  border-radius: 12px;
+  background: white;
+  border-radius: 14px;
   padding: 0 14px;
   margin: 12px 0;
-  border: 1px solid #ccc;
-  transition: 0.2s;
-  height: 50px; /* cố định chiều cao cho cân */
+  border: 2px solid #e2e8f0;
+  transition: all .2s;
+  height: 52px;
 }
 
 .input-group:focus-within {
   border-color: #4CAF50;
-  box-shadow: 0 0 0 3px rgba(76,175,80,0.2);
+  box-shadow: 0 0 0 4px rgba(76,175,80,.15);
 }
 
 .input-group .icon {
-  font-size: 18px;
-  margin-right: 8px;
+  font-size: 20px;
+  margin-right: 10px;
 }
 
 .input-group input {
@@ -36,49 +64,61 @@ body {
   outline: none;
   font-size: 16px;
   background: transparent;
+  font-family: inherit;
+  color: #2d3748;
+  height: 100%;
 }
 
-.auth-container h1 {
-  margin-bottom: 10px;
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 2px 18px;
+  font-size: 14px;
+  color: #4a5568;
+  user-select: none;
+  cursor: pointer;
 }
 
-.auth-container p {
-  color: #666;
-}
-
-.auth-container input {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 16px;
+.remember input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4CAF50;
+  cursor: pointer;
 }
 
 .btn {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   border: none;
-  border-radius: 12px;
-  font-size: 18px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
   cursor: pointer;
+  font-family: 'Baloo 2', cursive;
+  transition: transform .15s, box-shadow .15s;
 }
 
 .btn.main {
-  background: #4CAF50;
+  background: linear-gradient(145deg, #4CAF50, #2e7d32);
   color: white;
-  margin-top: 10px;
+  box-shadow: 0 6px 0 #1b5e20, 0 10px 18px rgba(76,175,80,.3);
 }
 
-.btn.main:hover {
-  background: #43a047;
-}
+.btn.main:hover { transform: translateY(-2px); }
+.btn.main:active { transform: translateY(3px); box-shadow: 0 2px 0 #1b5e20; }
 
 .links {
-  margin-top: 15px;
+  margin-top: 18px;
+  font-size: 14px;
+  color: #718096;
 }
 
 .links a {
   text-decoration: none;
   color: #2196F3;
+  font-weight: 700;
+  padding: 0 6px;
 }
+
+.links a:hover { text-decoration: underline; }

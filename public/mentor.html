@@ -6,6 +6,9 @@
 <title>Gặp Cô Giáo 👩‍🏫</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
+<script>document.documentElement.style.visibility='hidden';</script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <style>
 body{overflow:auto}
 
@@ -327,6 +330,17 @@ body{overflow:auto}
 <script src="firebase.js"></script>
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
+<script>
+try{
+  if(firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_')){
+    firebase.auth().onAuthStateChanged(user=>{
+      if(!user) location.href='auth/login.html';
+      else document.documentElement.style.visibility='';
+    });
+  } else { document.documentElement.style.visibility=''; }
+}catch(e){ document.documentElement.style.visibility=''; }
+setTimeout(()=>{document.documentElement.style.visibility='';}, 4000);
+</script>
 <script>
 /* ══════════════════════════════════════════
    AI CÔ GIÁO ENGINE

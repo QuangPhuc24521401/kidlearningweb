@@ -2,30 +2,38 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Đăng ký</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Đăng ký · Kid Learning</title>
 <link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
-<div class="auth-container">
+<form id="registerForm" class="auth-container" autocomplete="on" action="#" method="post" novalidate>
   <h1>📝 Đăng ký</h1>
 
   <div class="input-group">
-  <span class="icon">📧</span>
-  <input id="emailInput" type="email" placeholder="Email">
-</div>
+    <span class="icon">📧</span>
+    <input id="emailInput" name="email" type="email" autocomplete="username"
+           placeholder="Email" required>
+  </div>
 
-<div class="input-group">
-  <span class="icon">🔑</span>
-  <input id="passwordInput" type="password" placeholder="Mật khẩu">
-</div>
+  <div class="input-group">
+    <span class="icon">🔑</span>
+    <input id="passwordInput" name="password" type="password" autocomplete="new-password"
+           placeholder="Mật khẩu (ít nhất 6 ký tự)" required minlength="6">
+  </div>
 
-  <button class="btn main" id="registerBtn">Tạo tài khoản</button>
+  <label class="remember">
+    <input id="rememberMe" type="checkbox" checked>
+    <span>Ghi nhớ đăng nhập</span>
+  </label>
+
+  <button class="btn main" id="registerBtn" type="submit">Tạo tài khoản</button>
 
   <div class="links">
     <a href="login.html">← Quay lại đăng nhập</a>
   </div>
-</div>
+</form>
 
 <script type="module" src="./auth.js"></script>
 </body>
