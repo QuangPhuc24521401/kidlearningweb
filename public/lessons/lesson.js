@@ -6,6 +6,83 @@
   var currentIndex = 0;
   var stars = 0;
 
+  /* ─── Emoji → nhãn tiếng Việt (dùng khi hover đọc đáp án) ─── */
+  var EMOJI_LABELS = {
+    "🔴":"màu đỏ","🔵":"màu xanh dương","🟡":"màu vàng","🟢":"màu xanh lá",
+    "🟣":"màu tím","🟠":"màu cam","⚫":"màu đen","⚪":"màu trắng","🟤":"màu nâu",
+    "⬜":"hình vuông","🔺":"hình tam giác","🟦":"hình vuông xanh",
+    "💠":"hình thoi","⭐":"ngôi sao","❤️":"trái tim","▬":"hình chữ nhật","🧊":"hình khối",
+    "🐶":"con chó","🐕":"con chó","🐱":"con mèo","🐈":"con mèo",
+    "🐷":"con heo","🐮":"con bò","🐰":"con thỏ","🐇":"con thỏ",
+    "🦊":"con cáo","🐻":"con gấu","🦁":"sư tử","🐘":"con voi","🐯":"con hổ",
+    "🦒":"con hươu cao cổ","🐟":"con cá","🐠":"con cá",
+    "🐔":"con gà","🐸":"con ếch","🐢":"con rùa","🐭":"con chuột",
+    "🐿️":"con sóc","🦔":"con nhím","🐴":"con ngựa","🐑":"con cừu",
+    "🐒":"con khỉ","🐞":"con bọ rùa","🐜":"con kiến","🐌":"con ốc sên","🐦":"con chim",
+    "🍎":"quả táo","🍌":"quả chuối","🍇":"quả nho","🍊":"quả cam",
+    "🍓":"quả dâu","🍉":"quả dưa hấu","🍍":"quả dứa","🥭":"quả xoài",
+    "🍑":"quả đào","🍒":"quả anh đào","🍐":"quả lê","🥕":"củ cà rốt",
+    "🌙":"mặt trăng","☀️":"mặt trời","☁️":"đám mây","🌳":"cây xanh",
+    "🌊":"sóng biển","🌸":"bông hoa","🍄":"cây nấm","🍀":"cỏ bốn lá",
+    "🌵":"cây xương rồng","🌈":"cầu vồng",
+    "👩":"người phụ nữ","👨":"người đàn ông","👶":"em bé",
+    "👷":"chú công nhân","🧑‍🚀":"phi hành gia","👨‍⚕️":"bác sĩ","🚶":"người đi bộ",
+    "🚗":"xe ô tô","✈️":"máy bay","🚲":"xe đạp","🏠":"ngôi nhà",
+    "🥁":"cái trống","🎹":"đàn piano","🎸":"đàn ghi-ta","🎺":"cây kèn",
+    "🎻":"đàn vĩ cầm","🎷":"kèn saxophone","🪕":"đàn banjo","🪈":"cây sáo",
+    "🎧":"tai nghe","🎤":"micro","🔊":"cái loa","🔇":"tắt tiếng",
+    "🎵":"nốt nhạc","🎶":"bài hát","🔔":"cái chuông",
+    "🧩":"mảnh ghép","🖍️":"bút màu","🖌️":"cọ vẽ","✏️":"bút chì",
+    "🖼️":"bức tranh","🔑":"chìa khóa","🚪":"cánh cửa",
+    "📱":"điện thoại","📺":"ti vi","📷":"máy ảnh","🕯️":"cây nến",
+    "✂️":"cái kéo","📏":"cây thước","📌":"cái ghim","🧽":"bọt biển","🔧":"cờ lê",
+    "🍴":"muỗng nĩa","🍽️":"bộ đồ ăn","📄":"tờ giấy","⚽":"quả bóng",
+    "🎈":"quả bóng bay","📚":"quyển sách","🧢":"cái mũ","🧤":"đôi găng tay","👟":"đôi giày",
+    "😀":"khuôn mặt vui","😃":"khuôn mặt vui","😢":"khuôn mặt buồn",
+    "😡":"khuôn mặt giận","😴":"khuôn mặt ngủ","😂":"khuôn mặt cười lớn",
+    "😎":"khuôn mặt ngầu","🥰":"khuôn mặt yêu thương","😮":"khuôn mặt ngạc nhiên"
+  };
+
+  /* Chuyển đáp án thành câu đọc được:
+     - Nếu là emoji có trong dict → nhãn tiếng Việt
+     - Nếu là text → giữ nguyên (TTS tự đọc) */
+  function answerLabel(ans){
+    if(ans == null) return "";
+    var raw = String(ans).trim();
+    if(EMOJI_LABELS[raw]) return EMOJI_LABELS[raw];
+    return raw;
+  }
+
+  /* ─── Twemoji: biến emoji thành SVG cho icon đẹp hơn ─── */
+  var __twemojiQueue = null;
+  function ensureTwemoji(cb){
+    if(window.twemoji){ cb && cb(); return; }
+    if(__twemojiQueue){ __twemojiQueue.push(cb); return; }
+    __twemojiQueue = [cb];
+    var s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js";
+    s.crossOrigin = "anonymous";
+    s.onload = function(){
+      var q = __twemojiQueue; __twemojiQueue = null;
+      q.forEach(function(f){ try{ f && f(); }catch(e){} });
+    };
+    s.onerror = function(){ __twemojiQueue = null; };
+    document.head.appendChild(s);
+  }
+  function prettifyEmoji(el){
+    if(!el) return;
+    ensureTwemoji(function(){
+      if(!window.twemoji) return;
+      try{
+        window.twemoji.parse(el, {
+          folder: "svg",
+          ext: ".svg",
+          className: "tw-emoji"
+        });
+      }catch(e){}
+    });
+  }
+
   function setScreenMessage(title, detail){
     var q = document.getElementById("question");
     var a = document.getElementById("answers");
@@ -202,13 +279,13 @@
     var status = document.getElementById("status");
 
     if(currentIndex >= lessons.length){
-      if(questionEl) questionEl.innerText = "🎉 Bé học xong rồi!";
+      if(questionEl){ questionEl.innerText = "🎉 Bé học xong rồi!"; prettifyEmoji(questionEl); }
       if(container) container.innerHTML = "";
       if(topicEl) topicEl.style.display = "none";
       if(progressEl) progressEl.innerText = "Hoàn thành " + lessons.length + "/" + lessons.length;
       var barEnd = document.getElementById("progressBar");
       if(barEnd) barEnd.style.width = "100%";
-      if(status) status.innerText = "Con giỏi quá! 🏆";
+      if(status){ status.innerText = "Con giỏi quá! 🏆"; prettifyEmoji(status); }
       speak("Bé giỏi lắm, con đã học xong rồi");
       launchConfetti();
       saveProgress();
@@ -216,13 +293,14 @@
     }
 
     var lesson = lessons[currentIndex];
-    if(questionEl) questionEl.innerText = lesson.question;
+    if(questionEl){ questionEl.innerText = lesson.question; prettifyEmoji(questionEl); }
     speak(lesson.voiceText || lesson.question);
 
     if(topicEl){
       if(lesson.topic){
         topicEl.innerText = "🏷️ " + lesson.topic;
         topicEl.style.display = "";
+        prettifyEmoji(topicEl);
       } else {
         topicEl.style.display = "none";
       }
@@ -243,10 +321,24 @@
       var div = document.createElement("div");
       div.className = "box";
       div.innerText = ans;
+      var label = answerLabel(ans);
+      if(label) div.title = label;
+
+      var hoverTimer = null;
+      div.addEventListener("mouseenter", function(){
+        if(div.classList.contains("correct") || div.classList.contains("wrong")) return;
+        clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(function(){ speak(label); }, 160);
+      });
+      div.addEventListener("mouseleave", function(){
+        clearTimeout(hoverTimer);
+      });
+
       div.onclick = function(){
+        clearTimeout(hoverTimer);
         if(ans === lesson.correctAnswer){
           div.classList.add("correct");
-          if(status) status.innerText = "✅ Đúng rồi!";
+          if(status){ status.innerText = "✅ Đúng rồi!"; prettifyEmoji(status); }
           speak("Đúng rồi, giỏi lắm");
           stars++;
           var starsEl = document.getElementById("stars");
@@ -258,12 +350,13 @@
           }, 1200);
         } else {
           div.classList.add("wrong");
-          if(status) status.innerText = "❌ Con thử lại nhé";
+          if(status){ status.innerText = "❌ Con thử lại nhé"; prettifyEmoji(status); }
           speak("Sai rồi, con thử lại nhé");
         }
       };
       container.appendChild(div);
     });
+    prettifyEmoji(container);
   }
 
   function saveProgress(){
