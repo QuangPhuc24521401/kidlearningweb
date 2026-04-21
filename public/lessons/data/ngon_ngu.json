@@ -1,0 +1,158 @@
+[
+  {
+    "type": "ngon_ngu",
+    "topic": "Con vật",
+    "question": "Từ nào là 'MÈO'?",
+    "voiceText": "Con chọn từ MÈO nhé!",
+    "answers": ["MÈO", "CHÓ", "CÁ", "GÀ"],
+    "correctAnswer": "MÈO"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Con vật",
+    "question": "Từ nào là 'CHÓ'?",
+    "voiceText": "Con chọn từ CHÓ nhé!",
+    "answers": ["CHÓ", "MÈO", "VỊT", "BÒ"],
+    "correctAnswer": "CHÓ"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Con vật",
+    "question": "Chọn từ chỉ CON VẬT",
+    "voiceText": "Con chọn từ là con vật nhé!",
+    "answers": ["BÀN", "MÈO", "ÁO", "SÁCH"],
+    "correctAnswer": "MÈO"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Con vật",
+    "question": "🐱 đọc là gì?",
+    "voiceText": "Con mèo đọc là gì?",
+    "answers": ["MÈO", "CÁ", "GÀ", "VỊT"],
+    "correctAnswer": "MÈO"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Con vật",
+    "question": "🐶 đọc là gì?",
+    "voiceText": "Con chó đọc là gì?",
+    "answers": ["CHÓ", "MÈO", "BÒ", "HEO"],
+    "correctAnswer": "CHÓ"
+  },
+
+  {
+    "type": "ngon_ngu",
+    "topic": "Đồ vật",
+    "question": "Từ nào là 'XE'?",
+    "voiceText": "Con chọn từ XE nhé!",
+    "answers": ["CÂY", "NHÀ", "XE", "MƯA"],
+    "correctAnswer": "XE"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Đồ vật",
+    "question": "Từ nào là 'SÁCH'?",
+    "voiceText": "Con chọn từ SÁCH nhé!",
+    "answers": ["BÚT", "VỞ", "SÁCH", "CẶP"],
+    "correctAnswer": "SÁCH"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Đồ vật",
+    "question": "Chọn từ chỉ ĐỒ VẬT trong nhà",
+    "voiceText": "Con chọn từ là đồ vật trong nhà nhé!",
+    "answers": ["BÀN", "MÈO", "HOA", "BƯỚM"],
+    "correctAnswer": "BÀN"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Đồ vật",
+    "question": "🚗 đọc là gì?",
+    "voiceText": "Đây là gì?",
+    "answers": ["XE Ô TÔ", "MÁY BAY", "TÀU HỎA", "XE ĐẠP"],
+    "correctAnswer": "XE Ô TÔ"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Đồ vật",
+    "question": "🏠 đọc là gì?",
+    "voiceText": "Đây là gì?",
+    "answers": ["NHÀ", "CÂY", "XE", "HOA"],
+    "correctAnswer": "NHÀ"
+  },
+
+  {
+    "type": "ngon_ngu",
+    "topic": "Trái cây",
+    "question": "Chọn từ chỉ TRÁI CÂY",
+    "voiceText": "Con chọn từ là trái cây nhé!",
+    "answers": ["TÁO", "GHẾ", "CỬA", "BÚT"],
+    "correctAnswer": "TÁO"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Trái cây",
+    "question": "🍌 đọc là gì?",
+    "voiceText": "Đây là quả gì?",
+    "answers": ["CHUỐI", "TÁO", "CAM", "NHO"],
+    "correctAnswer": "CHUỐI"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Trái cây",
+    "question": "🍎 đọc là gì?",
+    "voiceText": "Đây là quả gì?",
+    "answers": ["TÁO", "ỔI", "LÊ", "MẬN"],
+    "correctAnswer": "TÁO"
+  },
+
+  {
+    "type": "ngon_ngu",
+    "topic": "Màu sắc",
+    "question": "Từ nào là 'MÀU ĐỎ'?",
+    "voiceText": "Con chọn từ màu đỏ nhé!",
+    "answers": ["ĐỎ", "XANH", "VÀNG", "TÍM"],
+    "correctAnswer": "ĐỎ"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Màu sắc",
+    "question": "🟡 đọc là màu gì?",
+    "voiceText": "Đây là màu gì?",
+    "answers": ["VÀNG", "ĐỎ", "XANH", "TÍM"],
+    "correctAnswer": "VÀNG"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Màu sắc",
+    "question": "🟢 đọc là màu gì?",
+    "voiceText": "Đây là màu gì?",
+    "answers": ["XANH LÁ", "ĐỎ", "VÀNG", "CAM"],
+    "correctAnswer": "XANH LÁ"
+  },
+
+  {
+    "type": "ngon_ngu",
+    "topic": "Gia đình",
+    "question": "Ai sinh ra con? 👩",
+    "voiceText": "Người phụ nữ sinh ra con gọi là gì?",
+    "answers": ["MẸ", "BÀ", "CÔ", "CHỊ"],
+    "correctAnswer": "MẸ"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Gia đình",
+    "question": "Cha con gọi là gì? 👨",
+    "voiceText": "Cha của con gọi là gì nhỉ?",
+    "answers": ["BỐ", "ÔNG", "ANH", "CHÚ"],
+    "correctAnswer": "BỐ"
+  },
+  {
+    "type": "ngon_ngu",
+    "topic": "Gia đình",
+    "question": "Em bé gọi là gì? 👶",
+    "voiceText": "Đây là ai nhỉ?",
+    "answers": ["EM BÉ", "ÔNG", "BÀ", "BỐ"],
+    "correctAnswer": "EM BÉ"
+  }
+]

@@ -1,0 +1,124 @@
+[
+  {
+    "type": "am_nhac",
+    "topic": "Nhạc cụ",
+    "question": "Nhạc cụ nào là TRỐNG?",
+    "voiceText": "Con chọn cái trống nhé!",
+    "answers": ["🥁", "🎹", "🎸", "🎺"],
+    "correctAnswer": "🥁"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Nhạc cụ",
+    "question": "Nhạc cụ nào là ĐÀN PIANO?",
+    "voiceText": "Con chọn đàn piano nhé!",
+    "answers": ["🎻", "🎹", "🪈", "🎷"],
+    "correctAnswer": "🎹"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Nhạc cụ",
+    "question": "Nhạc cụ nào là KÈN?",
+    "voiceText": "Con chọn cây kèn nhé!",
+    "answers": ["🎺", "🎸", "🥁", "🎻"],
+    "correctAnswer": "🎺"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Nhạc cụ",
+    "question": "Nhạc cụ nào là ĐÀN GHI-TA?",
+    "voiceText": "Con chọn đàn ghi-ta nhé!",
+    "answers": ["🎸", "🎻", "🎷", "🎹"],
+    "correctAnswer": "🎸"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Nhạc cụ",
+    "question": "Nhạc cụ nào là ĐÀN VĨ CẦM?",
+    "voiceText": "Con chọn đàn vĩ cầm, hay còn gọi là violin nhé!",
+    "answers": ["🎻", "🎺", "🥁", "🪕"],
+    "correctAnswer": "🎻"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Nhạc cụ",
+    "question": "Nhạc cụ nào là KÈN SAXOPHONE?",
+    "voiceText": "Con chọn cây kèn saxophone nhé!",
+    "answers": ["🎷", "🎸", "🎹", "🥁"],
+    "correctAnswer": "🎷"
+  },
+
+  {
+    "type": "am_nhac",
+    "topic": "Âm thanh",
+    "question": "Cái nào dùng để NGHE nhạc?",
+    "voiceText": "Con chọn đồ để nghe nhạc nhé!",
+    "answers": ["🎧", "🧢", "🧤", "👟"],
+    "correctAnswer": "🎧"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Âm thanh",
+    "question": "Cái nào dùng để HÁT?",
+    "voiceText": "Con chọn micro để hát nhé!",
+    "answers": ["🎤", "🎧", "📱", "📺"],
+    "correctAnswer": "🎤"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Âm thanh",
+    "question": "Cái nào PHÁT RA âm thanh to?",
+    "voiceText": "Con chọn cái loa nhé!",
+    "answers": ["🔊", "🔇", "📷", "🕯️"],
+    "correctAnswer": "🔊"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Âm thanh",
+    "question": "Con gì KÊU 'Meo meo'?",
+    "voiceText": "Con vật nào kêu meo meo?",
+    "answers": ["🐱", "🐶", "🐮", "🐔"],
+    "correctAnswer": "🐱"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Âm thanh",
+    "question": "Con gì KÊU 'Ò ó o'?",
+    "voiceText": "Con vật nào gáy ò ó o?",
+    "answers": ["🐔", "🐷", "🐴", "🐸"],
+    "correctAnswer": "🐔"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Âm thanh",
+    "question": "Con gì KÊU 'Ụt ịt'?",
+    "voiceText": "Con vật nào kêu ụt ịt?",
+    "answers": ["🐷", "🐑", "🐒", "🐰"],
+    "correctAnswer": "🐷"
+  },
+
+  {
+    "type": "am_nhac",
+    "topic": "Nốt nhạc",
+    "question": "Biểu tượng nào là NỐT NHẠC?",
+    "voiceText": "Con chọn hình nốt nhạc nhé!",
+    "answers": ["🎵", "⭐", "❤️", "🔔"],
+    "correctAnswer": "🎵"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Nốt nhạc",
+    "question": "Biểu tượng nào nói về ÂM NHẠC?",
+    "voiceText": "Con chọn biểu tượng âm nhạc nhé!",
+    "answers": ["🎶", "🏀", "🍎", "📚"],
+    "correctAnswer": "🎶"
+  },
+  {
+    "type": "am_nhac",
+    "topic": "Nốt nhạc",
+    "question": "Ai hát trên sân khấu?",
+    "voiceText": "Con chọn ca sĩ nhé!",
+    "answers": ["🎤", "🧑‍🚀", "👨‍⚕️", "👷"],
+    "correctAnswer": "🎤"
+  }
+]

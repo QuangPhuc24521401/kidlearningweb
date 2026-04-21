@@ -1,7 +1,7 @@
 // menu.js
 function goLesson(type){
   playPop();
-  window.location.href = 'lessons/lesson.html?type=' + type;
+  window.location.href = 'lessons/' + type + '/index.html';
 }
 function handleLogout(){
   playPop();

@@ -1,0 +1,149 @@
+[
+  {
+    "type": "my_thuat",
+    "topic": "Màu sắc",
+    "question": "Chọn màu VÀNG?",
+    "voiceText": "Con chọn màu vàng nhé!",
+    "answers": ["🟡", "🔵", "🔴", "🟢"],
+    "correctAnswer": "🟡"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Màu sắc",
+    "question": "Chọn màu ĐỎ?",
+    "voiceText": "Con chọn màu đỏ nhé!",
+    "answers": ["🔴", "🟢", "🟣", "⚫"],
+    "correctAnswer": "🔴"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Màu sắc",
+    "question": "Chọn màu XANH?",
+    "voiceText": "Con chọn màu xanh dương nhé!",
+    "answers": ["🔵", "🟡", "🔴", "🟠"],
+    "correctAnswer": "🔵"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Màu sắc",
+    "question": "Trái CHUỐI có màu gì?",
+    "voiceText": "Trái chuối thường có màu gì nhỉ?",
+    "answers": ["🟡", "🔴", "🔵", "⚫"],
+    "correctAnswer": "🟡"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Màu sắc",
+    "question": "Trái DÂU có màu gì?",
+    "voiceText": "Trái dâu tây có màu gì nhỉ?",
+    "answers": ["🔴", "🔵", "🟢", "🟣"],
+    "correctAnswer": "🔴"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Màu sắc",
+    "question": "LÁ CÂY có màu gì?",
+    "voiceText": "Lá cây thường có màu gì nhỉ?",
+    "answers": ["🟢", "🟡", "🔵", "🔴"],
+    "correctAnswer": "🟢"
+  },
+
+  {
+    "type": "my_thuat",
+    "topic": "Trộn màu",
+    "question": "🔴 + 🟡 = màu gì?",
+    "voiceText": "Đỏ trộn với vàng ra màu gì nhỉ?",
+    "answers": ["🟠", "🟢", "🟣", "🔵"],
+    "correctAnswer": "🟠"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Trộn màu",
+    "question": "🔵 + 🟡 = màu gì?",
+    "voiceText": "Xanh dương trộn với vàng ra màu gì nhỉ?",
+    "answers": ["🟢", "🟣", "🟠", "🔴"],
+    "correctAnswer": "🟢"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Trộn màu",
+    "question": "🔴 + 🔵 = màu gì?",
+    "voiceText": "Đỏ trộn với xanh dương ra màu gì nhỉ?",
+    "answers": ["🟣", "🟢", "🟠", "🟡"],
+    "correctAnswer": "🟣"
+  },
+
+  {
+    "type": "my_thuat",
+    "topic": "Dụng cụ vẽ",
+    "question": "Chọn dụng cụ VẼ?",
+    "voiceText": "Con chọn dụng cụ để vẽ nhé!",
+    "answers": ["🖍️", "🍴", "🔧", "🧽"],
+    "correctAnswer": "🖍️"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Dụng cụ vẽ",
+    "question": "Chọn CỌ VẼ?",
+    "voiceText": "Con chọn cái cọ vẽ nhé!",
+    "answers": ["🖌️", "✂️", "📏", "📌"],
+    "correctAnswer": "🖌️"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Dụng cụ vẽ",
+    "question": "Chọn BÚT CHÌ?",
+    "voiceText": "Con chọn cây bút chì nhé!",
+    "answers": ["✏️", "🖍️", "🖌️", "🔑"],
+    "correctAnswer": "✏️"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Dụng cụ vẽ",
+    "question": "Chọn hình dùng để TÔ màu?",
+    "voiceText": "Con chọn hình để tô màu nhé!",
+    "answers": ["🖼️", "📺", "📦", "🧺"],
+    "correctAnswer": "🖼️"
+  },
+
+  {
+    "type": "my_thuat",
+    "topic": "Cảm xúc",
+    "question": "Chọn cảm xúc VUI?",
+    "voiceText": "Con chọn khuôn mặt vui nhé!",
+    "answers": ["😀", "😢", "😡", "😴"],
+    "correctAnswer": "😀"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Cảm xúc",
+    "question": "Chọn cảm xúc BUỒN?",
+    "voiceText": "Con chọn khuôn mặt buồn nhé!",
+    "answers": ["😢", "😀", "😂", "😎"],
+    "correctAnswer": "😢"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Cảm xúc",
+    "question": "Chọn cảm xúc GIẬN?",
+    "voiceText": "Con chọn khuôn mặt giận dữ nhé!",
+    "answers": ["😡", "😴", "😃", "🥰"],
+    "correctAnswer": "😡"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Cảm xúc",
+    "question": "Chọn cảm xúc NGẠC NHIÊN?",
+    "voiceText": "Con chọn khuôn mặt ngạc nhiên nhé!",
+    "answers": ["😮", "😀", "😢", "😡"],
+    "correctAnswer": "😮"
+  },
+  {
+    "type": "my_thuat",
+    "topic": "Cảm xúc",
+    "question": "Chọn khuôn mặt YÊU THƯƠNG?",
+    "voiceText": "Con chọn khuôn mặt yêu thương nhé!",
+    "answers": ["🥰", "😡", "😴", "😢"],
+    "correctAnswer": "🥰"
+  }
+]

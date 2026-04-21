@@ -1,0 +1,165 @@
+[
+  {
+    "type": "tu_duy",
+    "topic": "Tìm khác biệt",
+    "question": "Chọn hình KHÁC loại?",
+    "voiceText": "Ba cái giống nhau, một cái khác. Con chọn cái khác nhé!",
+    "answers": ["🍎", "🍌", "🍇", "🚗"],
+    "correctAnswer": "🚗"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Tìm khác biệt",
+    "question": "Cái nào KHÔNG phải con vật?",
+    "voiceText": "Con tìm cái không phải con vật nhé!",
+    "answers": ["🐶", "🐱", "🌳", "🐰"],
+    "correctAnswer": "🌳"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Tìm khác biệt",
+    "question": "Cái nào KHÔNG phải trái cây?",
+    "voiceText": "Con chọn cái không phải trái cây nhé!",
+    "answers": ["🍎", "🍌", "🥕", "🍇"],
+    "correctAnswer": "🥕"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Tìm khác biệt",
+    "question": "Dãy hình: 🔺, 🔺, 🟦, 🔺. Hình nào khác?",
+    "voiceText": "Con tìm hình khác nhé!",
+    "answers": ["🔺", "🟦", "🔺", "🔺"],
+    "correctAnswer": "🟦"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Tìm khác biệt",
+    "question": "Cái nào KHÔNG phải phương tiện?",
+    "voiceText": "Con tìm cái không phải xe cộ nhé!",
+    "answers": ["🚗", "🚲", "🍎", "✈️"],
+    "correctAnswer": "🍎"
+  },
+
+  {
+    "type": "tu_duy",
+    "topic": "Dãy số",
+    "question": "Dãy số: 1, 2, 3, ?",
+    "voiceText": "Con chọn số tiếp theo nhé!",
+    "answers": ["4", "5", "1", "0"],
+    "correctAnswer": "4"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Dãy số",
+    "question": "Dãy số: 2, 4, 6, ?",
+    "voiceText": "Con chọn số tiếp theo nhé!",
+    "answers": ["7", "8", "10", "9"],
+    "correctAnswer": "8"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Dãy số",
+    "question": "Dãy số: 5, 4, 3, ?",
+    "voiceText": "Con chọn số tiếp theo nhé! Dãy giảm dần.",
+    "answers": ["1", "2", "6", "0"],
+    "correctAnswer": "2"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Dãy số",
+    "question": "Số nào ĐỨNG SAU số 7?",
+    "voiceText": "Con chọn số đứng sau số bảy nhé!",
+    "answers": ["6", "8", "9", "5"],
+    "correctAnswer": "8"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Dãy số",
+    "question": "Số nào ĐỨNG TRƯỚC số 5?",
+    "voiceText": "Con chọn số đứng trước số năm nhé!",
+    "answers": ["6", "3", "4", "7"],
+    "correctAnswer": "4"
+  },
+
+  {
+    "type": "tu_duy",
+    "topic": "So sánh",
+    "question": "Cái nào LỚN hơn?",
+    "voiceText": "Con chọn cái lớn hơn nhé!",
+    "answers": ["🐘", "🐭", "🐜", "🐞"],
+    "correctAnswer": "🐘"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "So sánh",
+    "question": "Cái nào NHỎ hơn?",
+    "voiceText": "Con chọn cái nhỏ hơn nhé!",
+    "answers": ["🐘", "🦒", "🐜", "🐻"],
+    "correctAnswer": "🐜"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "So sánh",
+    "question": "Cái nào NHANH hơn?",
+    "voiceText": "Con chọn cái chạy nhanh hơn nhé!",
+    "answers": ["🐢", "🚗", "🐌", "🚶"],
+    "correctAnswer": "🚗"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "So sánh",
+    "question": "Cái nào CAO hơn?",
+    "voiceText": "Con chọn cái cao hơn nhé!",
+    "answers": ["🦒", "🐕", "🐈", "🐇"],
+    "correctAnswer": "🦒"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "So sánh",
+    "question": "Số nào LỚN NHẤT?",
+    "voiceText": "Con chọn số lớn nhất nhé!",
+    "answers": ["2", "5", "9", "1"],
+    "correctAnswer": "9"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "So sánh",
+    "question": "Số nào NHỎ NHẤT?",
+    "voiceText": "Con chọn số nhỏ nhất nhé!",
+    "answers": ["4", "7", "1", "3"],
+    "correctAnswer": "1"
+  },
+
+  {
+    "type": "tu_duy",
+    "topic": "Ghép cặp",
+    "question": "Chọn cặp GIỐNG nhau?",
+    "voiceText": "Con chọn hai hình giống nhau nhé!",
+    "answers": ["⭐", "⭐", "🌙", "☀️"],
+    "correctAnswer": "⭐"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Ghép cặp",
+    "question": "Con gì ĐI CÙNG NƯỚC? 🌊",
+    "voiceText": "Con chọn con vật sống dưới nước nhé!",
+    "answers": ["🐟", "🐶", "🐔", "🐴"],
+    "correctAnswer": "🐟"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Ghép cặp",
+    "question": "Con gì ĐI CÙNG BẦU TRỜI? ☁️",
+    "voiceText": "Con chọn con biết bay nhé!",
+    "answers": ["🐠", "🐦", "🐱", "🐮"],
+    "correctAnswer": "🐦"
+  },
+  {
+    "type": "tu_duy",
+    "topic": "Ghép cặp",
+    "question": "🔑 dùng để mở gì?",
+    "voiceText": "Con chọn cái mà chìa khóa dùng để mở nhé!",
+    "answers": ["🚪", "🍎", "🐱", "⭐"],
+    "correctAnswer": "🚪"
+  }
+]

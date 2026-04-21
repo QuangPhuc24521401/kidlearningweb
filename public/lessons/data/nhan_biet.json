@@ -1,0 +1,247 @@
+[
+  {
+    "type": "nhan_biet",
+    "topic": "Màu sắc",
+    "question": "Đâu là màu ĐỎ?",
+    "voiceText": "Con chọn màu đỏ nhé!",
+    "answers": ["🔴", "🔵", "🟢", "🟡"],
+    "correctAnswer": "🔴"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Màu sắc",
+    "question": "Đâu là màu XANH DƯƠNG?",
+    "voiceText": "Con chọn màu xanh dương nhé!",
+    "answers": ["🟠", "🔵", "🟣", "⚫"],
+    "correctAnswer": "🔵"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Màu sắc",
+    "question": "Đâu là màu VÀNG?",
+    "voiceText": "Con chọn màu vàng nhé!",
+    "answers": ["🟡", "🟢", "🔴", "🔵"],
+    "correctAnswer": "🟡"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Màu sắc",
+    "question": "Đâu là màu XANH LÁ?",
+    "voiceText": "Con chọn màu xanh lá cây nhé!",
+    "answers": ["🟢", "🟡", "🟣", "🟤"],
+    "correctAnswer": "🟢"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Màu sắc",
+    "question": "Đâu là màu TÍM?",
+    "voiceText": "Con chọn màu tím nào!",
+    "answers": ["🟣", "🔴", "🟠", "⚪"],
+    "correctAnswer": "🟣"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Màu sắc",
+    "question": "Đâu là màu CAM?",
+    "voiceText": "Con chọn màu cam nhé!",
+    "answers": ["🟠", "🟡", "🔴", "🟢"],
+    "correctAnswer": "🟠"
+  },
+
+  {
+    "type": "nhan_biet",
+    "topic": "Hình dạng",
+    "question": "Đâu là hình TRÒN?",
+    "voiceText": "Con tìm hình tròn nào!",
+    "answers": ["⚪", "🔺", "🟦", "⭐"],
+    "correctAnswer": "⚪"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Hình dạng",
+    "question": "Đâu là hình VUÔNG?",
+    "voiceText": "Con chọn hình vuông nhé!",
+    "answers": ["⬜", "⚪", "🔺", "💠"],
+    "correctAnswer": "⬜"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Hình dạng",
+    "question": "Đâu là hình TAM GIÁC?",
+    "voiceText": "Con chọn hình tam giác nhé!",
+    "answers": ["🔺", "⚪", "🟦", "⭐"],
+    "correctAnswer": "🔺"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Hình dạng",
+    "question": "Đâu là hình NGÔI SAO?",
+    "voiceText": "Con chọn hình ngôi sao nào!",
+    "answers": ["⭐", "❤️", "🔺", "⚪"],
+    "correctAnswer": "⭐"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Hình dạng",
+    "question": "Đâu là hình TRÁI TIM?",
+    "voiceText": "Con chọn trái tim nhé!",
+    "answers": ["❤️", "⭐", "💠", "⚪"],
+    "correctAnswer": "❤️"
+  },
+
+  {
+    "type": "nhan_biet",
+    "topic": "Đếm số",
+    "question": "Đâu là số 1?",
+    "voiceText": "Con chọn số một nhé!",
+    "answers": ["1", "7", "4", "9"],
+    "correctAnswer": "1"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Đếm số",
+    "question": "Đâu là số 3?",
+    "voiceText": "Con chọn số ba nhé!",
+    "answers": ["1", "2", "3", "4"],
+    "correctAnswer": "3"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Đếm số",
+    "question": "Đâu là số 5?",
+    "voiceText": "Con chọn số năm nhé!",
+    "answers": ["2", "5", "8", "3"],
+    "correctAnswer": "5"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Đếm số",
+    "question": "Có bao nhiêu quả táo? 🍎🍎🍎",
+    "voiceText": "Con đếm xem có bao nhiêu quả táo nhé!",
+    "answers": ["2", "3", "4", "5"],
+    "correctAnswer": "3"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Đếm số",
+    "question": "Có bao nhiêu ngôi sao? ⭐⭐⭐⭐",
+    "voiceText": "Con đếm xem có bao nhiêu ngôi sao nhé!",
+    "answers": ["3", "4", "5", "6"],
+    "correctAnswer": "4"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Đếm số",
+    "question": "Có bao nhiêu trái bóng? ⚽⚽",
+    "voiceText": "Con đếm xem có bao nhiêu trái bóng nhé!",
+    "answers": ["1", "2", "3", "4"],
+    "correctAnswer": "2"
+  },
+
+  {
+    "type": "nhan_biet",
+    "topic": "Con vật",
+    "question": "Con vật nào là MÈO?",
+    "voiceText": "Con chọn con mèo nhé!",
+    "answers": ["🐶", "🐱", "🐷", "🐮"],
+    "correctAnswer": "🐱"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Con vật",
+    "question": "Con vật nào là CHÓ?",
+    "voiceText": "Con chọn con chó nhé!",
+    "answers": ["🐶", "🐰", "🦊", "🐻"],
+    "correctAnswer": "🐶"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Con vật",
+    "question": "Con vật nào là VOI?",
+    "voiceText": "Con chọn con voi nhé!",
+    "answers": ["🦁", "🐘", "🐯", "🦒"],
+    "correctAnswer": "🐘"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Con vật",
+    "question": "Con vật nào là CÁ?",
+    "voiceText": "Con chọn con cá nhé!",
+    "answers": ["🐟", "🐔", "🐸", "🐢"],
+    "correctAnswer": "🐟"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Con vật",
+    "question": "Con vật nào là THỎ?",
+    "voiceText": "Con chọn con thỏ nhé!",
+    "answers": ["🐭", "🐰", "🐿️", "🦔"],
+    "correctAnswer": "🐰"
+  },
+
+  {
+    "type": "nhan_biet",
+    "topic": "Trái cây",
+    "question": "Đâu là TRÁI TÁO?",
+    "voiceText": "Con chọn trái táo nào!",
+    "answers": ["🍌", "🍎", "🍇", "🍊"],
+    "correctAnswer": "🍎"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Trái cây",
+    "question": "Đâu là TRÁI CHUỐI?",
+    "voiceText": "Con chọn trái chuối nhé!",
+    "answers": ["🍌", "🍓", "🍉", "🍍"],
+    "correctAnswer": "🍌"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Trái cây",
+    "question": "Đâu là TRÁI DƯA HẤU?",
+    "voiceText": "Con chọn trái dưa hấu nhé!",
+    "answers": ["🍉", "🍇", "🥭", "🍑"],
+    "correctAnswer": "🍉"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Trái cây",
+    "question": "Đâu là TRÁI DÂU?",
+    "voiceText": "Con chọn trái dâu nhé!",
+    "answers": ["🍓", "🍒", "🍎", "🍐"],
+    "correctAnswer": "🍓"
+  },
+
+  {
+    "type": "nhan_biet",
+    "topic": "Thiên nhiên",
+    "question": "Đâu là MẶT TRỜI?",
+    "voiceText": "Con chọn mặt trời nhé!",
+    "answers": ["🌙", "⭐", "☀️", "☁️"],
+    "correctAnswer": "☀️"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Thiên nhiên",
+    "question": "Đâu là MẶT TRĂNG?",
+    "voiceText": "Con chọn mặt trăng nhé!",
+    "answers": ["☀️", "🌙", "⭐", "🌈"],
+    "correctAnswer": "🌙"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Thiên nhiên",
+    "question": "Đâu là CÂY XANH?",
+    "voiceText": "Con chọn cái cây nhé!",
+    "answers": ["🌳", "🏠", "🚗", "🌊"],
+    "correctAnswer": "🌳"
+  },
+  {
+    "type": "nhan_biet",
+    "topic": "Thiên nhiên",
+    "question": "Đâu là BÔNG HOA?",
+    "voiceText": "Con chọn bông hoa nhé!",
+    "answers": ["🍄", "🌸", "🍀", "🌵"],
+    "correctAnswer": "🌸"
+  }
+]

@@ -1,0 +1,117 @@
+[
+  {
+    "type": "ghep_hinh",
+    "topic": "Mảnh ghép",
+    "question": "Chọn mảnh ghép phù hợp: 🧩🧩 _ 🧩",
+    "voiceText": "Con chọn mảnh ghép còn thiếu nhé!",
+    "answers": ["🧩", "⭐", "🟦", "🔺"],
+    "correctAnswer": "🧩"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Mảnh ghép",
+    "question": "Chọn cặp GIỐNG nhau?",
+    "voiceText": "Con chọn cái giống nhau nhé!",
+    "answers": ["🟦", "🔺", "🟦", "⭐"],
+    "correctAnswer": "🟦"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Mảnh ghép",
+    "question": "🧩 Hình nào GIỐNG HỆT: ⭐?",
+    "voiceText": "Con chọn hình giống hệt ngôi sao nhé!",
+    "answers": ["⭐", "🌙", "❤️", "🔺"],
+    "correctAnswer": "⭐"
+  },
+
+  {
+    "type": "ghep_hinh",
+    "topic": "Mẫu lặp",
+    "question": "Mẫu lặp: 🔺 🟦 🔺 🟦 ?",
+    "voiceText": "Con chọn hình tiếp theo theo mẫu lặp nhé!",
+    "answers": ["🔺", "🟦", "⭐", "⚪"],
+    "correctAnswer": "🔺"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Mẫu lặp",
+    "question": "Mẫu lặp: 🔴 🟡 🔴 🟡 ?",
+    "voiceText": "Con chọn hình tiếp theo nhé!",
+    "answers": ["🔴", "🟡", "🟢", "🔵"],
+    "correctAnswer": "🔴"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Mẫu lặp",
+    "question": "Mẫu lặp: ⭐ ⚪ ⭐ ⚪ ?",
+    "voiceText": "Con chọn hình tiếp theo nhé!",
+    "answers": ["⭐", "⚪", "🔺", "🟦"],
+    "correctAnswer": "⭐"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Mẫu lặp",
+    "question": "Mẫu lặp: 🍎 🍌 🍎 🍌 ?",
+    "voiceText": "Con chọn trái cây tiếp theo nhé!",
+    "answers": ["🍎", "🍌", "🍇", "🍓"],
+    "correctAnswer": "🍎"
+  },
+
+  {
+    "type": "ghep_hinh",
+    "topic": "Hình khối",
+    "question": "Chọn hình KHỐI?",
+    "voiceText": "Con chọn hình khối nhé!",
+    "answers": ["🧊", "⬜", "⚪", "🔺"],
+    "correctAnswer": "🧊"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Hình khối",
+    "question": "Chọn hình VUÔNG?",
+    "voiceText": "Con chọn hình vuông nhé!",
+    "answers": ["⬜", "⚪", "🔺", "💠"],
+    "correctAnswer": "⬜"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Hình khối",
+    "question": "Chọn hình CHỮ NHẬT?",
+    "voiceText": "Con chọn hình chữ nhật nhé!",
+    "answers": ["▬", "⚪", "🔺", "⭐"],
+    "correctAnswer": "▬"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Hình khối",
+    "question": "Chọn hình THOI?",
+    "voiceText": "Con chọn hình thoi nhé!",
+    "answers": ["💠", "⚪", "⬜", "🔺"],
+    "correctAnswer": "💠"
+  },
+
+  {
+    "type": "ghep_hinh",
+    "topic": "Ghép đúng",
+    "question": "Vật gì đi với 🔑?",
+    "voiceText": "Chìa khóa đi với cái gì nhỉ?",
+    "answers": ["🚪", "🍎", "🎈", "🐱"],
+    "correctAnswer": "🚪"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Ghép đúng",
+    "question": "Vật gì đi với 🖍️?",
+    "voiceText": "Bút màu đi với cái gì nhỉ?",
+    "answers": ["📄", "🍎", "⚽", "🐶"],
+    "correctAnswer": "📄"
+  },
+  {
+    "type": "ghep_hinh",
+    "topic": "Ghép đúng",
+    "question": "Vật gì đi với 🍴?",
+    "voiceText": "Cái muỗng nĩa đi với cái gì nhỉ?",
+    "answers": ["🍽️", "📚", "🎈", "🚗"],
+    "correctAnswer": "🍽️"
+  }
+]

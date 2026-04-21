@@ -325,6 +325,7 @@ body{overflow:auto}
 </div>
 
 <script src="firebase.js"></script>
+<script src="../secrets/tts.config.js"></script>
 <script src="shared.js"></script>
 <script>
 /* ══════════════════════════════════════════
@@ -469,8 +470,10 @@ async function speakTeacher(text){
   if(teacherAudio){ teacherAudio.pause(); teacherAudio=null; }
   speechSynthesis.cancel();
 
-  const key   = localStorage.getItem('fpt_key');
-  const voice = localStorage.getItem('fpt_voice') || 'lannhi';
+  const keyFromConfig = (typeof window.__FPT_TTS_API_KEY__ === 'string') ? window.__FPT_TTS_API_KEY__.trim() : '';
+  const voiceFromConfig = (typeof window.__FPT_TTS_VOICE__ === 'string') ? window.__FPT_TTS_VOICE__.trim() : '';
+  const key   = keyFromConfig || localStorage.getItem('fpt_key') || '';
+  const voice = localStorage.getItem('fpt_voice') || voiceFromConfig || 'lannhi';
 
   if(key && !key.includes('YOUR_')){
     try{

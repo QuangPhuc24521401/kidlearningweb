@@ -5,8 +5,15 @@
 ═══════════════════════════════════════════════════ */
 
 /* ─── SETTINGS MODAL ─── */
-let fptKey   = localStorage.getItem('fpt_key')   || '';
-let fptVoice = localStorage.getItem('fpt_voice') || 'lannhi';
+const defaultFptKey = (typeof window !== 'undefined' && typeof window.__FPT_TTS_API_KEY__ === 'string')
+  ? window.__FPT_TTS_API_KEY__.trim()
+  : '';
+const defaultFptVoice = (typeof window !== 'undefined' && typeof window.__FPT_TTS_VOICE__ === 'string')
+  ? window.__FPT_TTS_VOICE__.trim()
+  : 'lannhi';
+
+let fptKey   = defaultFptKey || localStorage.getItem('fpt_key') || '';
+let fptVoice = localStorage.getItem('fpt_voice') || defaultFptVoice || 'lannhi';
 
 /* ─── THEME (light/dark/auto) ─── */
 let themePref = 'auto';

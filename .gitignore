@@ -1,3 +1,9 @@
 node_modules/
 .env
 .vercel/
+
+# Local secrets (do not commit)
+secrets/
+**/secrets/
+secrets/*.js
+**/secrets/*.js
