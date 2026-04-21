@@ -219,6 +219,58 @@
 .mentor-btn{width:100%;padding:18px 20px;border-radius:22px;font-size:20px}
 .mentor-btn .mentor-icon{font-size:30px;line-height:1}
 
+.mentor-cta-wrap{margin-top:14px}
+.mentor-cta{
+  width:100%;padding:18px 20px;border:none;border-radius:22px;cursor:pointer;
+  background:linear-gradient(145deg,#f093fb,#f5576c);
+  box-shadow:0 8px 0 #c0392b,0 14px 28px rgba(245,87,108,.3);
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;color:#fff;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1);
+}
+.mentor-cta-icon{font-size:32px;line-height:1}
+
+/* ═══════════ DESKTOP SCALE-UP (lớn hơn cho màn hình to) ═══════════ */
+@media (min-width:900px){
+  .menu-card{
+    padding:44px 48px 46px;
+    width:min(1320px, calc(100vw - 72px));
+    max-width:1320px;
+    border-radius:40px;
+  }
+  .menu-card h1{font-size:38px;margin-bottom:6px}
+  .menu-card .subtitle{font-size:17px;margin-bottom:22px}
+
+  .mascot-wrap{width:160px!important;height:auto!important}
+
+  .menu-grid{gap:20px;margin-top:18px}
+  .menu-item{
+    border-radius:32px;
+    padding:20px 22px 22px;
+  }
+  .mi-badge{font-size:13.5px;padding:6px 12px}
+  .mi-tag{font-size:28px}
+  .mi-title{font-size:21px;margin-top:10px}
+  .mi-sub{font-size:14.5px;margin-top:6px}
+
+  .logout-btn{font-size:17px;padding:12px 22px;border-radius:50px}
+
+  .mentor-cta-wrap{margin-top:20px}
+  .mentor-cta{padding:22px 24px;font-size:24px;border-radius:26px;gap:14px}
+  .mentor-cta-icon{font-size:38px}
+}
+
+/* Scale thêm chút cho màn hình rất rộng */
+@media (min-width:1400px){
+  .menu-card h1{font-size:42px}
+  .menu-card .subtitle{font-size:18px}
+  .mi-title{font-size:22px}
+  .mi-sub{font-size:15px}
+  .mi-tag{font-size:30px}
+  .mentor-cta{font-size:26px}
+  .mentor-cta-icon{font-size:42px}
+}
+
 @media (max-width:620px){
   .menu-card{width:calc(100vw - 28px);padding:26px 16px 18px}
   .menu-card h1{font-size:26px}

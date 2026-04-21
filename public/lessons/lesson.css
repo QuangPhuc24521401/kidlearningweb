@@ -18,7 +18,7 @@ body{
   color:var(--ink);
   display:flex;
   justify-content:center;
-  align-items:center;
+  align-items:safe center;
   padding:24px 16px;
   position:relative;
   overflow-x:hidden;
@@ -352,4 +352,40 @@ h2#question{
   .box{font-size:38px;border-radius:20px}
   .home-btn{width:46px;height:46px;font-size:22px}
   .star-box{padding:8px 14px;font-size:17px}
+}
+
+/* ═══════════ Desktop scale-up (màn hình lớn) ═══════════ */
+@media (min-width:900px){
+  .lesson-container{
+    width:min(980px,calc(100vw - 48px));
+    padding:72px 44px 36px;
+    border-radius:44px;
+  }
+  .lesson-container::before{border-radius:44px}
+
+  h2#question{font-size:30px;margin-top:14px;line-height:1.25}
+
+  .answers{
+    margin-top:22px;
+    gap:16px 22px;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    justify-items:stretch;
+  }
+  .box{
+    max-width:none;
+    aspect-ratio:auto;
+    height:clamp(110px, 18vh, 170px);
+    font-size:46px;
+    border-radius:26px;
+    padding:10px 16px;
+  }
+  .box:not(:has(> *)){font-size:clamp(22px,1.7vw,30px)}
+
+  #status{margin-top:16px}
+}
+
+@media (min-width:1400px){
+  .lesson-container{width:min(1120px,calc(100vw - 64px));padding:76px 52px 40px}
+  h2#question{font-size:34px}
+  .box{font-size:52px;height:clamp(130px, 19vh, 190px)}
 }
