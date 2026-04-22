@@ -92,6 +92,83 @@
     if(s) s.innerText = detail || "";
   }
 
+  /* ─── Phrase pools: đa dạng hoá phản hồi cho bé ─── */
+  var PRAISE_PHRASES = [
+    "Đúng rồi, giỏi lắm!",
+    "Tuyệt vời! Con trả lời đúng rồi.",
+    "Chính xác luôn, con siêu quá!",
+    "Hay lắm, con làm đúng rồi nè.",
+    "Chuẩn bài luôn, khen con nào!",
+    "Wow, con thông minh ghê!",
+    "Đúng rồi đấy, vỗ tay cho con!",
+    "Con trả lời rất tốt!",
+    "Giỏi quá đi mất, đúng rồi!",
+    "Ừ đúng rồi, con xuất sắc quá!"
+  ];
+  var GENTLE_WRONG_PHRASES = [
+    "Chưa đúng rồi, con thử lại nhé.",
+    "Gần đúng rồi, thử lại xem nào.",
+    "Ồ, chưa đúng đâu. Con xem lại nha.",
+    "Hmm, chưa chính xác. Cố lên nào con.",
+    "Chưa đúng, con nghĩ thêm chút xíu nhé.",
+    "Thử lại lần nữa nha, con làm được mà.",
+    "Ôi, chưa đúng rồi. Thử lại thôi.",
+    "Chưa đúng đâu con, mình thử lại nhé."
+  ];
+  var COMPLETE_PHRASES = [
+    "Bé giỏi lắm, con đã học xong rồi!",
+    "Hoan hô! Con học xong hết rồi đó.",
+    "Tuyệt vời! Con đã hoàn thành bài học.",
+    "Con giỏi quá, học hết rồi nè!"
+  ];
+  function pickRandom(arr){
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  /* ─── Sound effects: feedback tức thì qua Web Audio (không cần file) ─── */
+  var sfxCtx = null;
+  function getSfxCtx(){
+    if(sfxCtx) return sfxCtx;
+    try{
+      var C = window.AudioContext || window.webkitAudioContext;
+      if(C) sfxCtx = new C();
+    }catch(e){ sfxCtx = null; }
+    return sfxCtx;
+  }
+  function playTone(ctx, freq, startAt, dur, type, peak){
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.value = freq;
+    var p = (peak == null ? 0.18 : peak);
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.exponentialRampToValueAtTime(p, startAt + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + dur + 0.02);
+  }
+  function playSfx(kind){
+    var ctx = getSfxCtx(); if(!ctx) return;
+    if(ctx.state === "suspended"){ try{ ctx.resume(); }catch(e){} }
+    var t = ctx.currentTime;
+    if(kind === "correct"){
+      // Chime vui, 2 nốt đi lên (C6 → E6) rồi nốt cao bật lên (G6)
+      playTone(ctx, 1046.5, t,        0.14, "triangle", 0.20);
+      playTone(ctx, 1318.5, t + 0.11, 0.16, "triangle", 0.20);
+      playTone(ctx, 1568.0, t + 0.24, 0.22, "triangle", 0.18);
+    } else if(kind === "wrong"){
+      // "Ú ù" nhẹ, 2 nốt đi xuống, dùng sine êm tai
+      playTone(ctx, 523.25, t,        0.16, "sine",     0.16);
+      playTone(ctx, 392.00, t + 0.14, 0.22, "sine",     0.16);
+    } else if(kind === "done"){
+      // Fanfare nhỏ khi hoàn thành bài
+      playTone(ctx, 659.25, t,        0.15, "triangle", 0.20);
+      playTone(ctx, 783.99, t + 0.12, 0.15, "triangle", 0.20);
+      playTone(ctx, 1046.5, t + 0.24, 0.28, "triangle", 0.22);
+    }
+  }
+
   /* ─── TTS: FPT.AI với fallback Web Speech ─── */
   var ttsCache = {};
   var currentAudio = null;
@@ -105,9 +182,33 @@
     try{ return localStorage.getItem("fpt_key") || ""; }catch(e){ return ""; }
   }
   function getFptVoice(){
-    try{ return localStorage.getItem("fpt_voice") || window.__FPT_TTS_VOICE__ || "lannhi"; }
-    catch(e){ return "lannhi"; }
+    // banmai: nữ miền Bắc, giọng tự nhiên, năng động — hợp trẻ em hơn lannhi.
+    try{ return localStorage.getItem("fpt_voice") || window.__FPT_TTS_VOICE__ || "banmai"; }
+    catch(e){ return "banmai"; }
   }
+
+  /* Chọn giọng Việt "chuẩn" nhất từ Web Speech (fallback): ưu tiên các neural voice. */
+  var _cachedViVoice = null;
+  function pickBestViVoice(){
+    if(_cachedViVoice) return _cachedViVoice;
+    try{
+      var voices = window.speechSynthesis.getVoices() || [];
+      var vi = voices.filter(function(v){ return /^vi(\b|-)/i.test(v.lang || ""); });
+      if(!vi.length) return null;
+      // Ưu tiên các tên voice neural hoặc nữ: Microsoft HoaiMy, Google Tiếng Việt, An, Linh, Thu, HoaiMy.
+      var prefer = [/HoaiMy/i, /NamMinh/i, /Google.*Vietnamese/i, /Vietnamese.*Neural/i, /Linh/i, /Thu/i, /An/i];
+      for(var i=0;i<prefer.length;i++){
+        var hit = vi.find(function(v){ return prefer[i].test(v.name); });
+        if(hit){ _cachedViVoice = hit; return hit; }
+      }
+      _cachedViVoice = vi[0];
+      return _cachedViVoice;
+    }catch(e){ return null; }
+  }
+  try{
+    // Một số trình duyệt load voices bất đồng bộ.
+    window.speechSynthesis.onvoiceschanged = function(){ _cachedViVoice = null; pickBestViVoice(); };
+  }catch(e){}
 
   function showTtsPill(state, msg){
     var pill = document.getElementById("ttsStatus");
@@ -123,50 +224,69 @@
     }
   }
 
-  function speakFallback(text){
+  function speakFallback(text, opts){
     try{
       var u = new SpeechSynthesisUtterance(text);
-      u.lang = "vi-VN"; u.rate = 0.88; u.pitch = 1.1;
+      u.lang = "vi-VN";
+      // Tốc độ + cao độ khác nhau theo ngữ cảnh cho tự nhiên hơn.
+      u.rate  = (opts && typeof opts.rate  === "number") ? opts.rate  : 0.92;
+      u.pitch = (opts && typeof opts.pitch === "number") ? opts.pitch : 1.08;
+      var v = pickBestViVoice();
+      if(v) u.voice = v;
       showTtsPill("ok", "🔊 Web Speech (dự phòng)");
       speechSynthesis.cancel();
       speechSynthesis.speak(u);
     }catch(e){}
   }
 
-  function playAudioUrl(url, text){
+  function playAudioUrl(url, text, opts){
     currentAudio = new Audio(url);
+    // Thêm chút playbackRate nếu caller muốn lời khen/chê vui hơn một chút.
+    if(opts && typeof opts.playbackRate === "number"){
+      try{ currentAudio.playbackRate = opts.playbackRate; }catch(e){}
+    }
     currentAudio.onplay  = function(){ showTtsPill("ok", "🎙️ " + (text.length>20 ? text.slice(0,20)+"…" : text)); };
     currentAudio.onended = function(){ currentAudio = null; };
-    currentAudio.onerror = function(){ showTtsPill("error","Lỗi phát audio"); speakFallback(text); };
-    currentAudio.play().catch(function(){ speakFallback(text); });
+    currentAudio.onerror = function(){ showTtsPill("error","Lỗi phát audio"); speakFallback(text, opts); };
+    currentAudio.play().catch(function(){ speakFallback(text, opts); });
   }
 
-  function speak(rawText){
+  /**
+   * speak(text, opts)
+   *   opts.speed        : -3..3  (FPT.AI), ảnh hưởng tempo thật của giọng.
+   *   opts.playbackRate : số >0  (chỉ áp cho fallback/tái phát nhanh), 1 = bình thường.
+   *   opts.rate/pitch   : cho Web Speech fallback.
+   */
+  function speak(rawText, opts){
     var text = String(rawText || "").replace(/[\u{1F000}-\u{1FFFF}]/gu, "").replace(/[⭐✨💫🌟]/g,"").trim();
     if(!text) return;
+    opts = opts || {};
     if(currentAudio){ try{ currentAudio.pause(); }catch(e){} currentAudio = null; }
     try{ speechSynthesis.cancel(); }catch(e){}
 
     var key = getFptKey();
-    if(!key){ speakFallback(text); return; }
-    if(ttsCache[text]){ playAudioUrl(ttsCache[text], text); return; }
+    if(!key){ speakFallback(text, opts); return; }
+
+    var speed = (typeof opts.speed === "number") ? String(opts.speed) : "-1";
+    var voice = opts.voice || getFptVoice();
+    var cacheKey = voice + "|" + speed + "|" + text;
+    if(ttsCache[cacheKey]){ playAudioUrl(ttsCache[cacheKey], text, opts); return; }
 
     showTtsPill("loading", "Đang tải giọng FPT.AI...");
     var endpoints = [
       "https://api.fpt.ai/hmi/tts/v5",
       "https://corsproxy.io/?" + encodeURIComponent("https://api.fpt.ai/hmi/tts/v5")
     ];
-    var voice = getFptVoice();
 
     function tryNext(i){
       if(i >= endpoints.length){
         showTtsPill("error","Lỗi FPT.AI – dùng giọng dự phòng");
-        speakFallback(text);
+        speakFallback(text, opts);
         return;
       }
       fetch(endpoints[i], {
         method: "POST",
-        headers: { "api-key": key, "speed": "-1", "voice": voice, "Content-Type": "text/plain" },
+        headers: { "api-key": key, "speed": speed, "voice": voice, "Content-Type": "text/plain" },
         body: text
       })
       .then(function(res){ if(!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
@@ -174,8 +294,8 @@
         if(data.error) throw new Error("FPT: " + data.error);
         if(!data.async) throw new Error("Không có URL audio");
         setTimeout(function(){
-          ttsCache[text] = data.async;
-          playAudioUrl(data.async, text);
+          ttsCache[cacheKey] = data.async;
+          playAudioUrl(data.async, text, opts);
         }, 1400);
       })
       .catch(function(err){
@@ -184,6 +304,23 @@
       });
     }
     tryNext(0);
+  }
+
+  /* Các hàm tiện ích cho lời khen / lời động viên — có SFX + giọng nói đa dạng */
+  function reactCorrect(){
+    playSfx("correct");
+    // Khen: tốc độ bình thường (0), nghe vui và nhanh hơn câu hỏi.
+    speak(pickRandom(PRAISE_PHRASES), { speed: 0 });
+  }
+  function reactWrong(){
+    playSfx("wrong");
+    // Động viên: tốc độ bình thường (0), giọng nhẹ nhàng.
+    speak(pickRandom(GENTLE_WRONG_PHRASES), { speed: 0 });
+  }
+  function reactDone(){
+    playSfx("done");
+    // Câu kết thúc: chậm (-1) để trọn ý, thêm cảm xúc.
+    speak(pickRandom(COMPLETE_PHRASES), { speed: -1 });
   }
 
   function inferLessonTypeFromPathname(){
@@ -286,7 +423,7 @@
       var barEnd = document.getElementById("progressBar");
       if(barEnd) barEnd.style.width = "100%";
       if(status){ status.innerText = "Con giỏi quá! 🏆"; prettifyEmoji(status); }
-      speak("Bé giỏi lắm, con đã học xong rồi");
+      reactDone();
       launchConfetti();
       saveProgress();
       return;
@@ -294,7 +431,8 @@
 
     var lesson = lessons[currentIndex];
     if(questionEl){ questionEl.innerText = lesson.question; prettifyEmoji(questionEl); }
-    speak(lesson.voiceText || lesson.question);
+    // Câu hỏi đọc hơi chậm (-1) để bé nghe rõ.
+    speak(lesson.voiceText || lesson.question, { speed: -1 });
 
     if(topicEl){
       if(lesson.topic){
@@ -339,7 +477,7 @@
         if(ans === lesson.correctAnswer){
           div.classList.add("correct");
           if(status){ status.innerText = "✅ Đúng rồi!"; prettifyEmoji(status); }
-          speak("Đúng rồi, giỏi lắm");
+          reactCorrect();
           stars++;
           var starsEl = document.getElementById("stars");
           if(starsEl) starsEl.innerText = stars;
@@ -347,11 +485,11 @@
           setTimeout(function(){
             currentIndex++;
             showLesson();
-          }, 1200);
+          }, 1500);
         } else {
           div.classList.add("wrong");
           if(status){ status.innerText = "❌ Con thử lại nhé"; prettifyEmoji(status); }
-          speak("Sai rồi, con thử lại nhé");
+          reactWrong();
         }
       };
       container.appendChild(div);

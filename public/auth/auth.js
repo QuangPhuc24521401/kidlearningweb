@@ -124,7 +124,7 @@ async function handleRegister(e) {
 
     sessionStorage.setItem("auth:flash", JSON.stringify({
       type: "success",
-      message: `Tài khoản đã được tạo! Chúng tôi đã gửi email xác thực tới <b>${email}</b>. Vui lòng mở email và bấm vào đường link để kích hoạt trước khi đăng nhập.`
+      message: `Tài khoản đã được tạo! Chúng tôi đã gửi email xác thực tới <b>${email}</b>. Vui lòng mở email và bấm vào đường link để kích hoạt trước khi đăng nhập.<br><br>⚠️ Nếu không thấy trong hộp thư chính, hãy kiểm tra thư mục <b>Spam / Quảng cáo / Junk</b> và bấm <b>"Không phải spam"</b> để lần sau email về hộp thư chính nhé.`
     }));
     window.location.href = LOGIN_URL;
   } catch (error) {
@@ -184,7 +184,7 @@ async function resendVerification(email, password) {
       handleCodeInApp: false
     });
     await signOut(auth);
-    showNotice("success", `Đã gửi lại email xác thực tới <b>${email}</b>. Kiểm tra cả mục Spam nhé.`);
+    showNotice("success", `Đã gửi lại email xác thực tới <b>${email}</b>.<br>⚠️ Nhớ kiểm tra cả thư mục <b>Spam / Quảng cáo</b> nhé.`);
   } catch (error) {
     const msg = friendlyAuthError(error.code) || ("Không gửi lại được: " + error.message);
     showNotice("error", msg);
@@ -209,7 +209,7 @@ async function handleResetPassword(e) {
     });
     showNotice(
       "success",
-      `Đã gửi email đặt lại mật khẩu tới <b>${email}</b>. Hãy kiểm tra hộp thư (kể cả Spam) và làm theo hướng dẫn.`
+      `Đã gửi email đặt lại mật khẩu tới <b>${email}</b>.<br>⚠️ Nhớ kiểm tra cả thư mục <b>Spam / Quảng cáo / Junk</b> và làm theo hướng dẫn.`
     );
     document.getElementById("forgotForm")?.reset();
   } catch (error) {
