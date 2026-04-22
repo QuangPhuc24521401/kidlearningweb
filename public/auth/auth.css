@@ -2,61 +2,161 @@
 
 *{box-sizing:border-box}
 html,body{height:100%}
+
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg,#8fd3f4 0%, #84fab0 100%);
+  font-family: 'Nunito', Arial, sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: 'Nunito', Arial, sans-serif;
-  padding: 20px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 10%, #fff6b7 0%, transparent 40%),
+    radial-gradient(circle at 85% 15%, #ffd1f4 0%, transparent 45%),
+    linear-gradient(135deg, #a8e6ff 0%, #c2f0c2 50%, #fff0b3 100%);
 }
 
+/* ── Floating clouds decoration ── */
+.bg-clouds{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.bg-clouds .cloud{
+  position:absolute;
+  background:rgba(255,255,255,.85);
+  border-radius:60px;
+  filter:blur(.3px);
+  box-shadow:0 8px 30px rgba(100,149,237,.15);
+  animation:floatCloud linear infinite;
+}
+.bg-clouds .cloud::before,
+.bg-clouds .cloud::after{
+  content:"";
+  position:absolute;
+  background:inherit;
+  border-radius:50%;
+}
+.bg-clouds .c1{width:120px;height:36px;top:12%;left:-140px;animation-duration:38s}
+.bg-clouds .c1::before{width:50px;height:50px;top:-22px;left:18px}
+.bg-clouds .c1::after{width:36px;height:36px;top:-16px;left:60px}
+
+.bg-clouds .c2{width:160px;height:44px;top:70%;left:-180px;animation-duration:52s;animation-delay:-20s}
+.bg-clouds .c2::before{width:64px;height:64px;top:-28px;left:22px}
+.bg-clouds .c2::after{width:46px;height:46px;top:-20px;left:80px}
+
+.bg-clouds .c3{width:100px;height:30px;top:38%;left:-120px;animation-duration:44s;animation-delay:-8s}
+.bg-clouds .c3::before{width:42px;height:42px;top:-20px;left:14px}
+.bg-clouds .c3::after{width:30px;height:30px;top:-14px;left:50px}
+
+@keyframes floatCloud{
+  0%  {transform:translateX(0)}
+  100%{transform:translateX(calc(100vw + 240px))}
+}
+
+/* ── Floating dots / bubbles ── */
+.bg-dots{position:absolute;inset:0;pointer-events:none;z-index:0}
+.bg-dots i{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.25) 55%, transparent 70%);
+  box-shadow:inset 0 0 6px rgba(255,255,255,.4);
+  animation:floatDot 9s ease-in-out infinite;
+}
+.bg-dots i:nth-child(1){width:22px;height:22px;top:16%;left:10%;animation-delay:0s}
+.bg-dots i:nth-child(2){width:14px;height:14px;top:30%;right:12%;animation-delay:-2s}
+.bg-dots i:nth-child(3){width:28px;height:28px;bottom:20%;left:16%;animation-delay:-4s}
+.bg-dots i:nth-child(4){width:18px;height:18px;bottom:28%;right:14%;animation-delay:-5.5s}
+.bg-dots i:nth-child(5){width:12px;height:12px;top:58%;left:6%;animation-delay:-3s}
+.bg-dots i:nth-child(6){width:20px;height:20px;top:46%;right:7%;animation-delay:-6s}
+
+@keyframes floatDot{
+  0%,100%{transform:translateY(0);opacity:.7}
+  50%    {transform:translateY(-18px);opacity:1}
+}
+
+/* ── Main card ── */
 .auth-container {
-  background: rgba(255,255,255,.95);
-  backdrop-filter: blur(12px);
-  padding: 36px 32px;
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.15);
-  width: min(400px, 100%);
+  position: relative;
+  z-index: 1;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 28px 34px 34px;
+  border-radius: 28px;
+  box-shadow:
+    0 24px 60px rgba(30,64,175,.18),
+    0 4px 12px rgba(30,64,175,.08),
+    inset 0 1px 0 rgba(255,255,255,.9);
+  width: min(420px, 100%);
   text-align: center;
+  border: 2px solid rgba(255,255,255,.8);
+  animation: cardPop .55s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes cardPop{
+  0%  {opacity:0;transform:translateY(20px) scale(.94)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* ── Logo ── */
+.auth-logo{
+  display:block;
+  width: 220px;
+  max-width: 85%;
+  margin: 0 auto 4px;
+  animation: logoBob 4s ease-in-out infinite;
+  mix-blend-mode: multiply;
+  background: transparent;
+}
+@keyframes logoBob{
+  0%,100%{transform:translateY(0)}
+  50%    {transform:translateY(-6px)}
 }
 
 .auth-container h1 {
   font-family: 'Baloo 2', cursive;
-  font-size: 32px;
-  color: #2d3748;
-  margin: 0 0 8px;
+  font-size: 26px;
+  color: #1565C0;
+  margin: 6px 0 4px;
+  font-weight: 800;
+  letter-spacing: .3px;
 }
 
-.auth-container p {
-  color: #718096;
-  margin: 0 0 24px;
-  font-size: 15px;
+.auth-container .subtitle {
+  color: #6b7a90;
+  margin: 0 0 22px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
+/* ── Inputs ── */
 .input-group {
   display: flex;
   align-items: center;
-  background: white;
-  border-radius: 14px;
+  background: #f7faff;
+  border-radius: 16px;
   padding: 0 14px;
   margin: 12px 0;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #e4ecf7;
   transition: all .2s;
-  height: 52px;
+  height: 54px;
 }
 
 .input-group:focus-within {
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 4px rgba(76,175,80,.15);
+  border-color: #4fc3f7;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(79,195,247,.18);
 }
 
 .input-group .icon {
-  font-size: 20px;
-  margin-right: 10px;
+  width: 22px;
+  height: 22px;
+  margin-right: 12px;
+  color: #7aa3d9;
+  flex-shrink: 0;
+  transition: color .2s;
 }
+.input-group:focus-within .icon{ color:#2196F3 }
+.input-group .icon svg{ display:block; width:100%; height:100% }
 
 .input-group input {
   flex: 1;
@@ -65,19 +165,34 @@ body {
   font-size: 16px;
   background: transparent;
   font-family: inherit;
-  color: #2d3748;
+  font-weight: 600;
+  color: #1f2937;
   height: 100%;
 }
 
+.input-group input::placeholder{ color:#94a3b8; font-weight:500 }
+
+/* Password eye toggle */
+.toggle-eye{
+  background:none;border:none;cursor:pointer;
+  padding:6px;border-radius:8px;
+  color:#94a3b8;transition:background .15s, color .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.toggle-eye:hover{background:#eef4ff;color:#2196F3}
+.toggle-eye svg{width:20px;height:20px;display:block}
+
+/* ── Remember checkbox ── */
 .remember {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 10px 2px 18px;
+  margin: 8px 2px 18px;
   font-size: 14px;
-  color: #4a5568;
+  color: #475569;
   user-select: none;
   cursor: pointer;
+  font-weight: 600;
 }
 
 .remember input[type="checkbox"] {
@@ -87,38 +202,140 @@ body {
   cursor: pointer;
 }
 
+/* ── Buttons ── */
 .btn {
   width: 100%;
   padding: 14px;
   border: none;
-  border-radius: 14px;
+  border-radius: 16px;
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   font-family: 'Baloo 2', cursive;
-  transition: transform .15s, box-shadow .15s;
+  transition: transform .15s, box-shadow .15s, filter .15s;
+  letter-spacing: .4px;
 }
 
 .btn.main {
-  background: linear-gradient(145deg, #4CAF50, #2e7d32);
+  background: linear-gradient(145deg, #FF9A44 0%, #FF6B35 55%, #E63946 100%);
   color: white;
-  box-shadow: 0 6px 0 #1b5e20, 0 10px 18px rgba(76,175,80,.3);
+  box-shadow:
+    0 6px 0 #b23317,
+    0 12px 22px rgba(255,107,53,.35);
 }
 
-.btn.main:hover { transform: translateY(-2px); }
-.btn.main:active { transform: translateY(3px); box-shadow: 0 2px 0 #1b5e20; }
+.btn.main:hover { transform: translateY(-2px); filter:brightness(1.05) }
+.btn.main:active{ transform: translateY(4px); box-shadow: 0 2px 0 #b23317, 0 4px 8px rgba(255,107,53,.25) }
 
+.btn.main.blue{
+  background: linear-gradient(145deg, #4FC3F7 0%, #2196F3 55%, #1565C0 100%);
+  box-shadow:
+    0 6px 0 #0d47a1,
+    0 12px 22px rgba(33,150,243,.35);
+}
+.btn.main.blue:active{ box-shadow: 0 2px 0 #0d47a1, 0 4px 8px rgba(33,150,243,.25) }
+
+.btn.main.green{
+  background: linear-gradient(145deg, #81C784 0%, #4CAF50 55%, #2E7D32 100%);
+  box-shadow:
+    0 6px 0 #1b5e20,
+    0 12px 22px rgba(76,175,80,.35);
+}
+.btn.main.green:active{ box-shadow: 0 2px 0 #1b5e20, 0 4px 8px rgba(76,175,80,.25) }
+
+/* ── Divider ── */
+.divider{
+  display:flex;align-items:center;gap:10px;
+  margin:18px 0 6px;
+  color:#94a3b8;font-size:12px;font-weight:700;letter-spacing:1px;
+}
+.divider::before,.divider::after{
+  content:"";flex:1;height:2px;
+  background:linear-gradient(to right, transparent, #e2e8f0, transparent);
+  border-radius:2px;
+}
+
+/* ── Links ── */
 .links {
-  margin-top: 18px;
+  margin-top: 16px;
   font-size: 14px;
-  color: #718096;
+  color: #64748b;
+  font-weight: 600;
 }
 
 .links a {
   text-decoration: none;
   color: #2196F3;
-  font-weight: 700;
+  font-weight: 800;
   padding: 0 6px;
+  transition: color .15s;
 }
 
-.links a:hover { text-decoration: underline; }
+.links a:hover { color:#0d47a1; text-decoration: underline; }
+
+/* ── Password strength hint ── */
+.hint{
+  font-size:12px;color:#94a3b8;text-align:left;
+  margin:-4px 4px 8px;font-weight:600;
+}
+
+/* ── Inline notice (success / error / warn / info) ── */
+.auth-notice{
+  display:none;
+  text-align:left;
+  font-size:13.5px;
+  font-weight:600;
+  line-height:1.5;
+  padding:12px 14px;
+  border-radius:12px;
+  margin:0 0 14px;
+  border:1.5px solid transparent;
+  animation: noticeIn .25s ease-out;
+}
+.auth-notice.success{
+  background:#e8f7ee;color:#1b5e20;border-color:#a5d6a7;
+}
+.auth-notice.error{
+  background:#fdecec;color:#b71c1c;border-color:#ef9a9a;
+}
+.auth-notice.warn{
+  background:#fff7e0;color:#8a6d00;border-color:#ffd76a;
+}
+.auth-notice.info{
+  background:#e7f3fe;color:#0d47a1;border-color:#90caf9;
+}
+.auth-notice a{
+  color:inherit;
+  text-decoration:underline;
+  font-weight:800;
+}
+.auth-notice a:hover{ filter:brightness(.85) }
+@keyframes noticeIn{
+  0%  {opacity:0;transform:translateY(-6px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+
+/* ── Loading state for buttons ── */
+.btn.is-loading{
+  opacity:.75;cursor:wait;
+  position:relative;
+  pointer-events:none;
+}
+.btn.is-loading::after{
+  content:"";
+  position:absolute;right:16px;top:50%;
+  width:16px;height:16px;
+  border-radius:50%;
+  border:2.5px solid rgba(255,255,255,.4);
+  border-top-color:#fff;
+  transform:translateY(-50%);
+  animation:btnSpin .7s linear infinite;
+}
+@keyframes btnSpin{ to{ transform:translateY(-50%) rotate(360deg) } }
+
+/* ── Tablet/mobile ── */
+@media (max-width: 480px){
+  .auth-container{ padding: 22px 22px 26px; border-radius:22px }
+  .auth-logo{ width: 170px }
+  .auth-container h1{ font-size: 22px }
+}

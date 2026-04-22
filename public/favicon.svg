@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" width="260" height="260">
+  <defs>
+    <linearGradient id="rainbowK" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FF3FA4"/>
+      <stop offset="20%"  stop-color="#FF6B35"/>
+      <stop offset="40%"  stop-color="#FFD600"/>
+      <stop offset="60%"  stop-color="#4CAF50"/>
+      <stop offset="80%"  stop-color="#00BCD4"/>
+      <stop offset="100%" stop-color="#2979FF"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1565C033"/>
+    </filter>
+  </defs>
+
+  <!-- Circle background -->
+  <circle cx="130" cy="130" r="120" fill="#EEF4FF"/>
+
+  <!-- Rainbow arc on top -->
+  <path d="M50,145 A100,100 0 0,1 210,145" fill="none" stroke="url(#rainbowK)" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- Letter K -->
+  <text
+    x="130" y="185"
+    text-anchor="middle"
+    font-family="'Arial Rounded MT Bold', Arial Black, sans-serif"
+    font-size="130"
+    font-weight="900"
+    fill="#1565C0"
+    filter="url(#shadow)"
+  >K</text>
+</svg>

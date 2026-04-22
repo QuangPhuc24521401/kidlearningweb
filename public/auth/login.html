@@ -4,24 +4,54 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Đăng nhập · Kid Learning</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
+<div class="bg-clouds" aria-hidden="true">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+</div>
+<div class="bg-dots" aria-hidden="true">
+  <i></i><i></i><i></i><i></i><i></i><i></i>
+</div>
+
 <form id="loginForm" class="auth-container" autocomplete="on" action="#" method="post" novalidate>
-  <h1>Kid Learning</h1>
-  <p>Dành cho phụ huynh</p>
+  <img class="auth-logo" src="../logo.png" alt="Kid Learning">
+  <h1>Chào mừng trở lại</h1>
+  <p class="subtitle">Đăng nhập để cùng bé học nhé</p>
+
+  <div id="authNotice" class="auth-notice" role="alert"></div>
 
   <div class="input-group">
-    <span class="icon">📧</span>
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="2.5"/>
+        <path d="M3.5 6.5 12 13l8.5-6.5"/>
+      </svg>
+    </span>
     <input id="emailInput" name="email" type="email" autocomplete="username"
-           placeholder="Email" required>
+           placeholder="Email của bạn" required>
   </div>
 
   <div class="input-group">
-    <span class="icon">🔑</span>
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="10" width="16" height="11" rx="2.5"/>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+      </svg>
+    </span>
     <input id="passwordInput" name="password" type="password" autocomplete="current-password"
            placeholder="Mật khẩu" required>
+    <button type="button" class="toggle-eye" aria-label="Hiện/ẩn mật khẩu"
+            onclick="(function(b){var i=document.getElementById('passwordInput');var open=i.type==='password';i.type=open?'text':'password';b.innerHTML=open?eyeOff:eyeOn})(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
   </div>
 
   <label class="remember">
@@ -31,12 +61,18 @@
 
   <button class="btn main" id="loginBtn" type="submit">Đăng nhập</button>
 
+  <div class="divider">HOẶC</div>
+
   <div class="links">
-    <a href="register.html">Đăng ký</a> |
+    Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a><br>
     <a href="forgot.html">Quên mật khẩu?</a>
   </div>
 </form>
 
+<script>
+  const eyeOn = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const eyeOff = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-6.5 0-10-7-10-7a18.9 18.9 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c6.5 0 10 7 10 7a18.9 18.9 0 0 1-3.22 4.28"/><path d="M1 1l22 22"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>`;
+</script>
 <script type="module" src="./auth.js"></script>
 </body>
 </html>

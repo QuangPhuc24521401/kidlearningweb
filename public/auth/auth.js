@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
@@ -12,6 +13,8 @@ import {
 
 const HOME_URL   = "../index.html";
 const LOGIN_URL  = "./login.html";
+
+/* ───────────────────────── Helpers ───────────────────────── */
 
 function getRememberChoice() {
   const el = document.getElementById("rememberMe");
@@ -34,61 +37,197 @@ async function storeBrowserCredential(email, password) {
   } catch (e) { /* ignored */ }
 }
 
-async function handleRegister(e) {
-  e?.preventDefault?.();
-  const email = document.getElementById("emailInput")?.value?.trim();
-  const password = document.getElementById("passwordInput")?.value;
-  if (!email || !password) return alert("⚠️ Vui lòng nhập đầy đủ thông tin");
+/**
+ * Show an inline notice inside the form. Types: "success" | "error" | "warn" | "info".
+ * If an `extraHtml` is provided, it's appended (used for "Resend email" link).
+ */
+function showNotice(type, message, extraHtml) {
+  const box = document.getElementById("authNotice");
+  if (!box) { alert(message); return; }
+  box.className = "auth-notice " + type;
+  box.innerHTML = `<span>${message}</span>` + (extraHtml || "");
+  box.style.display = "block";
+}
+function clearNotice() {
+  const box = document.getElementById("authNotice");
+  if (box) { box.style.display = "none"; box.innerHTML = ""; }
+}
 
-  await applyPersistence();
-  try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    await storeBrowserCredential(email, password);
-    window.location.href = HOME_URL;
-  } catch (error) {
-    if (error.code === "auth/email-already-in-use") alert("❌ Email này đã được đăng ký.");
-    else if (error.code === "auth/weak-password")   alert("⚠️ Mật khẩu phải từ 6 ký tự trở lên.");
-    else if (error.code === "auth/invalid-email")   alert("❌ Email không hợp lệ.");
-    else alert("❌ Lỗi: " + error.message);
+/** Toggle loading state on the submit button. */
+function setLoading(btnId, loading, labelWhenLoading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (loading) {
+    btn.dataset.origText = btn.dataset.origText || btn.textContent;
+    btn.disabled = true;
+    btn.classList.add("is-loading");
+    btn.textContent = labelWhenLoading || "Đang xử lý...";
+  } else {
+    btn.disabled = false;
+    btn.classList.remove("is-loading");
+    if (btn.dataset.origText) btn.textContent = btn.dataset.origText;
   }
 }
+
+/** Friendly Firebase error mapping. */
+function friendlyAuthError(code) {
+  switch (code) {
+    case "auth/email-already-in-use":  return "Email này đã được đăng ký rồi.";
+    case "auth/invalid-email":         return "Email không hợp lệ.";
+    case "auth/weak-password":         return "Mật khẩu phải từ 6 ký tự trở lên.";
+    case "auth/missing-password":      return "Vui lòng nhập mật khẩu.";
+    case "auth/invalid-credential":
+    case "auth/wrong-password":        return "Sai email hoặc mật khẩu.";
+    case "auth/user-not-found":        return "Tài khoản không tồn tại.";
+    case "auth/user-disabled":         return "Tài khoản đã bị khóa.";
+    case "auth/too-many-requests":     return "Bạn thử quá nhiều lần. Vui lòng đợi vài phút.";
+    case "auth/network-request-failed":return "Không có kết nối mạng, thử lại nhé.";
+    default:                           return null;
+  }
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+/* ───────────────────────── Register ───────────────────────── */
+
+async function handleRegister(e) {
+  e?.preventDefault?.();
+  clearNotice();
+
+  const email      = document.getElementById("emailInput")?.value?.trim();
+  const password   = document.getElementById("passwordInput")?.value;
+  const confirm    = document.getElementById("confirmPasswordInput")?.value;
+
+  if (!email || !password) return showNotice("error", "Vui lòng nhập đầy đủ email và mật khẩu.");
+  if (!isValidEmail(email)) return showNotice("error", "Email không hợp lệ.");
+  if (password.length < 6)  return showNotice("error", "Mật khẩu phải có ít nhất 6 ký tự.");
+  if (password !== confirm) return showNotice("error", "Xác nhận mật khẩu không khớp.");
+
+  setLoading("registerBtn", true, "Đang tạo tài khoản...");
+  await applyPersistence();
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await storeBrowserCredential(email, password);
+
+    try {
+      await sendEmailVerification(cred.user, {
+        url: window.location.origin + "/auth/login.html",
+        handleCodeInApp: false
+      });
+    } catch (ve) {
+      console.warn("sendEmailVerification failed:", ve);
+    }
+
+    await signOut(auth);
+
+    sessionStorage.setItem("auth:flash", JSON.stringify({
+      type: "success",
+      message: `Tài khoản đã được tạo! Chúng tôi đã gửi email xác thực tới <b>${email}</b>. Vui lòng mở email và bấm vào đường link để kích hoạt trước khi đăng nhập.`
+    }));
+    window.location.href = LOGIN_URL;
+  } catch (error) {
+    const msg = friendlyAuthError(error.code) || ("Lỗi: " + error.message);
+    showNotice("error", msg);
+  } finally {
+    setLoading("registerBtn", false);
+  }
+}
+
+/* ───────────────────────── Login ───────────────────────── */
 
 async function handleLogin(e) {
   e?.preventDefault?.();
-  const email = document.getElementById("emailInput")?.value?.trim();
-  const password = document.getElementById("passwordInput")?.value;
-  if (!email || !password) return alert("⚠️ Vui lòng nhập đầy đủ thông tin");
+  clearNotice();
 
+  const email    = document.getElementById("emailInput")?.value?.trim();
+  const password = document.getElementById("passwordInput")?.value;
+
+  if (!email || !password) return showNotice("error", "Vui lòng nhập đầy đủ email và mật khẩu.");
+  if (!isValidEmail(email)) return showNotice("error", "Email không hợp lệ.");
+
+  setLoading("loginBtn", true, "Đang đăng nhập...");
   await applyPersistence();
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+
+    if (!cred.user.emailVerified) {
+      await signOut(auth);
+      showNotice(
+        "warn",
+        `Email <b>${email}</b> chưa được xác thực. Vui lòng mở hộp thư và bấm vào link xác thực.`,
+        ` <a href="#" id="resendVerifyLink">Gửi lại email xác thực</a>`
+      );
+      document.getElementById("resendVerifyLink")?.addEventListener("click", async (ev) => {
+        ev.preventDefault();
+        await resendVerification(email, password);
+      });
+      return;
+    }
+
     await storeBrowserCredential(email, password);
     window.location.href = HOME_URL;
   } catch (error) {
-    if (error.code === "auth/invalid-credential")     alert("❌ Sai email hoặc mật khẩu.");
-    else if (error.code === "auth/user-not-found")    alert("❌ Tài khoản không tồn tại.");
-    else if (error.code === "auth/wrong-password")    alert("❌ Mật khẩu không đúng.");
-    else if (error.code === "auth/too-many-requests") alert("⚠️ Đăng nhập sai quá nhiều lần. Thử lại sau.");
-    else alert("❌ Lỗi: " + error.message);
+    const msg = friendlyAuthError(error.code) || ("Lỗi: " + error.message);
+    showNotice("error", msg);
+  } finally {
+    setLoading("loginBtn", false);
   }
 }
 
-async function handleResetPassword(e) {
-  e?.preventDefault?.();
-  const email = document.getElementById("emailInput")?.value?.trim();
-  if (!email) return alert("⚠️ Vui lòng nhập email");
+async function resendVerification(email, password) {
   try {
-    await sendPasswordResetEmail(auth, email);
-    alert("📧 Đã gửi email đặt lại mật khẩu!");
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(cred.user, {
+      url: window.location.origin + "/auth/login.html",
+      handleCodeInApp: false
+    });
+    await signOut(auth);
+    showNotice("success", `Đã gửi lại email xác thực tới <b>${email}</b>. Kiểm tra cả mục Spam nhé.`);
   } catch (error) {
-    alert("❌ Lỗi: " + error.message);
+    const msg = friendlyAuthError(error.code) || ("Không gửi lại được: " + error.message);
+    showNotice("error", msg);
   }
 }
+
+/* ───────────────────────── Forgot password ───────────────────────── */
+
+async function handleResetPassword(e) {
+  e?.preventDefault?.();
+  clearNotice();
+
+  const email = document.getElementById("emailInput")?.value?.trim();
+  if (!email)               return showNotice("error", "Vui lòng nhập email.");
+  if (!isValidEmail(email)) return showNotice("error", "Email không hợp lệ.");
+
+  setLoading("resetBtn", true, "Đang gửi email...");
+  try {
+    await sendPasswordResetEmail(auth, email, {
+      url: window.location.origin + "/auth/login.html",
+      handleCodeInApp: false
+    });
+    showNotice(
+      "success",
+      `Đã gửi email đặt lại mật khẩu tới <b>${email}</b>. Hãy kiểm tra hộp thư (kể cả Spam) và làm theo hướng dẫn.`
+    );
+    document.getElementById("forgotForm")?.reset();
+  } catch (error) {
+    const msg = friendlyAuthError(error.code) || ("Lỗi: " + error.message);
+    showNotice("error", msg);
+  } finally {
+    setLoading("resetBtn", false);
+  }
+}
+
+/* ───────────────────────── Logout (exported) ───────────────────────── */
 
 export async function logout() {
   await signOut(auth);
   window.location.href = LOGIN_URL;
 }
+
+/* ───────────────────────── Init ───────────────────────── */
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loginForm")   ?.addEventListener("submit", handleLogin);
@@ -99,11 +238,20 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("registerBtn")?.addEventListener("click", handleRegister);
   document.getElementById("resetBtn")   ?.addEventListener("click", handleResetPassword);
 
+  try {
+    const flash = sessionStorage.getItem("auth:flash");
+    if (flash) {
+      sessionStorage.removeItem("auth:flash");
+      const { type, message } = JSON.parse(flash);
+      showNotice(type || "info", message);
+    }
+  } catch (e) { /* ignore */ }
+
   const path = location.pathname.toLowerCase();
   const isLoginOrRegister = path.endsWith("/login.html") || path.endsWith("/register.html");
   if (isLoginOrRegister) {
     onAuthStateChanged(auth, user => {
-      if (user) window.location.href = HOME_URL;
+      if (user && user.emailVerified) window.location.href = HOME_URL;
     });
   }
 });
