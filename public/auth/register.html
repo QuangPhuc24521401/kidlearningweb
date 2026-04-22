@@ -18,206 +18,79 @@
   <i></i><i></i><i></i><i></i><i></i><i></i>
 </div>
 
-<div class="auth-container">
+<form id="registerForm" class="auth-container" autocomplete="on" action="#" method="post" novalidate>
   <img class="auth-logo" src="../logo.png" alt="Kid Learning">
   <h1>Tạo tài khoản mới</h1>
   <p class="subtitle">Cùng bé bắt đầu hành trình học tập</p>
 
   <div id="authNotice" class="auth-notice" role="alert"></div>
 
-  <!-- Tab switcher: Email / Phone -->
-  <div class="auth-tabs" role="tablist" aria-label="Phương thức đăng ký">
-    <button type="button" class="auth-tab is-active" id="tabEmail" role="tab" aria-selected="true" aria-controls="registerForm">
+  <div class="input-group">
+    <span class="icon" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="5" width="18" height="14" rx="2.5"/>
         <path d="M3.5 6.5 12 13l8.5-6.5"/>
       </svg>
-      Email
-    </button>
-    <button type="button" class="auth-tab" id="tabPhone" role="tab" aria-selected="false" aria-controls="phoneRegisterForm">
+    </span>
+    <input id="emailInput" name="email" type="email" autocomplete="username"
+           placeholder="Email của bạn" required>
+  </div>
+
+  <div class="input-group">
+    <span class="icon" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="7" y="2" width="10" height="20" rx="2.5"/>
-        <path d="M11 18h2"/>
+        <rect x="4" y="10" width="16" height="11" rx="2.5"/>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
       </svg>
-      Số điện thoại
+    </span>
+    <input id="passwordInput" name="password" type="password" autocomplete="new-password"
+           placeholder="Mật khẩu (ít nhất 6 ký tự)" required minlength="6">
+    <button type="button" class="toggle-eye" aria-label="Hiện/ẩn mật khẩu"
+            onclick="(function(b){var i=document.getElementById('passwordInput');var open=i.type==='password';i.type=open?'text':'password';b.innerHTML=open?eyeOff:eyeOn})(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
     </button>
   </div>
 
-  <!-- ── Email pane ── -->
-  <form id="registerForm" class="auth-pane is-active" autocomplete="on" action="#" method="post" novalidate
-        role="tabpanel" aria-labelledby="tabEmail">
-    <div class="input-group">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="5" width="18" height="14" rx="2.5"/>
-          <path d="M3.5 6.5 12 13l8.5-6.5"/>
-        </svg>
-      </span>
-      <input id="emailInput" name="email" type="email" autocomplete="username"
-             placeholder="Email của bạn" required>
-    </div>
+  <div class="input-group">
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="10" width="16" height="11" rx="2.5"/>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        <path d="M9 15.5l2 2 4-4"/>
+      </svg>
+    </span>
+    <input id="confirmPasswordInput" name="confirm_password" type="password" autocomplete="new-password"
+           placeholder="Xác nhận mật khẩu" required minlength="6">
+    <button type="button" class="toggle-eye" aria-label="Hiện/ẩn mật khẩu"
+            onclick="(function(b){var i=document.getElementById('confirmPasswordInput');var open=i.type==='password';i.type=open?'text':'password';b.innerHTML=open?eyeOff:eyeOn})(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+  </div>
+  <div class="hint">Dùng ít nhất 6 ký tự, kết hợp chữ và số cho an toàn hơn. Chúng tôi sẽ gửi email xác thực tới địa chỉ của bạn.</div>
 
-    <div class="input-group">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="10" width="16" height="11" rx="2.5"/>
-          <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
-        </svg>
-      </span>
-      <input id="passwordInput" name="password" type="password" autocomplete="new-password"
-             placeholder="Mật khẩu (ít nhất 6 ký tự)" required minlength="6">
-      <button type="button" class="toggle-eye" aria-label="Hiện/ẩn mật khẩu"
-              onclick="(function(b){var i=document.getElementById('passwordInput');var open=i.type==='password';i.type=open?'text':'password';b.innerHTML=open?eyeOff:eyeOn})(this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-      </button>
-    </div>
+  <label class="remember">
+    <input id="rememberMe" type="checkbox" checked>
+    <span>Ghi nhớ đăng nhập</span>
+  </label>
 
-    <div class="input-group">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="10" width="16" height="11" rx="2.5"/>
-          <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
-          <path d="M9 15.5l2 2 4-4"/>
-        </svg>
-      </span>
-      <input id="confirmPasswordInput" name="confirm_password" type="password" autocomplete="new-password"
-             placeholder="Xác nhận mật khẩu" required minlength="6">
-      <button type="button" class="toggle-eye" aria-label="Hiện/ẩn mật khẩu"
-              onclick="(function(b){var i=document.getElementById('confirmPasswordInput');var open=i.type==='password';i.type=open?'text':'password';b.innerHTML=open?eyeOff:eyeOn})(this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-      </button>
-    </div>
-    <div class="hint">Dùng ít nhất 6 ký tự, kết hợp chữ và số cho an toàn hơn. Chúng tôi sẽ gửi email xác thực tới địa chỉ của bạn.</div>
-
-    <label class="remember">
-      <input id="rememberMe" type="checkbox" checked>
-      <span>Ghi nhớ đăng nhập</span>
-    </label>
-
-    <button class="btn main green" id="registerBtn" type="submit">Tạo tài khoản</button>
-  </form>
-
-  <!-- ── Phone pane ── -->
-  <form id="phoneRegisterForm" class="auth-pane" autocomplete="on" action="#" method="post" novalidate
-        role="tabpanel" aria-labelledby="tabPhone" hidden>
-    <!-- Step 1: Enter phone -->
-    <div id="phoneStep1">
-      <div class="input-group phone-group">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="7" y="2" width="10" height="20" rx="2.5"/>
-            <path d="M11 18h2"/>
-          </svg>
-        </span>
-        <select id="phoneCountryCode" class="country-code" aria-label="Mã quốc gia">
-          <option value="+84" selected>VN +84</option>
-          <option value="+1">US +1</option>
-          <option value="+44">UK +44</option>
-          <option value="+81">JP +81</option>
-          <option value="+82">KR +82</option>
-          <option value="+86">CN +86</option>
-          <option value="+65">SG +65</option>
-          <option value="+66">TH +66</option>
-          <option value="+60">MY +60</option>
-          <option value="+63">PH +63</option>
-          <option value="+62">ID +62</option>
-          <option value="+91">IN +91</option>
-          <option value="+33">FR +33</option>
-          <option value="+49">DE +49</option>
-          <option value="+61">AU +61</option>
-        </select>
-        <input id="phoneInput" name="phone" type="tel" autocomplete="tel-national"
-               placeholder="912 345 678" inputmode="numeric" required>
-      </div>
-      <div class="hint">Chúng tôi sẽ gửi mã xác thực 6 chữ số qua SMS tới SIM điện thoại của bạn.</div>
-
-      <div id="recaptchaContainer" class="recaptcha-slot"></div>
-
-      <label class="remember">
-        <input id="rememberMePhone" type="checkbox" checked>
-        <span>Ghi nhớ đăng nhập</span>
-      </label>
-
-      <button class="btn main blue" id="sendOtpBtn" type="submit">Gửi mã OTP qua SMS</button>
-    </div>
-
-    <!-- Step 2: Enter OTP -->
-    <div id="phoneStep2" hidden>
-      <div class="otp-hint">
-        Đã gửi mã 6 chữ số tới <b id="sentPhoneLabel"></b>.
-        <a href="#" id="changePhoneLink">Đổi số</a>
-      </div>
-
-      <div class="input-group">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 12l2 2 4-4"/>
-            <circle cx="12" cy="12" r="10"/>
-          </svg>
-        </span>
-        <input id="otpInput" name="otp" type="text" autocomplete="one-time-code"
-               placeholder="Mã OTP 6 chữ số" inputmode="numeric" maxlength="6"
-               pattern="\d{6}" class="otp-input" required>
-      </div>
-
-      <div class="otp-resend">
-        <span id="resendTimer">Gửi lại sau <b>60</b>s</span>
-        <a href="#" id="resendOtpLink" class="is-disabled">Gửi lại mã</a>
-      </div>
-
-      <button class="btn main green" id="verifyOtpBtn" type="submit">Xác thực và tạo tài khoản</button>
-    </div>
-  </form>
+  <button class="btn main green" id="registerBtn" type="submit">Tạo tài khoản</button>
 
   <div class="divider">HOẶC</div>
 
   <div class="links">
     Đã có tài khoản? <a href="login.html">Đăng nhập</a>
   </div>
-</div>
+</form>
 
 <script>
   const eyeOn = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
   const eyeOff = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-6.5 0-10-7-10-7a18.9 18.9 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c6.5 0 10 7 10 7a18.9 18.9 0 0 1-3.22 4.28"/><path d="M1 1l22 22"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>`;
-
-  // Tab switcher runs independently of the Firebase module so it always works.
-  (function setupTabs(){
-    function setActiveTab(which){
-      var tabEmail  = document.getElementById("tabEmail");
-      var tabPhone  = document.getElementById("tabPhone");
-      var paneEmail = document.getElementById("registerForm") || document.getElementById("loginForm");
-      var panePhone = document.getElementById("phoneRegisterForm") || document.getElementById("phoneLoginForm");
-      if(!tabEmail || !tabPhone || !paneEmail || !panePhone) return;
-      var isPhone = which === "phone";
-      tabEmail.classList.toggle("is-active", !isPhone);
-      tabPhone.classList.toggle("is-active",  isPhone);
-      tabEmail.setAttribute("aria-selected", String(!isPhone));
-      tabPhone.setAttribute("aria-selected", String(isPhone));
-      paneEmail.classList.toggle("is-active", !isPhone);
-      panePhone.classList.toggle("is-active",  isPhone);
-      paneEmail.hidden =  isPhone;
-      panePhone.hidden = !isPhone;
-      var notice = document.getElementById("authNotice");
-      if(notice){ notice.style.display="none"; notice.innerHTML=""; }
-    }
-    function bind(){
-      var te = document.getElementById("tabEmail");
-      var tp = document.getElementById("tabPhone");
-      if(te) te.addEventListener("click", function(){ setActiveTab("email"); });
-      if(tp) tp.addEventListener("click", function(){ setActiveTab("phone"); });
-    }
-    if(document.readyState === "loading"){
-      document.addEventListener("DOMContentLoaded", bind);
-    } else {
-      bind();
-    }
-  })();
 </script>
 <script type="module" src="./auth.js"></script>
 </body>
