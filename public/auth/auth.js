@@ -8,7 +8,9 @@ import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
 } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 
 const HOME_URL   = "../index.html";
@@ -17,7 +19,7 @@ const LOGIN_URL  = "./login.html";
 /* ───────────────────────── Helpers ───────────────────────── */
 
 function getRememberChoice() {
-  const el = document.getElementById("rememberMe");
+  const el = document.getElementById("rememberMe") || document.getElementById("rememberMePhone");
   return el ? !!el.checked : true;
 }
 
@@ -82,6 +84,13 @@ function friendlyAuthError(code) {
     case "auth/user-disabled":         return "Tài khoản đã bị khóa.";
     case "auth/too-many-requests":     return "Bạn thử quá nhiều lần. Vui lòng đợi vài phút.";
     case "auth/network-request-failed":return "Không có kết nối mạng, thử lại nhé.";
+    case "auth/invalid-phone-number":  return "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.";
+    case "auth/missing-phone-number":  return "Vui lòng nhập số điện thoại.";
+    case "auth/quota-exceeded":        return "Hệ thống đã gửi quá nhiều SMS hôm nay. Vui lòng thử lại sau.";
+    case "auth/invalid-verification-code": return "Mã OTP không đúng. Vui lòng kiểm tra lại.";
+    case "auth/code-expired":          return "Mã OTP đã hết hạn. Hãy bấm “Gửi lại mã”.";
+    case "auth/missing-verification-code": return "Vui lòng nhập mã OTP.";
+    case "auth/captcha-check-failed":  return "Xác thực reCAPTCHA thất bại. Hãy thử lại.";
     default:                           return null;
   }
 }
@@ -220,6 +229,174 @@ async function handleResetPassword(e) {
   }
 }
 
+/* ───────────────────────── Phone registration (SMS OTP) ───────────────────────── */
+
+let recaptchaVerifier = null;
+let confirmationResult = null;
+let resendTimerId = null;
+
+/** Lazily create a single invisible reCAPTCHA verifier bound to #sendOtpBtn. */
+function ensureRecaptcha() {
+  if (recaptchaVerifier) return recaptchaVerifier;
+  recaptchaVerifier = new RecaptchaVerifier(auth, "recaptchaContainer", {
+    size: "invisible",
+    callback: () => { /* solved, continue */ },
+    "expired-callback": () => {
+      showNotice("warn", "Phiên xác thực đã hết hạn. Vui lòng thử gửi lại mã.");
+    }
+  });
+  return recaptchaVerifier;
+}
+
+/** Reset verifier so the user can try again. */
+async function resetRecaptcha() {
+  try {
+    if (recaptchaVerifier) {
+      recaptchaVerifier.clear();
+    }
+  } catch (e) { /* ignore */ }
+  recaptchaVerifier = null;
+}
+
+/** Normalize VN-style input (e.g. "0912345678") to E.164 with the chosen country code. */
+function normalizePhone(countryCode, raw) {
+  if (!raw) return "";
+  let digits = raw.replace(/[^\d]/g, "");
+  if (countryCode === "+84" && digits.startsWith("0")) {
+    digits = digits.replace(/^0+/, "");
+  }
+  return countryCode + digits;
+}
+
+function isValidE164(num) {
+  return /^\+[1-9]\d{6,14}$/.test(num);
+}
+
+function startResendTimer(seconds = 60) {
+  const span = document.getElementById("resendTimer");
+  const link = document.getElementById("resendOtpLink");
+  if (!span || !link) return;
+  link.classList.add("is-disabled");
+  let remaining = seconds;
+  span.innerHTML = `Gửi lại sau <b>${remaining}</b>s`;
+  span.style.display = "";
+  clearInterval(resendTimerId);
+  resendTimerId = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearInterval(resendTimerId);
+      span.style.display = "none";
+      link.classList.remove("is-disabled");
+    } else {
+      span.innerHTML = `Gửi lại sau <b>${remaining}</b>s`;
+    }
+  }, 1000);
+}
+
+async function handleSendOtp(e) {
+  e?.preventDefault?.();
+  clearNotice();
+
+  const code  = document.getElementById("phoneCountryCode")?.value || "+84";
+  const raw   = document.getElementById("phoneInput")?.value?.trim();
+  const phone = normalizePhone(code, raw);
+
+  if (!raw)                 return showNotice("error", "Vui lòng nhập số điện thoại.");
+  if (!isValidE164(phone))  return showNotice("error", "Số điện thoại không hợp lệ. Hãy kiểm tra mã quốc gia và số.");
+
+  setLoading("sendOtpBtn", true, "Đang gửi OTP...");
+  await applyPersistence();
+
+  try {
+    const verifier = ensureRecaptcha();
+    confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
+
+    document.getElementById("sentPhoneLabel").textContent = phone;
+    document.getElementById("phoneStep1").hidden = true;
+    document.getElementById("phoneStep2").hidden = false;
+    document.getElementById("otpInput")?.focus();
+    startResendTimer(60);
+    showNotice("success", `Đã gửi mã OTP tới <b>${phone}</b>. Hãy nhập mã bạn nhận được qua SMS.`);
+  } catch (error) {
+    console.warn("signInWithPhoneNumber failed:", error);
+    await resetRecaptcha();
+    const msg = friendlyAuthError(error.code) || ("Không gửi được OTP: " + error.message);
+    showNotice("error", msg);
+  } finally {
+    setLoading("sendOtpBtn", false);
+  }
+}
+
+async function handleVerifyOtp(e) {
+  e?.preventDefault?.();
+  clearNotice();
+
+  const otp = document.getElementById("otpInput")?.value?.trim();
+  if (!otp || !/^\d{6}$/.test(otp)) return showNotice("error", "Mã OTP phải gồm đúng 6 chữ số.");
+  if (!confirmationResult)          return showNotice("error", "Phiên OTP đã hết hạn. Vui lòng gửi lại mã.");
+
+  setLoading("verifyOtpBtn", true, "Đang xác thực...");
+  try {
+    const cred = await confirmationResult.confirm(otp);
+
+    sessionStorage.setItem("auth:flash", JSON.stringify({
+      type: "success",
+      message: `Xác thực thành công! Chào mừng bạn tới Kid Learning.`
+    }));
+    window.location.href = HOME_URL;
+    void cred;
+  } catch (error) {
+    const msg = friendlyAuthError(error.code) || ("Xác thực thất bại: " + error.message);
+    showNotice("error", msg);
+  } finally {
+    setLoading("verifyOtpBtn", false);
+  }
+}
+
+async function handleResendOtp(e) {
+  e?.preventDefault?.();
+  const link = document.getElementById("resendOtpLink");
+  if (link?.classList.contains("is-disabled")) return;
+  await resetRecaptcha();
+  confirmationResult = null;
+  document.getElementById("phoneStep2").hidden = true;
+  document.getElementById("phoneStep1").hidden = false;
+  handleSendOtp(new Event("submit"));
+}
+
+function handleChangePhone(e) {
+  e?.preventDefault?.();
+  clearInterval(resendTimerId);
+  confirmationResult = null;
+  document.getElementById("otpInput").value = "";
+  document.getElementById("phoneStep2").hidden = true;
+  document.getElementById("phoneStep1").hidden = false;
+  clearNotice();
+}
+
+/* ───────────────────────── Tab switcher (Email / Phone) ───────────────────────── */
+
+function setActiveTab(which) {
+  const tabEmail  = document.getElementById("tabEmail");
+  const tabPhone  = document.getElementById("tabPhone");
+  const paneEmail = document.getElementById("registerForm") || document.getElementById("loginForm");
+  const panePhone = document.getElementById("phoneRegisterForm") || document.getElementById("phoneLoginForm");
+  if (!tabEmail || !tabPhone || !paneEmail || !panePhone) return;
+
+  const isPhone = which === "phone";
+  tabEmail.classList.toggle("is-active", !isPhone);
+  tabPhone.classList.toggle("is-active",  isPhone);
+  tabEmail.setAttribute("aria-selected", String(!isPhone));
+  tabPhone.setAttribute("aria-selected", String(isPhone));
+
+  paneEmail.classList.toggle("is-active", !isPhone);
+  panePhone.classList.toggle("is-active",  isPhone);
+  paneEmail.hidden =  isPhone;
+  panePhone.hidden = !isPhone;
+
+  clearNotice();
+}
+
 /* ───────────────────────── Logout (exported) ───────────────────────── */
 
 export async function logout() {
@@ -229,14 +406,29 @@ export async function logout() {
 
 /* ───────────────────────── Init ───────────────────────── */
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("loginForm")   ?.addEventListener("submit", handleLogin);
-  document.getElementById("registerForm")?.addEventListener("submit", handleRegister);
-  document.getElementById("forgotForm")  ?.addEventListener("submit", handleResetPassword);
+function initAuthUi() {
+  document.getElementById("loginForm")        ?.addEventListener("submit", handleLogin);
+  document.getElementById("registerForm")     ?.addEventListener("submit", handleRegister);
+  document.getElementById("forgotForm")       ?.addEventListener("submit", handleResetPassword);
+  const phoneForm = document.getElementById("phoneRegisterForm")
+                 || document.getElementById("phoneLoginForm");
+  phoneForm?.addEventListener("submit", (e) => {
+    const step2 = document.getElementById("phoneStep2");
+    if (step2 && !step2.hidden) {
+      handleVerifyOtp(e);
+    } else {
+      handleSendOtp(e);
+    }
+  });
 
-  document.getElementById("loginBtn")   ?.addEventListener("click", handleLogin);
-  document.getElementById("registerBtn")?.addEventListener("click", handleRegister);
-  document.getElementById("resetBtn")   ?.addEventListener("click", handleResetPassword);
+  document.getElementById("loginBtn")    ?.addEventListener("click", handleLogin);
+  document.getElementById("registerBtn") ?.addEventListener("click", handleRegister);
+  document.getElementById("resetBtn")    ?.addEventListener("click", handleResetPassword);
+  document.getElementById("changePhoneLink")?.addEventListener("click", handleChangePhone);
+  document.getElementById("resendOtpLink")  ?.addEventListener("click", handleResendOtp);
+
+  document.getElementById("tabEmail")?.addEventListener("click", () => setActiveTab("email"));
+  document.getElementById("tabPhone")?.addEventListener("click", () => setActiveTab("phone"));
 
   try {
     const flash = sessionStorage.getItem("auth:flash");
@@ -251,7 +443,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const isLoginOrRegister = path.endsWith("/login.html") || path.endsWith("/register.html");
   if (isLoginOrRegister) {
     onAuthStateChanged(auth, user => {
-      if (user && user.emailVerified) window.location.href = HOME_URL;
+      // Email users must verify their email before reaching home.
+      // Phone users are considered verified as soon as OTP is confirmed.
+      if (!user) return;
+      const providers = (user.providerData || []).map(p => p.providerId);
+      const hasPhone  = providers.includes("phone");
+      if (user.emailVerified || hasPhone) window.location.href = HOME_URL;
     });
   }
-});
+}
+
+// Module scripts are deferred: DOMContentLoaded may already have fired by the
+// time this file finishes loading. Handle both cases so listeners always bind.
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initAuthUi);
+} else {
+  initAuthUi();
+}
