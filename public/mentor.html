@@ -610,14 +610,23 @@ function _getStudentInfo(){
   return { name: name || 'Bé học sinh', email, uid };
 }
 
+// Jitsi server miễn phí, KHÔNG cần moderator đăng nhập (khác meet.jit.si).
+// Nếu server này lỗi, có thể đổi sang: meet.element.io, meet.calyx.net.
+const JITSI_HOST = 'meet.ffmuc.net';
+
 function callRealTeacher(){
   ROOM_NAME = getRoomName(); // refresh in case parent đổi mã lớp
   const overlay = document.getElementById('jitsiOverlay');
   const frame   = document.getElementById('jitsiFrame');
   const student = _getStudentInfo();
 
-  // Mở Jitsi ngay lập tức
-  frame.src = `https://meet.jit.si/${ROOM_NAME}#userInfo.displayName=%22${encodeURIComponent(student.name)}%22&config.startWithVideoMuted=false&config.startWithAudioMuted=false`;
+  // Mở Jitsi ngay lập tức. prejoinPageEnabled=false để vào phòng luôn không hỏi tên.
+  frame.src = `https://${JITSI_HOST}/${ROOM_NAME}` +
+    `#userInfo.displayName=%22${encodeURIComponent(student.name)}%22` +
+    `&config.prejoinPageEnabled=false` +
+    `&config.startWithVideoMuted=false` +
+    `&config.startWithAudioMuted=false` +
+    `&config.disableModeratorIndicator=true`;
   overlay.classList.add('open');
 
   // Báo cho giáo viên qua Firestore (realtime)

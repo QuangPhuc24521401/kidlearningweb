@@ -632,11 +632,21 @@ function toggleCall(){
   if(callOpen) endCall(); else startCall(currentRoom);
 }
 
+// Jitsi server miễn phí KHÔNG cần moderator login (khác meet.jit.si).
+// Phải khớp với JITSI_HOST trong mentor.html để cả 2 vào cùng phòng.
+const JITSI_HOST = 'meet.ffmuc.net';
+
 function startCall(room){
   currentRoom = room || currentRoom;
   const frame = document.getElementById('jitsiFrame');
   const wrap  = document.getElementById('jitsiWrap');
-  frame.src = `https://meet.jit.si/${currentRoom}#userInfo.displayName="Cô Giáo Mai"&config.startWithVideoMuted=false`;
+  const teacherName = localStorage.getItem('userDisplayName') || 'Cô Giáo';
+  frame.src = `https://${JITSI_HOST}/${currentRoom}` +
+    `#userInfo.displayName=%22${encodeURIComponent(teacherName)}%22` +
+    `&config.prejoinPageEnabled=false` +
+    `&config.startWithVideoMuted=false` +
+    `&config.startWithAudioMuted=false` +
+    `&config.disableModeratorIndicator=true`;
   wrap.classList.add('open');
   document.getElementById('callLabel').textContent = 'Kết thúc cuộc gọi';
   document.getElementById('callIcon').textContent = '⏹️';
