@@ -228,6 +228,9 @@ body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(1
         <span id="callLabel">Vào phòng học ngay</span>
       </button>
       <div style="font-family:'Nunito',sans-serif;font-size:13px;color:#9ca3af;text-align:center">Jitsi Meet — miễn phí, không cần cài app</div>
+      <div style="background:#fff8e1;color:#8a6d00;padding:10px 14px;margin-top:10px;border-radius:10px;font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:600">
+        💡 <b>Lần đầu</b> mở phòng: bấm <b>Log-in</b> → <b>Continue with Google</b> trong Jitsi để trở thành moderator. Sau đó cuộc gọi tự chạy. <a href="#" onclick="(function(){var f=document.getElementById('jitsiFrame'); if(f && f.src) window.open(f.src,'_blank');})();return false;" style="color:#1565C0;font-weight:800">Mở tab mới ↗</a>
+      </div>
       <div id="jitsiWrap"><iframe id="jitsiFrame" allow="camera; microphone; fullscreen; display-capture"></iframe></div>
     </div>
   </div>
@@ -632,9 +635,11 @@ function toggleCall(){
   if(callOpen) endCall(); else startCall(currentRoom);
 }
 
-// Jitsi server miễn phí KHÔNG cần moderator login (khác meet.jit.si).
 // Phải khớp với JITSI_HOST trong mentor.html để cả 2 vào cùng phòng.
-const JITSI_HOST = 'meet.ffmuc.net';
+// meet.jit.si là server duy nhất ổn định cho phép nhúng iframe.
+// Yêu cầu: 1 trong 2 bên (giáo viên hoặc bé) cần bấm "Log-in" → Google
+// để trở thành moderator lần đầu. Sau đó cuộc gọi chạy bình thường.
+const JITSI_HOST = 'meet.jit.si';
 
 function startCall(room){
   currentRoom = room || currentRoom;
