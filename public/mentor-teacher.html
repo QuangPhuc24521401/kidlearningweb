@@ -93,6 +93,10 @@ body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(1
 .notif-text{font-family:'Nunito',sans-serif;font-size:14px;color:#166534;font-weight:700}
 .notif-time{font-family:'Nunito',sans-serif;font-size:12px;color:#9ca3af}
 .join-small{border:none;background:linear-gradient(135deg,#43e97b,#38f9d7);color:#1a4d2e;border-radius:10px;padding:8px 14px;font-family:'Baloo 2',cursive;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap}
+@keyframes pulseRing{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,152,0,.55)}
+  50%    {box-shadow:0 0 0 10px rgba(255,152,0,0)}
+}
 
 /* ── PROGRESS REPORT ── */
 .report-filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
@@ -404,22 +408,203 @@ function loadHistory(){
 }
 
 /* ════════════════════════════════════════
-   PANEL 2 — NOTIFS
+   PANEL 2 — NOTIFS (Firestore realtime)
 ════════════════════════════════════════ */
-function loadNotifs(){
+let _callsUnsub = null;       // hàm hủy listener Firestore
+let _knownCallIds = new Set(); // để biết cuộc nào "mới" → reo chuông
+let _firstSnapshot = true;     // snapshot đầu tiên không reo chuông (load lịch sử)
+let _ringtoneCtx = null;
+let _ringtoneOsc = null;
+let _ringtoneInterval = null;
+
+/* Tạo chuông reo bằng Web Audio (không cần file âm thanh) */
+function _playRingtone(){
+  try{
+    if(!_ringtoneCtx){
+      _ringtoneCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const ctx = _ringtoneCtx;
+    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
+    function ding(at){
+      // 2 nốt chuông: A5 + E6
+      [880, 1318.5].forEach((freq, i)=>{
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        const start = at + i*0.12;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.4);
+      });
+    }
+    const t0 = ctx.currentTime;
+    ding(t0);
+    ding(t0 + 0.6);
+  }catch(e){ console.warn('[ringtone]', e); }
+}
+function _startRingtoneLoop(){
+  if(_ringtoneInterval) return;
+  _playRingtone();
+  _ringtoneInterval = setInterval(_playRingtone, 2200);
+}
+function _stopRingtoneLoop(){
+  if(_ringtoneInterval){ clearInterval(_ringtoneInterval); _ringtoneInterval = null; }
+}
+
+function _renderCalls(calls){
   const list = document.getElementById('notifList');
-  const notifs = getNotifs().reverse();
-  if(!notifs.length){ list.innerHTML='<div class="empty">Chưa có cuộc gọi nào</div>'; return; }
-  list.innerHTML = notifs.slice(0,8).map(n=>{
-    const t = new Date(n.time).toLocaleTimeString('vi-VN');
-    return `<div class="notif-item">
-      <div>
-        <div class="notif-text">📲 ${n.msg||'Bé đang gọi!'}</div>
-        <div class="notif-time">Phòng: ${n.room} • ${t}</div>
-      </div>
-      <button class="join-small" onclick="joinRoom('${n.room}')">Vào ngay</button>
-    </div>`;
-  }).join('');
+  if(!list) return;
+
+  const ringing = calls.filter(c => c.status === 'ringing');
+  const recent  = calls.filter(c => c.status !== 'ringing').slice(0, 5);
+
+  // Bật/tắt chuông reo theo có cuộc gọi đang đến hay không
+  if(ringing.length > 0) _startRingtoneLoop();
+  else                   _stopRingtoneLoop();
+
+  if(!calls.length){
+    list.innerHTML = '<div class="empty">Chưa có cuộc gọi nào</div>';
+    return;
+  }
+
+  let html = '';
+  if(ringing.length){
+    html += ringing.map(c => {
+      const t = c.createdAt ? new Date(c.createdAt).toLocaleTimeString('vi-VN') : '';
+      return `<div class="notif-item" style="background:#fff3e0;border-color:#ffb74d;animation:pulseRing 1s ease-in-out infinite">
+        <div>
+          <div class="notif-text">🔔 <b>${_esc(c.studentName)}</b> đang gọi!</div>
+          <div class="notif-time">Phòng: ${_esc(c.room)} • ${t}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="join-small" style="background:linear-gradient(135deg,#43e97b,#10b981)" onclick="answerCall('${c.id}','${_esc(c.room)}')">📞 Trả lời</button>
+          <button class="join-small" style="background:linear-gradient(135deg,#94a3b8,#64748b)" onclick="declineCall('${c.id}')">✖ Bỏ qua</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  if(recent.length){
+    html += '<div style="margin-top:10px;font-family:Nunito,sans-serif;font-size:12px;color:#94a3b8;font-weight:700">Gần đây</div>';
+    html += recent.map(c => {
+      const t = c.createdAt ? new Date(c.createdAt).toLocaleTimeString('vi-VN') : '';
+      const icon = c.status === 'answered' ? '✅' : (c.status === 'ended' ? '☎️' : '✖');
+      return `<div class="notif-item" style="opacity:.7">
+        <div>
+          <div class="notif-text">${icon} ${_esc(c.studentName)}</div>
+          <div class="notif-time">${c.status} • ${t}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  list.innerHTML = html;
+}
+
+function _esc(s){ return String(s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c]); }
+
+function startCallsListener(classCode){
+  if(_callsUnsub){ try{ _callsUnsub(); }catch(e){} _callsUnsub = null; }
+  if(!firebase.firestore){ console.warn('Firestore not loaded'); return; }
+  if(!classCode){ classCode = (localStorage.getItem('classRoom') || 'LOPA2024').toUpperCase(); }
+
+  _firstSnapshot = true;
+  _knownCallIds = new Set();
+  _callsUnsub = firebase.firestore()
+    .collection('classes').doc(classCode)
+    .collection('calls')
+    .orderBy('createdAt', 'desc')
+    .limit(30)
+    .onSnapshot(function(snap){
+      const calls = [];
+      const newRingingIds = [];
+      snap.forEach(function(d){
+        const data = d.data() || {};
+        calls.push({
+          id: d.id,
+          studentName: data.studentName || 'Bé',
+          studentEmail: data.studentEmail || '',
+          room: data.room || ('KidLearning-CoGiao-' + classCode),
+          status: data.status || 'ringing',
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate().getTime() : null
+        });
+        if(data.status === 'ringing' && !_knownCallIds.has(d.id)){
+          newRingingIds.push(d.id);
+        }
+        _knownCallIds.add(d.id);
+      });
+      _renderCalls(calls);
+
+      // Nếu có cuộc gọi mới (sau lần load đầu tiên) → tab title nháy
+      if(!_firstSnapshot && newRingingIds.length){
+        _flashTitle('🔔 Bé đang gọi!');
+      }
+      _firstSnapshot = false;
+    }, function(err){
+      console.error('[startCallsListener]', err);
+      const list = document.getElementById('notifList');
+      if(list) list.innerHTML = '<div class="empty" style="color:#b91c1c">Lỗi tải cuộc gọi: ' + (err.message||err.code||err) + '</div>';
+    });
+}
+
+/* Nháy tiêu đề tab cho user thấy có thông báo dù tab ẩn */
+let _origTitle = null, _flashInt = null;
+function _flashTitle(msg){
+  if(!_origTitle) _origTitle = document.title;
+  if(_flashInt) clearInterval(_flashInt);
+  let on = false;
+  _flashInt = setInterval(()=>{
+    document.title = on ? _origTitle : msg;
+    on = !on;
+  }, 800);
+  // Tự dừng khi user focus lại tab
+  window.addEventListener('focus', _stopFlashTitle, { once: true });
+}
+function _stopFlashTitle(){
+  if(_flashInt){ clearInterval(_flashInt); _flashInt = null; }
+  if(_origTitle) document.title = _origTitle;
+}
+
+function answerCall(callId, room){
+  // Đánh dấu đã trả lời
+  const classCode = (localStorage.getItem('classRoom') || 'LOPA2024').toUpperCase();
+  try{
+    firebase.firestore()
+      .collection('classes').doc(classCode)
+      .collection('calls').doc(callId)
+      .set({
+        status: 'answered',
+        answeredAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+  }catch(e){ console.warn(e); }
+  _stopRingtoneLoop();
+  _stopFlashTitle();
+  // Chuyển sang tab Video Call và tham gia phòng
+  switchTab(3);
+  setTimeout(function(){ startCall(room); }, 300);
+}
+
+function declineCall(callId){
+  const classCode = (localStorage.getItem('classRoom') || 'LOPA2024').toUpperCase();
+  try{
+    firebase.firestore()
+      .collection('classes').doc(classCode)
+      .collection('calls').doc(callId)
+      .set({
+        status: 'declined',
+        endedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+  }catch(e){ console.warn(e); }
+  _stopRingtoneLoop();
+  _stopFlashTitle();
+}
+
+/* Hàm cũ giữ tương thích: gọi lại listener khi user bấm refresh thủ công */
+function loadNotifs(){
+  const code = (localStorage.getItem('classRoom') || 'LOPA2024').toUpperCase();
+  startCallsListener(code);
 }
 
 /* ════════════════════════════════════════
@@ -541,7 +726,20 @@ currentRoom = 'KidLearning-CoGiao-' + classRoom;
 
 seedDemo();
 loadAll();
-setInterval(loadNotifs, 15000);
+
+/* Realtime listener cuộc gọi từ Firestore — start ngay khi Firebase auth ready */
+function _bootCallsListener(){
+  try{
+    if(typeof firebase !== 'undefined' && firebase.auth && firebase.firestore){
+      firebase.auth().onAuthStateChanged(function(user){
+        if(!user) return;
+        const code = (localStorage.getItem('classRoom') || 'LOPA2024').toUpperCase();
+        startCallsListener(code);
+      });
+    }
+  }catch(e){ console.warn('[bootCallsListener]', e); }
+}
+_bootCallsListener();
 </script>
 </body>
 </html>

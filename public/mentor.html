@@ -10,6 +10,7 @@
 <script>document.documentElement.style.visibility='hidden';</script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
 body{overflow:auto}
 
@@ -318,6 +319,17 @@ body{overflow:auto}
 
     <div class="divider"><span>— hoặc gặp trực tiếp —</span></div>
 
+    <!-- Lớp của bé -->
+    <div style="display:flex;gap:8px;align-items:center;margin:6px 0 10px;flex-wrap:wrap">
+      <span style="font-family:'Nunito',sans-serif;font-size:13px;color:#475569;font-weight:700">🏫 Mã lớp của bé:</span>
+      <input id="classRoomInput" type="text"
+             style="flex:1;min-width:120px;padding:8px 12px;border:2px solid #cbd5e1;border-radius:10px;font-family:'Courier New',monospace;font-weight:700;text-transform:uppercase;outline:none"
+             placeholder="VD: LOPA2024">
+      <button onclick="saveClassRoom()" type="button"
+              style="background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-family:'Baloo 2',cursive;font-weight:800;font-size:13px;cursor:pointer">💾 Lưu</button>
+    </div>
+    <div id="classRoomMsg" style="font-family:'Nunito',sans-serif;font-size:12px;color:#64748b;margin:0 0 10px;min-height:16px"></div>
+
     <!-- Call real teacher -->
     <button class="call-btn" onclick="callRealTeacher()">
       <span class="call-icon">📹</span>
@@ -347,8 +359,50 @@ setTimeout(()=>{document.documentElement.style.visibility='';}, 4000);
    AI CÔ GIÁO ENGINE
 ══════════════════════════════════════════ */
 
-// Tên phòng Jitsi — mỗi lớp có phòng riêng
-const ROOM_NAME = 'KidLearning-CoGiao-' + (localStorage.getItem('classRoom') || 'LopA');
+// Tên phòng Jitsi — mỗi lớp có phòng riêng. Tính toán động vì user có thể đổi mã lớp.
+function getClassRoomCode(){
+  return (localStorage.getItem('classRoom') || 'LOPA2024').toUpperCase();
+}
+function getRoomName(){
+  return 'KidLearning-CoGiao-' + getClassRoomCode();
+}
+let ROOM_NAME = getRoomName();
+
+/* ── Mã lớp UI ── */
+function _showClassRoomMsg(msg, isError){
+  const el = document.getElementById('classRoomMsg');
+  if(!el) return;
+  el.textContent = msg || '';
+  el.style.color = isError ? '#b91c1c' : '#16a34a';
+}
+function loadClassRoomUI(){
+  const input = document.getElementById('classRoomInput');
+  if(input) input.value = getClassRoomCode();
+  _showClassRoomMsg('Phòng hiện tại: ' + getRoomName(), false);
+}
+function saveClassRoom(){
+  const input = document.getElementById('classRoomInput');
+  if(!input) return;
+  const code = input.value.trim().replace(/\s+/g,'').toUpperCase();
+  if(code.length < 3){
+    _showClassRoomMsg('Mã lớp phải dài ít nhất 3 ký tự (vd LOPA2024)', true);
+    return;
+  }
+  localStorage.setItem('classRoom', code);
+  ROOM_NAME = getRoomName();
+  _showClassRoomMsg('✅ Đã lưu mã lớp: ' + code, false);
+  // Đồng bộ vào Firestore users/{uid}.classRoom (best-effort)
+  try{
+    const u = firebase.auth().currentUser;
+    if(u && firebase.firestore){
+      firebase.firestore().collection('users').doc(u.uid).set(
+        { classRoom: code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      ).catch(function(err){ console.warn('[saveClassRoom] firestore', err); });
+    }
+  }catch(e){}
+}
+window.addEventListener('load', loadClassRoomUI);
 
 /* ── Speech recognition ── */
 let recognition = null;
@@ -539,14 +593,56 @@ function saveHistory(q, a){
 }
 
 /* ── Jitsi video call ── */
+let _activeCallDocRef = null;     // Firestore doc ref của cuộc gọi đang diễn ra
+let _activeCallId     = null;
+
+function _getStudentInfo(){
+  let name = '', email = '', uid = '';
+  try{
+    name  = localStorage.getItem('userDisplayName') || '';
+    const u = firebase.auth().currentUser;
+    if(u){
+      email = u.email || '';
+      uid   = u.uid   || '';
+      if(!name) name = u.displayName || u.email || 'Bé học sinh';
+    }
+  }catch(e){}
+  return { name: name || 'Bé học sinh', email, uid };
+}
+
 function callRealTeacher(){
+  ROOM_NAME = getRoomName(); // refresh in case parent đổi mã lớp
   const overlay = document.getElementById('jitsiOverlay');
   const frame   = document.getElementById('jitsiFrame');
-  // Jitsi Meet nhúng trực tiếp — miễn phí, không cần tài khoản
-  frame.src = `https://meet.jit.si/${ROOM_NAME}#userInfo.displayName="Bé Học Sinh"&config.startWithVideoMuted=false&config.startWithAudioMuted=false`;
+  const student = _getStudentInfo();
+
+  // Mở Jitsi ngay lập tức
+  frame.src = `https://meet.jit.si/${ROOM_NAME}#userInfo.displayName=%22${encodeURIComponent(student.name)}%22&config.startWithVideoMuted=false&config.startWithAudioMuted=false`;
   overlay.classList.add('open');
 
-  // Lưu thông báo để giáo viên xem
+  // Báo cho giáo viên qua Firestore (realtime)
+  const classCode = getClassRoomCode();
+  try{
+    if(firebase.firestore){
+      const ref = firebase.firestore()
+        .collection('classes').doc(classCode)
+        .collection('calls').doc();
+      _activeCallDocRef = ref;
+      _activeCallId     = ref.id;
+      ref.set({
+        studentName:  student.name,
+        studentEmail: student.email,
+        studentUid:   student.uid,
+        room:         ROOM_NAME,
+        status:       'ringing',
+        createdAt:    firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(err){
+        console.warn('[callRealTeacher] firestore write failed:', err);
+      });
+    }
+  }catch(e){ console.warn('[callRealTeacher]', e); }
+
+  // Lưu localStorage làm fallback (cho trường hợp cùng máy)
   try{
     const notif = JSON.parse(localStorage.getItem('teacher_notif')||'[]');
     notif.push({ time: new Date().toISOString(), room: ROOM_NAME, msg:'Bé đang gọi video!' });
@@ -559,6 +655,20 @@ function endCall(){
   const frame   = document.getElementById('jitsiFrame');
   frame.src = '';
   overlay.classList.remove('open');
+
+  // Đánh dấu cuộc gọi đã kết thúc trên Firestore
+  if(_activeCallDocRef){
+    try{
+      _activeCallDocRef.set({
+        status: 'ended',
+        endedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(function(err){
+        console.warn('[endCall] firestore update failed:', err);
+      });
+    }catch(e){}
+    _activeCallDocRef = null;
+    _activeCallId = null;
+  }
 }
 
 /* ── Init greeting ── */
