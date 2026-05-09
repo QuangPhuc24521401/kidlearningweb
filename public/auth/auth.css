@@ -333,9 +333,67 @@ body {
 }
 @keyframes btnSpin{ to{ transform:translateY(-50%) rotate(360deg) } }
 
+/* ═══ Role tabs (Phụ huynh / Giáo viên) ═══ */
+.role-tabs{
+  display:flex;
+  gap:6px;
+  padding:5px;
+  background:#eef4ff;
+  border-radius:14px;
+  margin: 6px 0 18px;
+}
+.role-tab{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:11px 10px;
+  background:transparent;
+  border:none;
+  border-radius:10px;
+  font-family:'Baloo 2', cursive;
+  font-weight:800;
+  font-size:14.5px;
+  color:#64748b;
+  cursor:pointer;
+  transition: background .18s, color .18s, box-shadow .18s, transform .1s;
+}
+.role-tab svg{ width:19px; height:19px; flex-shrink:0 }
+.role-tab:hover{ color:#2196F3 }
+.role-tab.is-active{
+  background:#fff;
+  color:#1565C0;
+  box-shadow: 0 2px 8px rgba(30,64,175,.14), inset 0 0 0 2px #bfdcff;
+}
+.role-tab:active{ transform: translateY(1px) }
+
+/* Accent màu theo role: parent = xanh lá, teacher = xanh dương */
+.auth-container[data-role="parent"]  .role-tabs{ background:#e8f6ec }
+.auth-container[data-role="parent"]  .role-tab.is-active{
+  color:#1b5e20; box-shadow: 0 2px 8px rgba(46,125,50,.18), inset 0 0 0 2px #a5d6a7;
+}
+.auth-container[data-role="teacher"] .role-tabs{ background:#e3f2fd }
+.auth-container[data-role="teacher"] .role-tab.is-active{
+  color:#0d47a1; box-shadow: 0 2px 8px rgba(13,71,161,.18), inset 0 0 0 2px #90caf9;
+}
+
+/* Panes (form theo role) */
+.role-pane{ display:none }
+.role-pane.is-active{ display:block }
+
+/* Đổi viền card theo role để user nhận diện ngay */
+.auth-container[data-role="teacher"]{
+  border-color:#bfdcff;
+  background:linear-gradient(180deg, rgba(255,255,255,.94), rgba(232,243,255,.94));
+}
+.auth-container[data-role="parent"]{
+  border-color:#c5e8c8;
+  background:linear-gradient(180deg, rgba(255,255,255,.94), rgba(232,247,234,.94));
+}
+
 /* ── Tablet/mobile ── */
 @media (max-width: 480px){
   .auth-container{ padding: 22px 22px 26px; border-radius:22px }
   .auth-logo{ width: 170px }
   .auth-container h1{ font-size: 22px }
+  .role-tab{ font-size:13px; padding:10px 6px }
+  .role-tab svg{ width:17px; height:17px }
 }

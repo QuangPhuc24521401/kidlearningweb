@@ -6,6 +6,11 @@
 <title>Trang Giáo Viên 👩‍🏫</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<!-- Firebase compat SDK để guard role có thể đọc Firestore khi cần -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:20px;display:flex;justify-content:center}
@@ -471,17 +476,64 @@ function joinRoom(room){
 ════════════════════════════════════════ */
 function handleLogout(){
   localStorage.removeItem('userRole');
+  localStorage.removeItem('classRoom');
+  localStorage.removeItem('userDisplayName');
+  try{
+    if(typeof firebase !== 'undefined' && firebase.auth){
+      firebase.auth().signOut().finally(()=>{ window.location.href = 'auth/login.html'; });
+      return;
+    }
+  }catch(e){}
   window.location.href = 'auth/login.html';
 }
 
 /* ════════════════════════════════════════
    INIT
 ════════════════════════════════════════ */
-// Kiểm tra quyền giáo viên
-const role = localStorage.getItem('userRole');
-if(role && role !== 'teacher'){
-  window.location.href = 'index.html';
-}
+// Role guard: chỉ giáo viên mới được vào trang này.
+// Nếu chưa có role trong localStorage, đợi Firebase auth load để check Firestore.
+(function teacherGuard(){
+  var role = localStorage.getItem('userRole');
+  if(role === 'teacher'){
+    return; // OK, đã xác nhận giáo viên
+  }
+  if(role && role !== 'teacher'){
+    window.location.replace('index.html');
+    return;
+  }
+  // Chưa có role → chuyển về login để xác thực lại.
+  if(typeof firebase === 'undefined' || !firebase.auth){
+    window.location.replace('auth/login.html');
+    return;
+  }
+  firebase.auth().onAuthStateChanged(function(user){
+    if(!user){ window.location.replace('auth/login.html'); return; }
+    // Đọc role từ Firestore
+    if(!firebase.firestore){
+      window.location.replace('auth/login.html');
+      return;
+    }
+    firebase.firestore().collection('users').doc(user.uid).get()
+      .then(function(snap){
+        var data = snap && snap.exists ? snap.data() : null;
+        var r = data?.role || 'parent';
+        if(r === 'teacher'){
+          localStorage.setItem('userRole', 'teacher');
+          if(data?.classRoom)   localStorage.setItem('classRoom', data.classRoom);
+          if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
+          // Cập nhật UI sau khi load xong
+          var info = document.getElementById('teacherInfo');
+          if(info) info.textContent = 'Lớp: ' + (data?.classRoom || 'LOPA2024');
+        } else {
+          window.location.replace('index.html');
+        }
+      })
+      .catch(function(err){
+        console.warn('[teacherGuard] firestore read failed:', err);
+        window.location.replace('auth/login.html');
+      });
+  });
+})();
 
 const classRoom = localStorage.getItem('classRoom') || 'LOPA2024';
 document.getElementById('teacherInfo').textContent = 'Lớp: ' + classRoom;

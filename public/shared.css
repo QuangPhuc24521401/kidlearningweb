@@ -73,8 +73,8 @@ body{
 }
 
 /* Dark mode: blobs shift to cooler neon + lower intensity */
-::root[data-theme="dark"] .liquid-bg{filter:blur(20px) saturate(1.22);opacity:.78}
-::root[data-theme="dark"] .liquid-bg .blob{
+:root[data-theme="dark"] .liquid-bg{filter:blur(20px) saturate(1.22);opacity:.78}
+:root[data-theme="dark"] .liquid-bg .blob{
   background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.38) 0%, rgba(255,255,255,0) 62%),
              radial-gradient(circle at 70% 60%, rgba(124,58,237,.46) 0%, rgba(124,58,237,0) 64%),
              radial-gradient(circle at 40% 80%, rgba(56,249,215,.26) 0%, rgba(56,249,215,0) 66%);
@@ -326,4 +326,152 @@ button{touch-action:manipulation}
   --rayOpacity:0;
   --sunGlow:.18;
   --moonCraterOpacity:1;
+}
+
+/* ═══════════ DARK MODE TEXT FIX ═══════════
+   Mục đích: ép tất cả chữ hardcoded (settings, chip, theme btn, hint, link…)
+   sang tone sáng để đọc được trên nền tối. Áp dụng cho cả manual (data-theme=dark)
+   lẫn auto (prefers-color-scheme:dark khi không có override). */
+:root[data-theme="dark"]{
+  /* Bonus: làm muted sáng hơn để dễ đọc */
+  --muted:#cbd5e1;
+}
+
+:root[data-theme="dark"] body{ color:var(--ink); }
+
+/* Tiêu đề & mô tả trong settings card */
+:root[data-theme="dark"] .settings-card h2{ color:#e8eefc; }
+:root[data-theme="dark"] .settings-card p { color:#b7c3de; }
+:root[data-theme="dark"] .settings-close   { color:#b7c3de; }
+:root[data-theme="dark"] .settings-close:hover{ color:#fff; }
+
+/* Tiêu đề nhỏ + label + value trong settings */
+:root[data-theme="dark"] .settings-title{ color:#e8eefc; }
+:root[data-theme="dark"] .settings-label{ color:#cbd5e1; }
+:root[data-theme="dark"] .settings-hint { color:#94a3b8; }
+:root[data-theme="dark"] .settings-val  { color:#cbd5e1; }
+
+/* Chip chọn voice */
+:root[data-theme="dark"] .chip{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(255,255,255,.16);
+  color:#e8eefc;
+}
+:root[data-theme="dark"] .chip:hover{
+  background:rgba(108,142,255,.18);
+  border-color:#6c8eff;
+}
+:root[data-theme="dark"] .chip.active{
+  /* gradient + chữ trắng vẫn ổn nên giữ nguyên */
+  color:#fff;
+}
+
+/* Input dán key API */
+:root[data-theme="dark"] .key-input{
+  background:rgba(255,255,255,.04);
+  border-color:rgba(255,179,77,.55);
+  color:#ffe2b0;
+}
+:root[data-theme="dark"] .key-input::placeholder{ color:#94a3b8; }
+
+/* Trạng thái "đã lưu key" */
+:root[data-theme="dark"] .key-saved{
+  background:rgba(46,125,50,.20);
+  color:#a7e7ad;
+}
+
+/* Link giúp đỡ */
+:root[data-theme="dark"] .settings-link  { color:#94a3b8; }
+:root[data-theme="dark"] .settings-link a{ color:#9bb4ff; }
+
+/* Theme picker: chữ trên nút "Tự động / Sáng / Tối" */
+:root[data-theme="dark"] .theme-row .theme-label{ color:#cbd5e1; }
+:root[data-theme="dark"] .theme-btn{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(255,255,255,.16);
+  color:#e8eefc;
+}
+:root[data-theme="dark"] .theme-btn:hover{
+  background:rgba(108,142,255,.18);
+  border-color:#6c8eff;
+}
+:root[data-theme="dark"] .theme-btn.active{ color:#fff; }
+
+/* Settings action (nút phụ trong panel) */
+:root[data-theme="dark"] .settings-action{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(255,255,255,.16);
+  color:#e8eefc;
+}
+:root[data-theme="dark"] .settings-action.danger{
+  background:rgba(244,67,54,.18);
+  border-color:rgba(244,67,54,.36);
+  color:#ffb4ad;
+}
+
+/* Card chính (menu, lesson…) — đảm bảo chữ thừa kế ink */
+:root[data-theme="dark"] .card{ color:var(--ink); }
+
+/* Áp dụng tương tự khi user dùng chế độ "Auto" và OS đang dark */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]) body{ color:var(--ink); }
+
+  :root:not([data-theme]) .settings-card h2{ color:#e8eefc; }
+  :root:not([data-theme]) .settings-card p { color:#b7c3de; }
+  :root:not([data-theme]) .settings-close  { color:#b7c3de; }
+  :root:not([data-theme]) .settings-close:hover{ color:#fff; }
+
+  :root:not([data-theme]) .settings-title{ color:#e8eefc; }
+  :root:not([data-theme]) .settings-label{ color:#cbd5e1; }
+  :root:not([data-theme]) .settings-hint { color:#94a3b8; }
+  :root:not([data-theme]) .settings-val  { color:#cbd5e1; }
+
+  :root:not([data-theme]) .chip{
+    background:rgba(255,255,255,.06);
+    border-color:rgba(255,255,255,.16);
+    color:#e8eefc;
+  }
+  :root:not([data-theme]) .chip:hover{
+    background:rgba(108,142,255,.18);
+    border-color:#6c8eff;
+  }
+
+  :root:not([data-theme]) .key-input{
+    background:rgba(255,255,255,.04);
+    border-color:rgba(255,179,77,.55);
+    color:#ffe2b0;
+  }
+  :root:not([data-theme]) .key-input::placeholder{ color:#94a3b8; }
+  :root:not([data-theme]) .key-saved{
+    background:rgba(46,125,50,.20);
+    color:#a7e7ad;
+  }
+
+  :root:not([data-theme]) .settings-link  { color:#94a3b8; }
+  :root:not([data-theme]) .settings-link a{ color:#9bb4ff; }
+
+  :root:not([data-theme]) .theme-row .theme-label{ color:#cbd5e1; }
+  :root:not([data-theme]) .theme-btn{
+    background:rgba(255,255,255,.06);
+    border-color:rgba(255,255,255,.16);
+    color:#e8eefc;
+  }
+  :root:not([data-theme]) .theme-btn:hover{
+    background:rgba(108,142,255,.18);
+    border-color:#6c8eff;
+  }
+  :root:not([data-theme]) .theme-btn.active{ color:#fff; }
+
+  :root:not([data-theme]) .settings-action{
+    background:rgba(255,255,255,.06);
+    border-color:rgba(255,255,255,.16);
+    color:#e8eefc;
+  }
+  :root:not([data-theme]) .settings-action.danger{
+    background:rgba(244,67,54,.18);
+    border-color:rgba(244,67,54,.36);
+    color:#ffb4ad;
+  }
+
+  :root:not([data-theme]) .card{ color:var(--ink); }
 }

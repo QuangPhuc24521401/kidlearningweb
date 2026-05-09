@@ -9,8 +9,20 @@
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
 <script>document.documentElement.style.visibility='hidden';</script>
+<script>
+  // Quick role guard: nếu localStorage cache đã biết là giáo viên, đẩy ngay.
+  (function quickRoleGuard(){
+    try{
+      var role = localStorage.getItem('userRole');
+      if(role === 'teacher'){
+        window.location.replace('mentor-teacher.html');
+      }
+    }catch(e){}
+  })();
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body class="page-scroll">
 
@@ -144,6 +156,26 @@
 </div>
 
 <script src="firebase.js"></script>
+<script>
+  // Deep role guard: nếu localStorage không có userRole nhưng user đã login, đọc Firestore.
+  (function deepRoleGuard(){
+    if(localStorage.getItem('userRole')) return; // đã có cache → guard quick đã xử lý ở head
+    if(typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore) return;
+    firebase.auth().onAuthStateChanged(function(user){
+      if(!user) return; // chưa login: cứ để menu hiện, lessons vẫn chạy được không cần auth
+      firebase.firestore().collection('users').doc(user.uid).get()
+        .then(function(snap){
+          var data = snap && snap.exists ? snap.data() : null;
+          var role = data?.role || 'parent';
+          localStorage.setItem('userRole', role);
+          if(data?.classRoom)   localStorage.setItem('classRoom', data.classRoom);
+          if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
+          if(role === 'teacher') window.location.replace('mentor-teacher.html');
+        })
+        .catch(function(err){ console.warn('[deepRoleGuard]', err); });
+    });
+  })();
+</script>
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
