@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kid Learning 🌟</title>
+<title>Kid Learning — Chương trình học cho trẻ</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
 <script>document.documentElement.style.visibility='hidden';</script>
@@ -24,7 +24,32 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
-<body class="page-scroll">
+<body class="page-scroll page-home">
+
+<header class="app-topbar" role="banner">
+  <div class="app-topbar-inner">
+    <a href="index.html" class="topbar-brand">
+      <span class="topbar-brand-mark" aria-hidden="true"></span>
+      <span class="topbar-brand-text">
+        <span class="topbar-brand-name">Kid Learning</span>
+        <span class="topbar-brand-tag">Chương trình học tập cho trẻ mầm non</span>
+      </span>
+    </a>
+    <nav class="topbar-nav" aria-label="Điều hướng chính">
+      <a href="#subjects-anchor" class="topbar-link">Môn học</a>
+      <a href="#progress-anchor" class="topbar-link">Tiến độ &amp; huy hiệu</a>
+      <a href="mentor.html" class="topbar-link">Cô giáo AI</a>
+    </nav>
+    <div class="topbar-end">
+      <div id="topbarUserSlot" class="topbar-user-slot"></div>
+      <div class="topbar-tools">
+        <button type="button" id="musicBtn" aria-label="Bật tắt nhạc nền" title="Nhạc nền">🎵</button>
+        <button type="button" id="settingsBtn" aria-label="Cài đặt giọng đọc" title="Cài đặt">⚙️</button>
+        <button type="button" class="topbar-logout" onclick="handleLogout()">Đăng xuất</button>
+      </div>
+    </div>
+  </div>
+</header>
 
 <div class="sky">
   <div class="sun">
@@ -43,8 +68,6 @@
 </div>
 <div class="ground"></div>
 <div class="sprinkles" id="sprinkles"></div>
-<button id="musicBtn">🎵</button>
-<button id="settingsBtn">⚙️</button>
 <div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
 
 <!-- Settings modal -->
@@ -71,8 +94,7 @@
 
 <!-- Menu card -->
 <div class="card menu-card">
-  <button class="logout-btn" onclick="handleLogout()">🚪 Đăng xuất</button>
-
+  <div class="menu-hero-block" id="subjects-anchor">
   <svg class="mascot-wrap" width="120" height="118" viewBox="0 0 130 120">
     <circle cx="28" cy="28" r="18" fill="#c47a5a"/><circle cx="102" cy="28" r="18" fill="#c47a5a"/>
     <circle cx="28" cy="28" r="11" fill="#b06040"/><circle cx="102" cy="28" r="11" fill="#b06040"/>
@@ -90,8 +112,9 @@
     <circle cx="88" cy="60" r="10" fill="#e89888" opacity="0.55"/>
   </svg>
 
-  <h1>Bé học gì hôm nay?</h1>
-  <p class="subtitle">Chọn môn học và cùng bắt đầu nào! 🌟</p>
+  <h1 class="menu-title">Chương trình học hôm nay</h1>
+  <p class="subtitle">Chọn môn học để bắt đầu — tiến độ được lưu tự động trên tài khoản của bé.</p>
+  </div>
 
   <div class="menu-grid" style="margin-top:12px">
     <button class="menu-item mi-language" data-subject="nhan_biet" onclick="goLesson('nhan_biet')">
@@ -155,6 +178,7 @@
     </button>
   </div>
 
+  <div id="progress-anchor" class="menu-progress-stack">
   <!-- Tổng kết tiến độ -->
   <div id="overallProgress" class="overall-progress" hidden>
     <div class="op-row">
@@ -180,6 +204,7 @@
     </div>
     <p class="ach-hint">Hoàn thành bài học, gom sao và học đều mỗi ngày để mở thêm huy hiệu nhé!</p>
     <div id="achievementsGrid" class="ach-grid"></div>
+  </div>
   </div>
 
   <div class="mentor-cta-wrap">

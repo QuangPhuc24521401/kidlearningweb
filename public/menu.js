@@ -226,16 +226,24 @@ function _computeTotalStars(){
 function mountUserBar(){
   var name = (localStorage.getItem('userDisplayName') || '').trim() || 'Bé học sinh';
   var stars = _computeTotalStars();
+  var slot = document.getElementById('topbarUserSlot');
   var bar = document.getElementById('userBar');
   if(!bar){
     bar = document.createElement('div');
     bar.id = 'userBar';
-    bar.className = 'user-bar';
-    document.body.appendChild(bar);
   }
+  bar.className = slot ? 'user-bar user-bar--topbar' : 'user-bar';
   bar.innerHTML =
     '<span class="ub-avatar">👤</span>' +
     '<span class="ub-name" title="' + (name.replace(/"/g,'&quot;')) + '">' + (name.length > 16 ? name.slice(0,15) + '…' : name) + '</span>' +
     '<span class="ub-divider"></span>' +
     '<span class="ub-stars" title="Tổng sao đã đạt">🌟 ' + stars + '</span>';
+  if(slot){
+    slot.innerHTML = '';
+    slot.appendChild(bar);
+  } else if(!bar.parentNode){
+    document.body.appendChild(bar);
+  } else if(bar.parentNode !== document.body){
+    document.body.appendChild(bar);
+  }
 }
