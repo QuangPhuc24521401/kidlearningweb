@@ -38,6 +38,18 @@
   line-height:1.5;
 }
 
+.pvp-wait-hint{
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-size:13px;
+  color:#64748b;
+  text-align:center;
+  margin:-6px 0 14px;
+  line-height:1.55;
+  max-width:40em;
+  margin-left:auto;
+  margin-right:auto;
+}
+
 .pvp-subject-row{
   display:flex;
   flex-wrap:wrap;

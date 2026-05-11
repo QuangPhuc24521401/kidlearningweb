@@ -135,16 +135,29 @@
       showLobby();
       $('lobbyMain').classList.add('pvp-hidden');
       $('lobbyWaiting').classList.remove('pvp-hidden');
+      var hintEl = $('pvpWaitHint');
       if(d.hostId === uid){
         if(d.guestId){
-          $('pvpWaitMsg').textContent = d.guestName + ' đã vào! Bấm Bắt đầu để đấu.';
+          $('pvpWaitMsg').textContent = (d.guestName || 'Bạn') + ' đã vào phòng!';
+          if(hintEl){
+            hintEl.hidden = false;
+            hintEl.textContent = 'Chủ phòng bấm nút « Bắt đầu đấu » bên dưới để mở trận (không tự chạy).';
+          }
           $('pvpBtnStart').classList.remove('pvp-hidden');
         } else {
-          $('pvpWaitMsg').textContent = 'Chờ bạn vào phòng... Gửi mã ' + d.code + ' cho bạn nhé.';
+          $('pvpWaitMsg').textContent = 'Đang chờ người chơi thứ hai...';
+          if(hintEl){
+            hintEl.hidden = false;
+            hintEl.textContent = 'Gửi mã ' + (d.code || '') + ' cho bạn. Trên máy hoặc tài khoản khác: mở trang PvP → nhập mã → « Vào phòng ». Khi có đủ hai người sẽ xuất hiện nút « Bắt đầu đấu » — chỉ chủ phòng mới bấm được.';
+          }
           $('pvpBtnStart').classList.add('pvp-hidden');
         }
       } else {
-        $('pvpWaitMsg').textContent = 'Đang chờ chủ phòng bắt đầu...';
+        $('pvpWaitMsg').textContent = 'Bạn đã vào phòng. Đang chờ chủ phòng...';
+        if(hintEl){
+          hintEl.hidden = false;
+          hintEl.textContent = 'Đợi chủ phòng bấm « Bắt đầu đấu » — nút đó chỉ hiện trên máy của chủ phòng.';
+        }
         $('pvpBtnStart').classList.add('pvp-hidden');
       }
       return;
