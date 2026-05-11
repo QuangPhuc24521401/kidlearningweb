@@ -457,3 +457,113 @@
 }
 :root[data-theme="dark"] .user-bar .ub-name{ color:#cfe1ff }
 :root[data-theme="dark"] .user-bar .ub-divider{ background:rgba(255,255,255,.20) }
+
+/* ═══════════ ACHIEVEMENTS PANEL ═══════════ */
+.achievements-panel{
+  margin: 16px auto 0;
+  padding: 16px 18px 18px;
+  background: rgba(255,255,255,.58);
+  border: 2px solid rgba(255,255,255,.82);
+  border-radius: 22px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.07);
+}
+.ach-head{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+}
+.ach-h3{
+  margin:0;
+  font-family:'Baloo 2',cursive;
+  font-weight:800;
+  font-size:19px;
+  color: color-mix(in oklab, var(--ink) 82%, #7c3aed 18%);
+}
+.ach-streak-line{
+  font-family:'Nunito',sans-serif;
+  font-size:13.5px;
+  font-weight:800;
+  color:#c2410c;
+  background: linear-gradient(135deg, rgba(254,215,170,.9), rgba(253,186,116,.65));
+  padding:6px 12px;
+  border-radius:999px;
+  border:1.5px solid rgba(251,146,60,.45);
+}
+.ach-streak-line strong{ font-weight:900 }
+.ach-hint{
+  margin:0 0 12px;
+  font-family:'Nunito',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  color: var(--muted, #64748b);
+  line-height:1.45;
+}
+.ach-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap:10px;
+}
+.ach-card{
+  border-radius:16px;
+  padding:12px 10px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  border:2px solid rgba(255,255,255,.7);
+  background: rgba(255,255,255,.42);
+  transition: transform .15s, filter .15s, box-shadow .15s;
+  min-height:92px;
+  justify-content:center;
+}
+.ach-card.is-unlocked{
+  background: linear-gradient(160deg, rgba(254,249,195,.95), rgba(187,247,208,.75));
+  border-color: rgba(52,211,153,.5);
+  box-shadow: 0 6px 0 rgba(16,185,129,.25), 0 10px 20px rgba(16,185,129,.12);
+}
+.ach-card.is-locked{
+  filter: grayscale(0.35) brightness(0.97);
+  opacity:.88;
+}
+.ach-card.is-locked .ach-emoji{ filter: saturate(0.4); opacity:.75 }
+.ach-emoji{
+  font-size:26px;
+  line-height:1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
+}
+.ach-card-title{
+  font-family:'Nunito',sans-serif;
+  font-weight:800;
+  font-size:11.5px;
+  color: var(--ink, #1a1a2e);
+  line-height:1.25;
+}
+.ach-card.is-locked .ach-card-title{ color:#64748b }
+
+:root[data-theme="dark"] .achievements-panel{
+  background: rgba(18,26,46,.62);
+  border-color: rgba(255,255,255,.14);
+}
+:root[data-theme="dark"] .ach-h3{ color:#e2e8f0 }
+:root[data-theme="dark"] .ach-hint{ color:#94a3b8 }
+:root[data-theme="dark"] .ach-streak-line{
+  color:#ffedd5;
+  background: linear-gradient(135deg, rgba(154,52,18,.55), rgba(234,88,12,.35));
+  border-color: rgba(251,146,60,.35);
+}
+:root[data-theme="dark"] .ach-card{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.12);
+}
+:root[data-theme="dark"] .ach-card.is-unlocked{
+  background: linear-gradient(160deg, rgba(20,83,45,.55), rgba(22,101,52,.4));
+  border-color: rgba(52,211,153,.35);
+}
+:root[data-theme="dark"] .ach-card-title{ color:#e2e8f0 }
+:root[data-theme="dark"] .ach-card.is-locked .ach-card-title{ color:#94a3b8 }

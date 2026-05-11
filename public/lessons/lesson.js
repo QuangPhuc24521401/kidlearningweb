@@ -707,6 +707,10 @@
         }
       }
     }catch(e){}
+
+    if(typeof window.syncAchievementsAfterLessonSave === "function"){
+      try{ window.syncAchievementsAfterLessonSave(); }catch(err){}
+    }
   }
 
   function shuffle(arr){

@@ -129,19 +129,25 @@ function renderProgressBadges(){
   }
   // Cập nhật user-bar (nếu đang có) cho khớp tổng sao mới
   mountUserBar();
+  if(typeof renderAchievementsPanel === 'function') renderAchievementsPanel();
 }
 
 /* Xoá toàn bộ tiến độ — có xác nhận */
 function resetProgress(){
   if(!confirm('Xoá hết tiến độ học của tất cả các môn? Hành động này không thể hoàn tác.')) return;
   try{ localStorage.removeItem('learning_progress'); }catch(e){}
+  if(typeof resetAchievementStorage === 'function') resetAchievementStorage();
   // Xoá trên Firestore (best-effort)
   try{
     if(typeof firebase !== 'undefined' && firebase.auth && firebase.firestore){
       var u = firebase.auth().currentUser;
       if(u){
         firebase.firestore().collection('learning_progress').doc(u.uid)
-          .set({ progress: {}, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+          .set({
+            progress: {},
+            achievements: {},
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          })
           .catch(function(err){ console.warn('[resetProgress] firestore', err); });
       }
     }
@@ -156,9 +162,24 @@ function fetchProgressFromCloud(uid){
     if(typeof firebase === 'undefined' || !firebase.firestore) return;
     firebase.firestore().collection('learning_progress').doc(uid).get()
       .then(function(snap){
-        if(!snap || !snap.exists) return;
-        var cloud = snap.data() && snap.data().progress;
-        if(!cloud || typeof cloud !== 'object') return;
+        function finish(){
+          if(typeof recomputeAchievementsAfterCloudMerge === 'function') recomputeAchievementsAfterCloudMerge();
+          renderProgressBadges();
+          if(typeof flushAchievementsToCloud === 'function') flushAchievementsToCloud();
+        }
+        if(!snap || !snap.exists){
+          finish();
+          return;
+        }
+        var d = snap.data() || {};
+        if(d.achievements && typeof mergeAchievementsFromCloud === 'function'){
+          mergeAchievementsFromCloud(d.achievements);
+        }
+        var cloud = d.progress;
+        if(!cloud || typeof cloud !== 'object'){
+          finish();
+          return;
+        }
         var local = _readProgress();
         // Merge cấp topic: lấy giá trị MAX của mỗi field
         var merged = {};
@@ -184,7 +205,7 @@ function fetchProgressFromCloud(uid){
           merged[sub] = { topics: mTop };
         });
         try{ localStorage.setItem('learning_progress', JSON.stringify(merged)); }catch(e){}
-        renderProgressBadges();
+        finish();
       })
       .catch(function(err){ console.warn('[fetchProgressFromCloud]', err); });
   }catch(e){}

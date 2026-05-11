@@ -171,6 +171,17 @@
       <button class="op-reset" onclick="resetProgress()" title="Xoá toàn bộ tiến độ học">🗑️ Bắt đầu lại</button>
     </div>
   </div>
+
+  <!-- Huy hiệu thành tích -->
+  <div id="achievementsPanel" class="achievements-panel" hidden>
+    <div class="ach-head">
+      <h3 class="ach-h3">🏅 Huy hiệu</h3>
+      <span class="ach-streak-line" title="Số ngày học liên tiếp (theo lịch)">🔥 Chuỗi: <strong id="achStreak">0</strong> ngày</span>
+    </div>
+    <p class="ach-hint">Hoàn thành bài học, gom sao và học đều mỗi ngày để mở thêm huy hiệu nhé!</p>
+    <div id="achievementsGrid" class="ach-grid"></div>
+  </div>
+
   <div class="mentor-cta-wrap">
     <button class="mentor-cta" onclick="window.location.href='mentor.html'" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
       <span class="mentor-cta-icon">👩‍🏫</span> Gặp Cô Giáo AI
@@ -179,6 +190,7 @@
 </div>
 
 <script src="firebase.js"></script>
+<script src="achievements.js"></script>
 <script>
   // Deep role guard: nếu localStorage không có userRole nhưng user đã login, đọc Firestore.
   (function deepRoleGuard(){
