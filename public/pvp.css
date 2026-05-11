@@ -292,3 +292,96 @@
 :root[data-theme="dark"] .pvp-p-score{ color:#f1f5f9 }
 :root[data-theme="dark"] .pvp-question{ color:#f1f5f9 }
 :root[data-theme="dark"] .pvp-ans{ background:rgba(30,41,59,.75); border-color:rgba(255,255,255,.12) }
+
+/* ═══════════ MOBILE ═══════════ */
+@media (max-width:640px){
+  .page-pvp.page-scroll{
+    padding-top:calc(var(--topbar-h) + 72px);
+    padding-bottom:32px;
+  }
+  .pvp-wrap{
+    width:calc(100vw - 20px);
+  }
+  .pvp-card{
+    border-radius:22px;
+    padding:18px 14px 20px;
+  }
+  .pvp-card h1{
+    font-size:clamp(18px, 5vw, 22px);
+  }
+  .pvp-lead{
+    font-size:13px;
+    margin-bottom:14px;
+  }
+  .pvp-wait-hint{
+    font-size:12.5px;
+  }
+  .pvp-subject-row{
+    gap:6px;
+    margin-bottom:12px;
+  }
+  .pvp-chip{
+    padding:7px 12px;
+    font-size:12.5px;
+  }
+  .pvp-btn{
+    padding:13px 16px;
+    font-size:16px;
+    border-radius:14px;
+  }
+  .pvp-btn-ghost{ font-size:14px; }
+  .pvp-input-row{
+    gap:8px;
+    flex-direction:column;
+  }
+  .pvp-input-row input{
+    padding:12px;
+    font-size:16px;
+    letter-spacing:.18em;
+  }
+  .pvp-code-box{
+    padding:12px;
+    margin:12px 0;
+    border-radius:14px;
+  }
+  .pvp-code-value{
+    font-size:24px;
+    letter-spacing:.16em;
+    word-break:break-all;
+  }
+  .pvp-scoreboard{
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .pvp-player-pill{
+    padding:10px 8px;
+    border-radius:14px;
+  }
+  .pvp-p-name{ font-size:11px; }
+  .pvp-p-score{ font-size:22px; }
+  .pvp-vs{ font-size:12px; }
+  .pvp-q-meta{
+    font-size:11.5px;
+  }
+  .pvp-answers{
+    gap:8px;
+  }
+  .pvp-ans{
+    padding:14px 10px;
+    border-radius:14px;
+  }
+  .pvp-status{
+    font-size:13px;
+    margin-top:10px;
+  }
+  .pvp-result-banner{
+    padding:14px;
+    font-size:15px;
+    border-radius:14px;
+  }
+}
+
+@media (max-width:380px){
+  .pvp-card{ padding:16px 12px 18px; }
+  .pvp-code-value{ font-size:22px; }
+}

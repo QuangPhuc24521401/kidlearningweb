@@ -1,0 +1,60 @@
+rules_version = '2';
+
+// Dán toàn bộ file này vào Firebase Console → Firestore → Rules → Publish
+// (hoặc firebase deploy --only firestore:rules nếu đã cấu hình Firebase CLI)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Hồ sơ user: chỉ chính chủ
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Tiến độ học + huy hiệu (doc id = uid)
+    match /learning_progress/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Đấu trường nhiều người (doc cố định live, hoặc mở rộng sau)
+    match /arena_sessions/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null;
+    }
+
+    // PvP — phòng 1v1
+    match /pvp_rooms/{roomId} {
+      // get + listen + query .where(...) đều cần read
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.hostId == request.auth.uid;
+
+      // Khách vào lần đầu: doc cũ guestId còn null, user chưa phải guest → cần nhánh riêng
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.hostId
+        || request.auth.uid == resource.data.guestId
+        || (
+          resource.data.status == 'waiting'
+          && resource.data.hostId != request.auth.uid
+          && (
+            !resource.data.keys().hasAll(['guestId'])
+            || resource.data.guestId == null
+          )
+          && request.resource.data.guestId == request.auth.uid
+          && request.resource.data.hostId == resource.data.hostId
+        )
+      );
+
+      allow delete: if request.auth != null && (
+        request.auth.uid == resource.data.hostId
+        || request.auth.uid == resource.data.guestId
+      );
+    }
+
+    // Mặc định chặn hết (thêm rule /classes/... nếu dùng mentor gọi video)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

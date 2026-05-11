@@ -28,10 +28,11 @@
 .arena-card h1{
   font-family:var(--font-ui,'Nunito',sans-serif);
   font-weight:800;
-  font-size:22px;
+  font-size:clamp(20px, 4.4vw, 22px);
   color:#0f172a;
   margin:0 0 6px;
   text-align:center;
+  line-height:1.2;
 }
 
 .arena-lead{
@@ -178,4 +179,84 @@
   font-size:14px;
   color:#065f46;
   line-height:1.5;
+}
+
+/* ═══════════ MOBILE ═══════════ */
+@media (max-width:640px){
+  /* Bù padding khi topbar wrap thành 2 dòng */
+  .page-arena.page-scroll{
+    padding-top:calc(var(--topbar-h) + 72px);
+    padding-bottom:32px;
+  }
+  .arena-wrap{
+    width:calc(100vw - 20px);
+  }
+  .arena-card{
+    border-radius:22px;
+    padding:18px 14px 20px;
+  }
+  .arena-lead{
+    font-size:13px;
+    margin-bottom:14px;
+  }
+  .arena-hero{
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .arena-clock-box{
+    padding:10px 12px;
+    border-radius:16px;
+  }
+  .arena-clock-label{
+    font-size:11px;
+  }
+  .arena-clock-value{
+    font-size:26px;
+  }
+  .arena-phase{
+    font-size:13px;
+    margin-bottom:12px;
+  }
+  .arena-actions{
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .arena-lb-wrap{
+    border-radius:14px;
+    max-height:min(180px, 36vh);
+    margin-bottom:12px;
+  }
+  .arena-lb-table{ font-size:13px; }
+  .arena-lb-table thead th,
+  .arena-lb-table tbody td{
+    padding:8px 10px;
+  }
+  /* Cột # (medal) thu hẹp để chừa chỗ cho tên + điểm */
+  .arena-lb-table thead th:first-child,
+  .arena-lb-table tbody td:first-child{
+    width:36px;
+    padding-right:4px;
+  }
+  .arena-lb-table thead th:last-child,
+  .arena-lb-table tbody td:last-child{
+    width:60px;
+    text-align:right;
+  }
+  .arena-podium{
+    padding:14px 12px;
+    border-radius:16px;
+  }
+  .arena-podium-win{ font-size:19px; }
+  .arena-podium-sub{ font-size:12.5px; }
+  .arena-reward-banner{
+    padding:12px 14px;
+    border-radius:14px;
+    font-size:13px;
+  }
+}
+
+@media (max-width:380px){
+  .arena-hero{ grid-template-columns:1fr; }
+  .arena-clock-value{ font-size:30px; }
+  .arena-card{ padding:16px 12px 18px; }
 }
