@@ -3,18 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kid Learning — Chương trình học cho trẻ</title>
+<title>Tiến độ & huy hiệu — Kid Learning</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
 <script>document.documentElement.style.visibility='hidden';</script>
 <script>
-  // Quick role guard: nếu localStorage cache đã biết là giáo viên, đẩy ngay.
   (function quickRoleGuard(){
     try{
-      var role = localStorage.getItem('userRole');
-      if(role === 'teacher'){
+      if(localStorage.getItem('userRole') === 'teacher'){
         window.location.replace('mentor-teacher.html');
       }
     }catch(e){}
@@ -24,7 +22,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
-<body class="page-scroll page-home">
+<body class="page-scroll page-progress">
 
 <header class="app-topbar" role="banner">
   <div class="app-topbar-inner">
@@ -36,8 +34,8 @@
       </span>
     </a>
     <nav class="topbar-nav" aria-label="Điều hướng chính">
-      <a href="index.html" class="topbar-link is-current" aria-current="page">Trang chủ</a>
-      <a href="progress.html" class="topbar-link">Tiến độ &amp; huy hiệu</a>
+      <a href="index.html" class="topbar-link">Trang chủ</a>
+      <a href="progress.html" class="topbar-link is-current" aria-current="page">Tiến độ &amp; huy hiệu</a>
       <a href="mentor.html" class="topbar-link">Cô giáo AI</a>
     </nav>
     <div class="topbar-end">
@@ -70,7 +68,6 @@
 <div class="sprinkles" id="sprinkles"></div>
 <div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
 
-<!-- Settings modal -->
 <div id="settingsModal">
   <div class="settings-card">
     <button class="settings-close" onclick="closeSettings()">×</button>
@@ -92,101 +89,48 @@
   </div>
 </div>
 
-<!-- Menu card -->
-<div class="card menu-card">
-  <div class="menu-hero-block" id="subjects-anchor">
-  <svg class="mascot-wrap" width="120" height="118" viewBox="0 0 130 120">
-    <circle cx="28" cy="28" r="18" fill="#c47a5a"/><circle cx="102" cy="28" r="18" fill="#c47a5a"/>
-    <circle cx="28" cy="28" r="11" fill="#b06040"/><circle cx="102" cy="28" r="11" fill="#b06040"/>
-    <ellipse cx="65" cy="98" rx="36" ry="26" fill="#d4956a"/>
-    <ellipse cx="65" cy="100" rx="22" ry="18" fill="#e8b880"/>
-    <circle class="bear-paw-r" cx="105" cy="88" r="16" fill="#d4956a"/>
-    <circle cx="25" cy="88" r="16" fill="#d4956a"/>
-    <circle cx="65" cy="52" r="40" fill="#d4956a"/>
-    <ellipse cx="65" cy="66" rx="18" ry="14" fill="#c47a5a"/>
-    <circle cx="50" cy="44" r="9" fill="#1a1a2e"/><circle cx="80" cy="44" r="9" fill="#1a1a2e"/>
-    <circle cx="53" cy="41" r="3.5" fill="white"/><circle cx="83" cy="41" r="3.5" fill="white"/>
-    <ellipse cx="65" cy="62" rx="7" ry="5" fill="#1a1a2e"/>
-    <path d="M56,70 Q65,80 74,70" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <circle cx="42" cy="60" r="10" fill="#e89888" opacity="0.55"/>
-    <circle cx="88" cy="60" r="10" fill="#e89888" opacity="0.55"/>
-  </svg>
-
-  <h1 class="menu-title">Chương trình học hôm nay</h1>
-  <p class="subtitle">Chọn môn học để bắt đầu. Tiến độ và huy hiệu nằm ở <strong>Tiến độ &amp; huy hiệu</strong> trên thanh menu; <strong>Cô giáo AI</strong> là trang hỏi đáp riêng.</p>
+<div class="card menu-card progress-page-card">
+  <div class="menu-hero-block" id="progress-page-top">
+    <h1 class="menu-title">Tiến độ &amp; huy hiệu</h1>
+    <p class="subtitle">Theo dõi tổng sao, số môn đã hoàn thành và các huy hiệu bé đã mở khóa. Quay lại <a href="index.html">trang chủ</a> để tiếp tục học.</p>
   </div>
 
-  <div class="menu-grid" style="margin-top:12px">
-    <button class="menu-item mi-language" data-subject="nhan_biet" onclick="goLesson('nhan_biet')">
-      <div class="mi-top">
-        <span class="mi-badge">Cơ bản</span>
-        <span class="mi-tag">👀</span>
+  <div class="menu-progress-stack">
+    <div id="overallProgress" class="overall-progress" hidden>
+      <div class="op-row">
+        <span class="op-icon">🌟</span>
+        <span class="op-label">Tổng sao:</span>
+        <span class="op-value" id="opStars">0</span>
       </div>
-      <div class="mi-title">Nhận biết</div>
-      <div class="mi-sub">Màu sắc • Hình dạng • Đếm số</div>
-      <div class="mi-progress" data-progress-for="nhan_biet"></div>
-    </button>
+      <div class="op-row">
+        <span class="op-icon">✅</span>
+        <span class="op-label">Đã hoàn thành:</span>
+        <span class="op-value"><span id="opDone">0</span>/6 môn</span>
+      </div>
+      <div class="op-row">
+        <button class="op-reset" onclick="resetProgress()" title="Xoá toàn bộ tiến độ học">🗑️ Bắt đầu lại</button>
+      </div>
+    </div>
 
-    <button class="menu-item mi-puzzle" data-subject="tu_duy" onclick="goLesson('tu_duy')">
-      <div class="mi-top">
-        <span class="mi-badge">Logic</span>
-        <span class="mi-tag">🧠</span>
+    <div id="achievementsPanel" class="achievements-panel" hidden>
+      <div class="ach-head">
+        <h3 class="ach-h3">🏅 Huy hiệu</h3>
+        <span class="ach-streak-line" title="Số ngày học liên tiếp (theo lịch)">🔥 Chuỗi: <strong id="achStreak">0</strong> ngày</span>
       </div>
-      <div class="mi-title">Tư duy</div>
-      <div class="mi-sub">Tìm khác biệt • Dãy số • So sánh</div>
-      <div class="mi-progress" data-progress-for="tu_duy"></div>
-    </button>
-
-    <button class="menu-item mi-music" data-subject="am_nhac" onclick="goLesson('am_nhac')">
-      <div class="mi-top">
-        <span class="mi-badge">Âm thanh</span>
-        <span class="mi-tag">🎵</span>
-      </div>
-      <div class="mi-title">Âm nhạc</div>
-      <div class="mi-sub">Nhạc cụ • Nhịp điệu • Nốt nhạc</div>
-      <div class="mi-progress" data-progress-for="am_nhac"></div>
-    </button>
-
-    <button class="menu-item mi-puzzle" data-subject="ghep_hinh" onclick="goLesson('ghep_hinh')">
-      <div class="mi-top">
-        <span class="mi-badge">Không gian</span>
-        <span class="mi-tag">🧩</span>
-      </div>
-      <div class="mi-title">Ghép hình</div>
-      <div class="mi-sub">Hình khối • Mẫu lặp • Chọn mảnh đúng</div>
-      <div class="mi-progress" data-progress-for="ghep_hinh"></div>
-    </button>
-
-    <button class="menu-item mi-art" data-subject="my_thuat" onclick="goLesson('my_thuat')">
-      <div class="mi-top">
-        <span class="mi-badge">Sáng tạo</span>
-        <span class="mi-tag">🎨</span>
-      </div>
-      <div class="mi-title">Mỹ thuật</div>
-      <div class="mi-sub">Màu sắc • Cảm xúc • Trộn màu</div>
-      <div class="mi-progress" data-progress-for="my_thuat"></div>
-    </button>
-
-    <button class="menu-item mi-math" data-subject="ngon_ngu" onclick="goLesson('ngon_ngu')">
-      <div class="mi-top">
-        <span class="mi-badge">Từ vựng</span>
-        <span class="mi-tag">📚</span>
-      </div>
-      <div class="mi-title">Ngôn ngữ</div>
-      <div class="mi-sub">Đồ vật • Con vật • Từ đơn giản</div>
-      <div class="mi-progress" data-progress-for="ngon_ngu"></div>
-    </button>
+      <p class="ach-hint">Hoàn thành bài học, gom sao và học đều mỗi ngày để mở thêm huy hiệu nhé!</p>
+      <div id="achievementsGrid" class="ach-grid"></div>
+    </div>
   </div>
 </div>
 
 <script src="firebase.js"></script>
+<script src="achievements.js"></script>
 <script>
-  // Deep role guard: nếu localStorage không có userRole nhưng user đã login, đọc Firestore.
   (function deepRoleGuard(){
-    if(localStorage.getItem('userRole')) return; // đã có cache → guard quick đã xử lý ở head
+    if(localStorage.getItem('userRole')) return;
     if(typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore) return;
     firebase.auth().onAuthStateChanged(function(user){
-      if(!user) return; // chưa login: cứ để menu hiện, lessons vẫn chạy được không cần auth
+      if(!user) return;
       firebase.firestore().collection('users').doc(user.uid).get()
         .then(function(snap){
           var data = snap && snap.exists ? snap.data() : null;

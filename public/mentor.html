@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gặp Cô Giáo 👩‍🏫</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="menu.css">
 <script>document.documentElement.style.visibility='hidden';</script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
-body{overflow:auto}
+body.page-mentor{overflow:auto}
 
 /* ── MAIN CARD ── */
 .mentor-card{
@@ -27,7 +28,7 @@ body{overflow:auto}
 @keyframes cardPop{from{transform:scale(.68) translateY(50px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
 
 /* ── HEADER ── */
-.mentor-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.mentor-header{display:flex;align-items:center;justify-content:center;text-align:center;gap:14px;margin-bottom:20px}
 .back-btn{border:none;background:linear-gradient(135deg,#ff9a56,#ff6348);color:#fff;border-radius:50%;width:48px;height:48px;font-size:20px;cursor:pointer;box-shadow:0 4px 0 #c0392b;transition:transform .15s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
 .back-btn:hover{transform:scale(1.15) rotate(-8deg)}
 .mentor-header h1{font-size:24px;font-weight:800;color:#3a2d6e;margin:0}
@@ -163,12 +164,34 @@ body{overflow:auto}
 .status-dot.thinking{background:#ff9800;animation:dotPulse .7s ease-in-out infinite}
 @keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
 
-/* ── HOME BTN ── */
-#homeBtn{position:fixed;top:18px;left:18px;z-index:9999;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#ff9a56,#ff6348);box-shadow:0 4px 0 #c0392b;font-size:22px;display:flex;align-items:center;justify-content:center;transition:transform .15s cubic-bezier(.34,1.56,.64,1)}
-#homeBtn:hover{transform:scale(1.15) rotate(-8deg)}
 </style>
 </head>
-<body>
+<body class="page-scroll page-mentor">
+
+<header class="app-topbar" role="banner">
+  <div class="app-topbar-inner">
+    <a href="index.html" class="topbar-brand">
+      <span class="topbar-brand-mark" aria-hidden="true"></span>
+      <span class="topbar-brand-text">
+        <span class="topbar-brand-name">Kid Learning</span>
+        <span class="topbar-brand-tag">Chương trình học tập cho trẻ mầm non</span>
+      </span>
+    </a>
+    <nav class="topbar-nav" aria-label="Điều hướng chính">
+      <a href="index.html" class="topbar-link">Trang chủ</a>
+      <a href="progress.html" class="topbar-link">Tiến độ &amp; huy hiệu</a>
+      <a href="mentor.html" class="topbar-link is-current" aria-current="page">Cô giáo AI</a>
+    </nav>
+    <div class="topbar-end">
+      <div id="topbarUserSlot" class="topbar-user-slot"></div>
+      <div class="topbar-tools">
+        <button type="button" id="musicBtn" aria-label="Bật tắt nhạc nền" title="Nhạc nền">🎵</button>
+        <button type="button" id="settingsBtn" aria-label="Cài đặt giọng đọc" title="Cài đặt">⚙️</button>
+        <button type="button" class="topbar-logout" onclick="handleLogout()">Đăng xuất</button>
+      </div>
+    </div>
+  </div>
+</header>
 
 <!-- Background -->
 <div class="sky">
@@ -184,7 +207,28 @@ body{overflow:auto}
 <div class="ground"></div>
 <div class="sprinkles" id="sprinkles"></div>
 
-<button id="homeBtn" onclick="window.location.href='index.html'">🏠</button>
+<div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
+
+<div id="settingsModal">
+  <div class="settings-card">
+    <button class="settings-close" onclick="closeSettings()">×</button>
+    <h2>🎙️ Cài đặt giọng đọc</h2>
+    <p>Dùng <strong>FPT.AI</strong> để có giọng Tiếng Việt tự nhiên nhất.<br>Miễn phí 2.000 lượt/ngày sau khi đăng ký.</p>
+    <div class="key-input-wrap">
+      <input class="key-input" id="fptKeyInput" type="password" placeholder="Paste FPT.AI API key vào đây...">
+      <button class="save-btn" onclick="saveKey()">💾 Lưu</button>
+    </div>
+    <div class="key-saved hidden" id="keySavedMsg">✅ API key đã được lưu!</div>
+    <p style="font-family:Nunito,sans-serif;font-size:14px;color:#555;margin:16px 0 6px"><strong>Chọn giọng đọc:</strong></p>
+    <div class="voice-chips" id="voiceChips">
+      <div class="chip active" onclick="setVoice('lannhi',this)">🌸 Lan Nhi (nữ Nam)</div>
+      <div class="chip" onclick="setVoice('linhsan',this)">💐 Linh San (nữ Bắc)</div>
+      <div class="chip" onclick="setVoice('minhquang',this)">🎯 Minh Quang (nam Bắc)</div>
+      <div class="chip" onclick="setVoice('giahuy',this)">🚀 Gia Huy (nam Nam)</div>
+    </div>
+    <p class="settings-link">Chưa có API key? <a href="https://fpt.ai/tts" target="_blank">Đăng ký miễn phí tại fpt.ai →</a></p>
+  </div>
+</div>
 
 <!-- AI Status pill -->
 <div id="aiStatus"><div class="status-dot" id="statusDot"></div><span id="statusMsg">Đang suy nghĩ...</span></div>
@@ -205,7 +249,6 @@ body{overflow:auto}
 <!-- Main card -->
 <div class="mentor-card">
   <div class="mentor-header">
-    <button class="back-btn" onclick="window.location.href='index.html'">🏠</button>
     <div>
       <h1>👩‍🏫 Cô Giáo AI</h1>
       <p>Hỏi cô bất cứ điều gì về bài học!</p>
@@ -347,6 +390,7 @@ body{overflow:auto}
 <script src="firebase.js"></script>
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
+<script src="menu.js"></script>
 <script>
 try{
   if(firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_')){
