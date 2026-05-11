@@ -396,3 +396,64 @@
 :root[data-theme="dark"] .mi-status-done{ background:rgba(52,211,153,.18); color:#a7f3d0 }
 :root[data-theme="dark"] .mi-frac{ color:#cbd5e1 }
 :root[data-theme="dark"] .mi-bar{ background:rgba(255,255,255,.10) }
+
+/* ═══════════ USER BAR (góc phải trên) ═══════════ */
+.user-bar{
+  position:fixed;
+  top:14px;
+  right:78px; /* chừa chỗ cho settingsBtn ở right:18px (~52px) */
+  z-index:1000;
+  background:rgba(255,255,255,.94);
+  border:2px solid rgba(255,255,255,.85);
+  border-radius:18px;
+  padding:7px 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:'Baloo 2',cursive;
+  font-weight:800;
+  font-size:14px;
+  color:#1565C0;
+  box-shadow: 0 6px 18px rgba(30,64,175,.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  max-width:calc(100vw - 110px);
+}
+.user-bar .ub-avatar{ font-size:18px }
+.user-bar .ub-name{
+  color:#0d47a1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:160px;
+}
+.user-bar .ub-divider{
+  width:1.5px;height:18px;
+  background:rgba(0,0,0,.12);
+  border-radius:1px;
+}
+.user-bar .ub-stars{
+  color:#f59e0b;
+  white-space:nowrap;
+}
+
+@media (max-width: 560px){
+  .user-bar{
+    top:60px;
+    right:14px;
+    left:14px;
+    max-width:none;
+    justify-content:center;
+    padding:7px 12px;
+    font-size:13px;
+  }
+  .user-bar .ub-name{ max-width:none }
+}
+
+:root[data-theme="dark"] .user-bar{
+  background:rgba(18,26,46,.78);
+  border-color:rgba(255,255,255,.18);
+  color:#bfdcff;
+}
+:root[data-theme="dark"] .user-bar .ub-name{ color:#cfe1ff }
+:root[data-theme="dark"] .user-bar .ub-divider{ background:rgba(255,255,255,.20) }

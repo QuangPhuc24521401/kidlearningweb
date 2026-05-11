@@ -333,7 +333,45 @@
   }
 
   var params = new URLSearchParams(window.location.search);
-  var lessonType = params.get("type") || inferLessonTypeFromPathname() || "nhan_biet";
+  var lessonType   = params.get("type")  || inferLessonTypeFromPathname() || "nhan_biet";
+  var currentTopic = params.get("topic") ? decodeURIComponent(params.get("topic")) : null;
+
+  var SUBJECT_TITLES = {
+    nhan_biet: "Nhận biết",
+    tu_duy:    "Tư duy",
+    am_nhac:   "Âm nhạc",
+    ghep_hinh: "Ghép hình",
+    my_thuat:  "Mỹ thuật",
+    ngon_ngu:  "Ngôn ngữ"
+  };
+  var SUBJECT_ICONS = {
+    nhan_biet:"👀", tu_duy:"🧠", am_nhac:"🎵",
+    ghep_hinh:"🧩", my_thuat:"🎨", ngon_ngu:"📚"
+  };
+
+  function getTopicsForSubject(subject){
+    var data = (window.LESSON_DATA && window.LESSON_DATA[subject]) || [];
+    var seen = [], counts = {};
+    data.forEach(function(q){
+      var t = q.topic || "Khác";
+      if(counts[t] == null){ seen.push(t); counts[t] = 0; }
+      counts[t]++;
+    });
+    return seen.map(function(t){ return { name: t, count: counts[t] }; });
+  }
+
+  function readSubjectProgress(subject){
+    try{
+      var all = JSON.parse(localStorage.getItem("learning_progress") || "{}") || {};
+      return all[subject] || { topics: {} };
+    }catch(e){ return { topics: {} }; }
+  }
+
+  function escapeHtml(s){
+    return String(s||"").replace(/[<>&"']/g, function(c){
+      return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
 
   function loadLessons(){
     var all = (typeof window.LESSON_DATA === "object" && window.LESSON_DATA) ? window.LESSON_DATA : null;
@@ -344,22 +382,99 @@
       );
       return;
     }
-    var data = all[lessonType];
-    if(!Array.isArray(data) || data.length === 0){
+    var subjectData = all[lessonType];
+    if(!Array.isArray(subjectData) || subjectData.length === 0){
       setScreenMessage(
         "Chưa có bài học",
         "Chủ đề: " + lessonType + " chưa có dữ liệu."
       );
       return;
     }
-    lessons = data.slice();
-    shuffle(lessons);
-    currentIndex = 0;
-    stars = 0;
-    var starsEl = document.getElementById("stars");
-    if(starsEl) starsEl.innerText = "0";
-    showLesson();
+
+    if(currentTopic){
+      // QUESTION MODE — chỉ lấy câu hỏi của topic này
+      var data = subjectData.filter(function(q){ return (q.topic || "Khác") === currentTopic; });
+      if(!data.length){
+        setScreenMessage("Không tìm thấy bài học", "Bài \"" + currentTopic + "\" không có câu hỏi.");
+        return;
+      }
+      lessons = data.slice();
+      shuffle(lessons);
+      currentIndex = 0;
+      stars = 0;
+      var starsEl = document.getElementById("stars");
+      if(starsEl) starsEl.innerText = "0";
+      showLesson();
+    } else {
+      // TOPIC-LIST MODE — render danh sách bài học của chủ đề với lock/unlock
+      renderTopicList(subjectData);
+    }
   }
+
+  function renderTopicList(subjectData){
+    var container = document.querySelector(".lesson-container");
+    if(!container) return;
+
+    var topics  = getTopicsForSubject(lessonType);
+    var prog    = readSubjectProgress(lessonType);
+    var pTopics = prog.topics || {};
+
+    var subjectTitle = SUBJECT_TITLES[lessonType] || lessonType;
+    var subjectIcon  = SUBJECT_ICONS[lessonType]  || "📘";
+
+    var html = '<div class="topic-list-head">' +
+      '<div class="topic-list-icon">' + subjectIcon + '</div>' +
+      '<h1 class="topic-list-title">' + escapeHtml(subjectTitle) + '</h1>' +
+      '<p class="topic-list-sub">Hoàn thành mỗi bài để mở khoá bài tiếp theo</p>' +
+      '</div>';
+
+    html += '<div class="topic-list">';
+    var prevDone = true; // bài đầu luôn mở
+    topics.forEach(function(t, i){
+      var p        = pTopics[t.name] || {};
+      var unlocked = prevDone;
+      var done     = (p.completedRuns || 0) >= 1;
+      var bestRun  = p.bestRun || 0;
+      var pct      = t.count ? Math.round(bestRun / t.count * 100) : 0;
+      var stars_   = p.totalStars || 0;
+      var status   = !unlocked ? "locked" : (done ? "done" : (bestRun > 0 ? "progress" : "available"));
+
+      var click = unlocked
+        ? ('onclick="window.__goTopic(' + i + ', \'' + encodeURIComponent(t.name) + '\')"')
+        : ('disabled aria-disabled="true"');
+
+      var lockBadge = !unlocked
+        ? '<div class="topic-locked">🔒 Hoàn thành Bài ' + i + ' để mở khoá</div>'
+        : '<div class="topic-bar"><div class="topic-bar-fill" style="width:' + pct + '%"></div></div>' +
+          '<div class="topic-status">' +
+            (done    ? '✅ Đã hoàn thành • ⭐ ' + stars_
+                     : (bestRun > 0 ? '🟢 Đang học · ' + bestRun + '/' + t.count
+                                    : '▶ Sẵn sàng học'))
+          + '</div>';
+
+      html += '<button class="topic-card topic-' + status + '" type="button" ' + click + '>' +
+        '<div class="topic-num">Bài ' + (i+1) + (unlocked ? '' : ' 🔒') + '</div>' +
+        '<div class="topic-title">' + escapeHtml(t.name) + '</div>' +
+        '<div class="topic-meta">' + t.count + ' câu hỏi</div>' +
+        lockBadge +
+      '</button>';
+
+      prevDone = done; // bài kế chỉ mở nếu bài hiện tại done
+    });
+    html += '</div>';
+
+    html += '<div class="topic-list-actions">' +
+      '<button class="topic-back-btn" type="button" onclick="window.location.href=\'../../index.html\'">← Về trang chủ</button>' +
+      '</div>';
+
+    container.innerHTML = html;
+  }
+
+  // Điều hướng vào 1 bài học cụ thể (gọi từ HTML inline onclick)
+  window.__goTopic = function(idx, topicEnc){
+    var url = window.location.pathname + "?topic=" + topicEnc;
+    window.location.href = url;
+  };
 
   function ensureHeaderElements(){
     var questionEl = document.getElementById("question");
@@ -426,6 +541,18 @@
       reactDone();
       launchConfetti();
       saveProgress({ finished: true, sessionStars: stars });
+
+      // Sau 2.5s tự đẩy về danh sách bài để bé thấy bài tiếp theo đã mở khoá.
+      // Đồng thời hiện nút "Tiếp theo" cho user bấm sớm.
+      if(currentTopic && container){
+        var backUrl = window.location.pathname;
+        container.innerHTML =
+          '<div class="finish-actions">' +
+            '<button class="btn-finish primary" onclick="window.location.href=\'' + backUrl + '\'">📚 Bài tiếp theo</button>' +
+            '<button class="btn-finish ghost"  onclick="window.location.href=\'../../index.html\'">🏠 Về trang chủ</button>' +
+          '</div>';
+        setTimeout(function(){ window.location.href = backUrl; }, 2500);
+      }
       return;
     }
 
@@ -516,7 +643,24 @@
    *   finished: true khi user vừa hoàn thành toàn bộ bài (currentIndex >= total)
    *   sessionStars: số sao kiếm được trong PHIÊN này (chỉ dùng khi finished=true)
    */
+  /**
+   * Lưu tiến độ TÍCH LUỸ theo TOPIC vào localStorage + Firestore.
+   *
+   * Cấu trúc localStorage learning_progress:
+   *   {
+   *     nhan_biet: {
+   *       topics: {
+   *         "Màu sắc":    { total: 6, bestRun: 6, completedRuns: 2, totalStars: 12, lastSessionAt: ... },
+   *         "Hình dạng":  { ... },
+   *         ...
+   *       }
+   *     },
+   *     tu_duy:  { topics: { ... } },
+   *     ...
+   *   }
+   */
   function saveProgress(opts){
+    if(!currentTopic) return; // không lưu nếu đang ở topic-list mode
     opts = opts || {};
     var total      = lessons.length || 0;
     var done       = Math.max(0, Math.min(currentIndex, total));
@@ -525,7 +669,9 @@
 
     var all = {};
     try{ all = JSON.parse(localStorage.getItem("learning_progress") || "{}") || {}; }catch(e){ all = {}; }
-    var entry = all[lessonType] || { total: 0, bestRun: 0, completedRuns: 0, totalStars: 0, lastSessionAt: 0 };
+    var subj = all[lessonType] || { topics: {} };
+    if(!subj.topics) subj.topics = {};
+    var entry = subj.topics[currentTopic] || { total: 0, bestRun: 0, completedRuns: 0, totalStars: 0, lastSessionAt: 0 };
 
     entry.total         = Math.max(entry.total || 0, total);
     entry.bestRun       = Math.max(entry.bestRun || 0, done);
@@ -536,20 +682,22 @@
       entry.bestRun       = entry.total;
     }
 
-    all[lessonType] = entry;
+    subj.topics[currentTopic] = entry;
+    all[lessonType] = subj;
     try{ localStorage.setItem("learning_progress", JSON.stringify(all)); }catch(e){}
 
-    // Đồng bộ lên Firestore (best-effort)
+    // Đồng bộ lên Firestore (best-effort) — dùng dot path để chỉ ghi field thay đổi
     try{
       if(typeof firebase !== "undefined" && firebase.apps && firebase.apps.length > 0){
         var user = firebase.auth && firebase.auth().currentUser;
         if(user && firebase.firestore){
+          var base = "progress." + lessonType + ".topics." + currentTopic + ".";
           var update = {};
-          update["progress." + lessonType + ".total"]         = entry.total;
-          update["progress." + lessonType + ".bestRun"]       = entry.bestRun;
-          update["progress." + lessonType + ".completedRuns"] = entry.completedRuns;
-          update["progress." + lessonType + ".totalStars"]    = entry.totalStars;
-          update["progress." + lessonType + ".lastSessionAt"] = entry.lastSessionAt;
+          update[base + "total"]         = entry.total;
+          update[base + "bestRun"]       = entry.bestRun;
+          update[base + "completedRuns"] = entry.completedRuns;
+          update[base + "totalStars"]    = entry.totalStars;
+          update[base + "lastSessionAt"] = entry.lastSessionAt;
           update["updatedAt"] = firebase.firestore.FieldValue.serverTimestamp();
           firebase.firestore()
             .collection("learning_progress")
@@ -568,9 +716,44 @@
     }
   }
 
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", loadLessons);
-  } else {
+  /* ── User bar góc phải trên (tên + tổng sao) ── */
+  function mountUserBarLesson(){
+    var name = (localStorage.getItem("userDisplayName") || "").trim() || "Bé học sinh";
+    var data = {};
+    try{ data = JSON.parse(localStorage.getItem("learning_progress") || "{}") || {}; }catch(e){}
+    var totalStars = 0;
+    Object.values(data).forEach(function(s){
+      if(s && s.topics){
+        Object.values(s.topics).forEach(function(t){ totalStars += (t.totalStars || 0); });
+      } else if(s && s.totalStars){
+        totalStars += s.totalStars;
+      }
+    });
+    var bar = document.getElementById("userBar");
+    if(!bar){
+      bar = document.createElement("div");
+      bar.id = "userBar";
+      bar.className = "user-bar";
+      document.body.appendChild(bar);
+    }
+    var safeName = name.replace(/[<>&"']/g, function(c){
+      return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c];
+    });
+    bar.innerHTML =
+      '<span class="ub-avatar">👤</span>' +
+      '<span class="ub-name" title="' + safeName + '">' + (safeName.length > 16 ? safeName.slice(0,15) + "…" : safeName) + '</span>' +
+      '<span class="ub-divider"></span>' +
+      '<span class="ub-stars" title="Tổng sao đã đạt">🌟 ' + totalStars + '</span>';
+  }
+
+  function bootLesson(){
     loadLessons();
+    mountUserBarLesson();
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", bootLesson);
+  } else {
+    bootLesson();
   }
 })();
