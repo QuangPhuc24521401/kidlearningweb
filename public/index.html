@@ -94,59 +94,82 @@
   <p class="subtitle">Chọn môn học và cùng bắt đầu nào! 🌟</p>
 
   <div class="menu-grid" style="margin-top:12px">
-    <button class="menu-item mi-language" onclick="goLesson('nhan_biet')">
+    <button class="menu-item mi-language" data-subject="nhan_biet" onclick="goLesson('nhan_biet')">
       <div class="mi-top">
         <span class="mi-badge">Cơ bản</span>
         <span class="mi-tag">👀</span>
       </div>
       <div class="mi-title">Nhận biết</div>
       <div class="mi-sub">Màu sắc • Hình dạng • Đếm số</div>
+      <div class="mi-progress" data-progress-for="nhan_biet"></div>
     </button>
 
-    <button class="menu-item mi-puzzle" onclick="goLesson('tu_duy')">
+    <button class="menu-item mi-puzzle" data-subject="tu_duy" onclick="goLesson('tu_duy')">
       <div class="mi-top">
         <span class="mi-badge">Logic</span>
         <span class="mi-tag">🧠</span>
       </div>
       <div class="mi-title">Tư duy</div>
       <div class="mi-sub">Tìm khác biệt • Dãy số • So sánh</div>
+      <div class="mi-progress" data-progress-for="tu_duy"></div>
     </button>
 
-    <button class="menu-item mi-music" onclick="goLesson('am_nhac')">
+    <button class="menu-item mi-music" data-subject="am_nhac" onclick="goLesson('am_nhac')">
       <div class="mi-top">
         <span class="mi-badge">Âm thanh</span>
         <span class="mi-tag">🎵</span>
       </div>
       <div class="mi-title">Âm nhạc</div>
       <div class="mi-sub">Nhạc cụ • Nhịp điệu • Nốt nhạc</div>
+      <div class="mi-progress" data-progress-for="am_nhac"></div>
     </button>
 
-    <button class="menu-item mi-puzzle" onclick="goLesson('ghep_hinh')">
+    <button class="menu-item mi-puzzle" data-subject="ghep_hinh" onclick="goLesson('ghep_hinh')">
       <div class="mi-top">
         <span class="mi-badge">Không gian</span>
         <span class="mi-tag">🧩</span>
       </div>
       <div class="mi-title">Ghép hình</div>
       <div class="mi-sub">Hình khối • Mẫu lặp • Chọn mảnh đúng</div>
+      <div class="mi-progress" data-progress-for="ghep_hinh"></div>
     </button>
 
-    <button class="menu-item mi-art" onclick="goLesson('my_thuat')">
+    <button class="menu-item mi-art" data-subject="my_thuat" onclick="goLesson('my_thuat')">
       <div class="mi-top">
         <span class="mi-badge">Sáng tạo</span>
         <span class="mi-tag">🎨</span>
       </div>
       <div class="mi-title">Mỹ thuật</div>
       <div class="mi-sub">Màu sắc • Cảm xúc • Trộn màu</div>
+      <div class="mi-progress" data-progress-for="my_thuat"></div>
     </button>
 
-    <button class="menu-item mi-math" onclick="goLesson('ngon_ngu')">
+    <button class="menu-item mi-math" data-subject="ngon_ngu" onclick="goLesson('ngon_ngu')">
       <div class="mi-top">
         <span class="mi-badge">Từ vựng</span>
         <span class="mi-tag">📚</span>
       </div>
       <div class="mi-title">Ngôn ngữ</div>
       <div class="mi-sub">Đồ vật • Con vật • Từ đơn giản</div>
+      <div class="mi-progress" data-progress-for="ngon_ngu"></div>
     </button>
+  </div>
+
+  <!-- Tổng kết tiến độ -->
+  <div id="overallProgress" class="overall-progress" hidden>
+    <div class="op-row">
+      <span class="op-icon">🌟</span>
+      <span class="op-label">Tổng sao:</span>
+      <span class="op-value" id="opStars">0</span>
+    </div>
+    <div class="op-row">
+      <span class="op-icon">✅</span>
+      <span class="op-label">Đã hoàn thành:</span>
+      <span class="op-value"><span id="opDone">0</span>/6 môn</span>
+    </div>
+    <div class="op-row">
+      <button class="op-reset" onclick="resetProgress()" title="Xoá toàn bộ tiến độ học">🗑️ Bắt đầu lại</button>
+    </div>
   </div>
   <div class="mentor-cta-wrap">
     <button class="mentor-cta" onclick="window.location.href='mentor.html'" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">

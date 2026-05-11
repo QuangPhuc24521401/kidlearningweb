@@ -425,7 +425,7 @@
       if(status){ status.innerText = "Con giỏi quá! 🏆"; prettifyEmoji(status); }
       reactDone();
       launchConfetti();
-      saveProgress();
+      saveProgress({ finished: true, sessionStars: stars });
       return;
     }
 
@@ -497,31 +497,65 @@
     prettifyEmoji(container);
   }
 
-  function saveProgress(){
-    try{
-      var key = "progress_" + lessonType;
-      localStorage.setItem(key, JSON.stringify({
-        type: lessonType,
-        completed: currentIndex,
-        stars: stars,
-        updatedAt: Date.now()
-      }));
-    }catch(e){}
+  /**
+   * Lưu tiến độ TÍCH LUỸ vào localStorage (key learning_progress) + Firestore.
+   *
+   * Cấu trúc localStorage learning_progress:
+   *   {
+   *     nhan_biet: {
+   *       total: 20,            // tổng câu hỏi của môn
+   *       bestRun: 18,          // số câu xa nhất từng làm trong 1 phiên
+   *       completedRuns: 2,     // số lần hoàn thành toàn bộ
+   *       totalStars: 36,       // tổng sao tích luỹ
+   *       lastSessionAt: 17xx   // ms từ epoch
+   *     },
+   *     ...
+   *   }
+   *
+   * @param {{finished?: boolean, sessionStars?: number}} opts
+   *   finished: true khi user vừa hoàn thành toàn bộ bài (currentIndex >= total)
+   *   sessionStars: số sao kiếm được trong PHIÊN này (chỉ dùng khi finished=true)
+   */
+  function saveProgress(opts){
+    opts = opts || {};
+    var total      = lessons.length || 0;
+    var done       = Math.max(0, Math.min(currentIndex, total));
+    var finished   = !!opts.finished;
+    var sessionStr = (typeof opts.sessionStars === "number") ? opts.sessionStars : stars;
 
+    var all = {};
+    try{ all = JSON.parse(localStorage.getItem("learning_progress") || "{}") || {}; }catch(e){ all = {}; }
+    var entry = all[lessonType] || { total: 0, bestRun: 0, completedRuns: 0, totalStars: 0, lastSessionAt: 0 };
+
+    entry.total         = Math.max(entry.total || 0, total);
+    entry.bestRun       = Math.max(entry.bestRun || 0, done);
+    entry.lastSessionAt = Date.now();
+    if(finished){
+      entry.completedRuns = (entry.completedRuns || 0) + 1;
+      entry.totalStars    = (entry.totalStars    || 0) + sessionStr;
+      entry.bestRun       = entry.total;
+    }
+
+    all[lessonType] = entry;
+    try{ localStorage.setItem("learning_progress", JSON.stringify(all)); }catch(e){}
+
+    // Đồng bộ lên Firestore (best-effort)
     try{
       if(typeof firebase !== "undefined" && firebase.apps && firebase.apps.length > 0){
         var user = firebase.auth && firebase.auth().currentUser;
         if(user && firebase.firestore){
+          var update = {};
+          update["progress." + lessonType + ".total"]         = entry.total;
+          update["progress." + lessonType + ".bestRun"]       = entry.bestRun;
+          update["progress." + lessonType + ".completedRuns"] = entry.completedRuns;
+          update["progress." + lessonType + ".totalStars"]    = entry.totalStars;
+          update["progress." + lessonType + ".lastSessionAt"] = entry.lastSessionAt;
+          update["updatedAt"] = firebase.firestore.FieldValue.serverTimestamp();
           firebase.firestore()
-            .collection("progress")
-            .doc(user.uid + "_" + lessonType)
-            .set({
-              userId: user.uid,
-              type: lessonType,
-              completed: currentIndex,
-              stars: stars,
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            .collection("learning_progress")
+            .doc(user.uid)
+            .set(update, { merge: true })
+            .catch(function(err){ console.warn("[saveProgress] firestore", err); });
         }
       }
     }catch(e){}

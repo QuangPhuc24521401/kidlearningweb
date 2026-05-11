@@ -285,3 +285,114 @@
   .menu-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .menu-item{border-radius:24px}
 }
+
+/* ═══════════ PROGRESS BADGES ═══════════ */
+.menu-item{position:relative}
+
+.mi-progress{
+  margin-top:10px;
+  position:relative;
+  z-index:1;
+}
+.mi-status-row{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  margin-bottom:5px;
+}
+.mi-status{
+  font-family:'Nunito',sans-serif;
+  font-size:11.5px;font-weight:800;
+  padding:3px 8px;border-radius:8px;
+  white-space:nowrap;
+}
+.mi-status-none{ background:#f1f5f9;color:#64748b }
+.mi-status-prog{ background:#fff3cd;color:#856404 }
+.mi-status-done{ background:#d4edda;color:#155724 }
+.mi-frac{
+  font-family:'Nunito',sans-serif;
+  font-size:11px;font-weight:800;color:#475569;
+  white-space:nowrap;
+}
+.mi-bar{
+  height:5px;background:rgba(0,0,0,.06);
+  border-radius:3px;overflow:hidden;
+}
+.mi-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,#fbbf24,#f59e0b);
+  border-radius:3px;
+  transition:width .6s cubic-bezier(.34,1.2,.64,1);
+}
+.menu-item.is-done .mi-bar-fill{
+  background:linear-gradient(90deg,#34d399,#10b981);
+}
+
+/* Hiệu ứng nhẹ cho item đã hoàn thành */
+.menu-item.is-done{
+  position:relative;
+}
+.menu-item.is-done::after{
+  content:'✨';
+  position:absolute;top:10px;right:10px;
+  font-size:18px;
+  filter:drop-shadow(0 2px 4px rgba(255,193,7,.6));
+  animation:doneShine 2.4s ease-in-out infinite;
+  z-index:2;
+}
+@keyframes doneShine{
+  0%,100%{transform:rotate(0deg) scale(1);opacity:.7}
+  50%    {transform:rotate(15deg) scale(1.2);opacity:1}
+}
+
+/* Item chưa làm: dim nhẹ để focus vào item đã có hoạt động */
+.menu-item.is-none{ opacity:.92 }
+
+/* ═══════════ OVERALL PROGRESS PANEL ═══════════ */
+.overall-progress{
+  margin: 18px auto 0;
+  padding: 14px 18px;
+  background: rgba(255,255,255,.65);
+  border: 2px solid rgba(255,255,255,.85);
+  border-radius: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  font-family:'Nunito',sans-serif;
+  font-weight:800;
+  color: var(--ink, #1a1a2e);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
+}
+.op-row{
+  display:flex;align-items:center;gap:8px;
+  font-size:14.5px;
+}
+.op-icon{ font-size:20px }
+.op-label{ color:#64748b;font-weight:700 }
+.op-value{ color:#1565C0;font-size:16px }
+.op-reset{
+  border:none;cursor:pointer;
+  padding:8px 14px;border-radius:14px;
+  background:linear-gradient(135deg,#fee2e2,#fecaca);
+  color:#991b1b;
+  font-family:'Baloo 2',cursive;font-weight:800;font-size:13px;
+  transition:transform .12s, filter .12s;
+}
+.op-reset:hover{ transform:translateY(-2px); filter:brightness(.97) }
+.op-reset:active{ transform:translateY(1px) }
+
+/* Dark mode adjust */
+:root[data-theme="dark"] .overall-progress{
+  background: rgba(18,26,46,.62);
+  border-color: rgba(255,255,255,.14);
+  color: var(--ink);
+}
+:root[data-theme="dark"] .op-label{ color:#cbd5e1 }
+:root[data-theme="dark"] .op-value{ color:#9bb4ff }
+:root[data-theme="dark"] .mi-status-none{ background:rgba(255,255,255,.08); color:#cbd5e1 }
+:root[data-theme="dark"] .mi-status-prog{ background:rgba(251,191,36,.18); color:#fde68a }
+:root[data-theme="dark"] .mi-status-done{ background:rgba(52,211,153,.18); color:#a7f3d0 }
+:root[data-theme="dark"] .mi-frac{ color:#cbd5e1 }
+:root[data-theme="dark"] .mi-bar{ background:rgba(255,255,255,.10) }
