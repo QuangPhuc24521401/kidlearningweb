@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Đấu PvP — Kid Learning</title>
+<title>Đấu trường — Kid Learning</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
 <link rel="stylesheet" href="pvp.css">
+<link rel="stylesheet" href="arena.css">
 <script>document.documentElement.style.visibility='hidden';</script>
 <script>
   (function quickRoleGuard(){
@@ -23,7 +24,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
-<body class="page-scroll page-pvp">
+<body class="page-scroll page-arena">
 
 <header class="app-topbar" role="banner">
   <div class="app-topbar-inner">
@@ -31,14 +32,14 @@
       <img src="favicon.svg" alt="Kid Learning" class="topbar-brand-logo" width="36" height="36" decoding="async">
       <span class="topbar-brand-text">
         <span class="topbar-brand-name">Kid Learning</span>
-        <span class="topbar-brand-tag">Đấu kiến thức PvP</span>
+        <span class="topbar-brand-tag">Đấu trường trực tuyến</span>
       </span>
     </a>
     <nav class="topbar-nav" aria-label="Điều hướng chính">
       <a href="index.html" class="topbar-link">Trang chủ</a>
       <a href="progress.html" class="topbar-link">Tiến độ &amp; huy hiệu</a>
-      <a href="arena.html" class="topbar-link">Đấu trường</a>
-      <a href="pvp.html" class="topbar-link is-current" aria-current="page">PvP</a>
+      <a href="arena.html" class="topbar-link is-current" aria-current="page">Đấu trường</a>
+      <a href="pvp.html" class="topbar-link">PvP</a>
       <a href="mentor.html" class="topbar-link">Cô giáo AI</a>
     </nav>
     <div class="topbar-end">
@@ -92,68 +93,60 @@
   </div>
 </div>
 
-<div class="pvp-wrap">
-  <div id="lobby">
-    <div class="pvp-card">
-      <h1>⚔️ Đấu cùng bạn</h1>
-      <p class="pvp-lead">Hai bé cùng trả lời một màn: <strong>đúng và nhanh hơn</strong> được 1 điểm. Ai tới <strong>5 điểm</strong> trước thắng. Cần đăng nhập và bật quyền Firestore (xem chú thích trong mã).</p>
+<div class="arena-wrap">
+  <div class="arena-card">
+    <h1>🏟️ Đấu trường trực tuyến</h1>
+    <p class="arena-lead">Nhiều bé cùng vào <strong>một phiên</strong>, trả lời câu hỏi xen kẽ các môn. Hết giờ, <strong>ai điểm cao nhất</strong> (hòa thì ai trả lời nhanh hơn) nhận <strong>điểm vinh dự</strong> và huy hiệu. Cần đăng nhập và quyền ghi Firestore cho <code style="font-size:12px">arena_sessions</code>.</p>
 
-      <p class="pvp-code-label" style="text-align:center;margin-bottom:8px">Chủ đề câu hỏi</p>
-      <div id="pvpSubjectChips" class="pvp-subject-row"></div>
-
-      <div id="lobbyMain">
-        <div class="pvp-actions">
-          <button type="button" class="pvp-btn pvp-btn-primary" onclick="pvpCreateRoom()">➕ Tạo phòng &amp; lấy mã</button>
-          <button type="button" class="pvp-btn pvp-btn-secondary" onclick="pvpQuickMatch()">⚡ Vào phòng chờ (nhanh)</button>
-        </div>
-        <div class="pvp-input-row">
-          <input id="pvpCodeInput" type="text" maxlength="8" placeholder="MÃ PHÒNG" autocomplete="off">
-          <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpJoinRoom()">Vào phòng</button>
-        </div>
+    <div class="arena-hero">
+      <div class="arena-clock-box">
+        <p class="arena-clock-label">Còn lại (phiên)</p>
+        <div id="arenaCountdown" class="arena-clock-value" aria-live="polite">—:—</div>
       </div>
-
-      <div id="lobbyWaiting" class="pvp-hidden">
-        <div class="pvp-code-box">
-          <div class="pvp-code-label">Mã phòng gửi cho bạn</div>
-          <div id="pvpCodeShow" class="pvp-code-value">——</div>
-        </div>
-        <p id="pvpWaitMsg" class="pvp-lead" style="margin-bottom:12px"></p>
-        <div class="pvp-actions">
-          <button type="button" id="pvpBtnStart" class="pvp-btn pvp-btn-primary pvp-hidden" onclick="pvpStartMatch()">▶ Bắt đầu đấu</button>
-          <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpLeaveRoom()">Rời phòng</button>
-        </div>
+      <div class="arena-clock-box" style="background:linear-gradient(145deg,#eff6ff,#e0e7ff);border-color:rgba(59,130,246,.35)">
+        <p class="arena-clock-label" style="color:#1d4ed8">Vinh dự tích luỹ</p>
+        <div id="arenaHonorTotal" class="arena-clock-value" style="color:#1e3a8a;font-size:28px" aria-live="polite">0</div>
       </div>
     </div>
-  </div>
 
-  <div id="arena" class="pvp-hidden">
-    <div class="pvp-card">
-      <div class="pvp-scoreboard">
-        <div id="pvpPillA" class="pvp-player-pill">
-          <div class="pvp-p-name" id="pvpNameA">Bạn A</div>
-          <div class="pvp-p-score" id="pvpScoreA">0</div>
-        </div>
-        <div class="pvp-vs">VS</div>
-        <div id="pvpPillB" class="pvp-player-pill">
-          <div class="pvp-p-name" id="pvpNameB">Bạn B</div>
-          <div class="pvp-p-score" id="pvpScoreB">0</div>
-        </div>
-      </div>
-      <p id="pvpQMeta" class="pvp-q-meta"></p>
-      <h2 id="pvpQuestion" class="pvp-question"></h2>
-      <div id="pvpAnswers" class="pvp-answers"></div>
-      <p id="pvpStatus" class="pvp-status"></p>
-      <div id="pvpResultBanner" class="pvp-result-banner pvp-hidden"></div>
-      <div class="pvp-actions" style="margin-top:16px">
-        <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpLeaveRoom()">Về sảnh</button>
-      </div>
+    <p id="arenaPhase" class="arena-phase">Đang kết nối...</p>
+
+    <div class="arena-actions">
+      <button type="button" class="pvp-btn pvp-btn-primary" onclick="arenaEnter()">🎯 Vào sàn &amp; cập nhật bảng</button>
+      <button type="button" class="pvp-btn pvp-btn-ghost" onclick="arenaEnter()">🔄 Làm mới kết nối</button>
     </div>
+
+    <div class="arena-meta">
+      <span id="arenaPicksCount" aria-live="polite"></span>
+    </div>
+
+    <div class="arena-lb-wrap">
+      <table class="arena-lb-table" aria-label="Bảng điểm đấu trường">
+        <thead>
+          <tr><th>#</th><th>Bé</th><th>Điểm</th></tr>
+        </thead>
+        <tbody id="arenaLeaderboard"></tbody>
+      </table>
+    </div>
+
+    <div class="arena-q-block">
+      <p id="arenaQMeta" class="pvp-q-meta"></p>
+      <h2 id="arenaQuestion" class="pvp-question"></h2>
+      <div id="arenaAnswers" class="pvp-answers"></div>
+    </div>
+
+    <div id="arenaPodium" class="arena-podium arena-hidden" aria-live="polite">
+      <div id="arenaPodiumInner"></div>
+    </div>
+
+    <div id="arenaRewardBanner" class="arena-reward-banner arena-hidden" role="status"></div>
   </div>
 </div>
 
 <script src="firebase.js"></script>
 <script src="lessons/data/lessons-data.js"></script>
-<script src="pvp.js"></script>
+<script src="achievements.js"></script>
+<script src="arena.js"></script>
 <script>
   (function deepRoleGuard(){
     if(localStorage.getItem('userRole')) return;
@@ -175,5 +168,26 @@
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
+<script>
+(function(){
+  window.addEventListener('beforeunload', function(){
+    if(typeof arenaLeavePage === 'function') arenaLeavePage();
+  });
+  function enterIfReady(){
+    if(typeof firebase === 'undefined' || !firebase.auth) return;
+    if(firebase.auth().currentUser && typeof arenaEnter === 'function') arenaEnter();
+  }
+  if(typeof firebase !== 'undefined' && firebase.auth){
+    firebase.auth().onAuthStateChanged(function(user){
+      if(user && typeof arenaEnter === 'function'){ arenaEnter(); }
+    });
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', enterIfReady);
+  } else {
+    enterIfReady();
+  }
+})();
+</script>
 </body>
 </html>

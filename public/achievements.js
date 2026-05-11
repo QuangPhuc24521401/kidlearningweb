@@ -18,7 +18,9 @@
     { id: "stars_75",       icon: "🌟", title: "Vệ tinh sáng",   desc: "Tích luỹ 75 sao" },
     { id: "stars_150",      icon: "✨", title: "Dải ngân hà",    desc: "Tích luỹ 150 sao" },
     { id: "streak_3",       icon: "🔥", title: "Lửa học tập",    desc: "Học 3 ngày liên tiếp" },
-    { id: "streak_7",       icon: "🌈", title: "Tuần vàng",      desc: "Học 7 ngày liên tiếp" }
+    { id: "streak_7",       icon: "🌈", title: "Tuần vàng",      desc: "Học 7 ngày liên tiếp" },
+    { id: "arena_champion", icon: "🏟️", title: "Bá chủ sàn đấu", desc: "Thắng một phiên đấu trường trực tuyến" },
+    { id: "arena_legend",   icon: "👑", title: "Huyền thoại sàn", desc: "Thắng đấu trường 5 lần" }
   ];
 
   function _pad2(n){ return (n < 10 ? "0" : "") + n; }
@@ -260,6 +262,31 @@
     try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
   }
 
+  function recordArenaWin(honorPoints){
+    honorPoints = typeof honorPoints === "number" ? honorPoints : 15;
+    var n = (parseInt(localStorage.getItem("arena_wins_total") || "0", 10) || 0) + 1;
+    localStorage.setItem("arena_wins_total", String(n));
+    var honor = (parseInt(localStorage.getItem("arena_honor") || "0", 10) || 0) + honorPoints;
+    localStorage.setItem("arena_honor", String(honor));
+
+    var state = readAchievements();
+    var toasts = [];
+    window.ACHIEVEMENT_DEFS.forEach(function(def){
+      if(def.id === "arena_champion" && n >= 1 && !state.unlocked.arena_champion){
+        state.unlocked.arena_champion = Date.now();
+        toasts.push(def);
+      }
+      if(def.id === "arena_legend" && n >= 5 && !state.unlocked.arena_legend){
+        state.unlocked.arena_legend = Date.now();
+        toasts.push(def);
+      }
+    });
+    writeAchievements(state);
+    toasts.forEach(showAchievementToast);
+    flushAchievementsToCloud();
+    return { wins: n, honor: honor };
+  }
+
   window.readAchievements = readAchievements;
   window.recordStudyDay = recordStudyDay;
   window.renderAchievementsPanel = renderAchievementsPanel;
@@ -268,4 +295,5 @@
   window.syncAchievementsAfterLessonSave = syncAchievementsAfterLessonSave;
   window.recomputeAchievementsAfterCloudMerge = recomputeAchievementsAfterCloudMerge;
   window.resetAchievementStorage = resetAchievementStorage;
+  window.recordArenaWin = recordArenaWin;
 })();

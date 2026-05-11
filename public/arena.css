@@ -1,0 +1,181 @@
+/* Đấu trường — nhiều người, phiên có thời hạn */
+
+.page-arena.page-scroll{
+  padding-top:calc(var(--topbar-h) + 24px);
+  padding-bottom:40px;
+}
+
+.arena-hidden{
+  display:none !important;
+}
+
+.arena-wrap{
+  width:min(720px, calc(100vw - 32px));
+  margin:0 auto;
+  position:relative;
+  z-index:10;
+}
+
+.arena-card{
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,252,248,.88));
+  border:1px solid rgba(255,255,255,.7);
+  border-radius:28px;
+  padding:22px 22px 26px;
+  box-shadow:0 14px 40px rgba(15,23,42,.1);
+  backdrop-filter:blur(18px);
+}
+
+.arena-card h1{
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-weight:800;
+  font-size:22px;
+  color:#0f172a;
+  margin:0 0 6px;
+  text-align:center;
+}
+
+.arena-lead{
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-size:14px;
+  color:#64748b;
+  text-align:center;
+  margin:0 0 18px;
+  line-height:1.55;
+}
+
+.arena-hero{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-bottom:16px;
+  align-items:stretch;
+}
+
+@media (max-width:560px){
+  .arena-hero{ grid-template-columns:1fr; }
+}
+
+.arena-clock-box{
+  background:linear-gradient(145deg, #fff7ed, #ffedd5);
+  border:2px solid rgba(251,146,60,.35);
+  border-radius:20px;
+  padding:14px 16px;
+  text-align:center;
+}
+.arena-clock-label{
+  font-family:'Nunito',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  color:#c2410c;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  margin:0 0 4px;
+}
+.arena-clock-value{
+  font-family:'Baloo 2',cursive;
+  font-size:34px;
+  font-weight:800;
+  color:#9a3412;
+  line-height:1;
+}
+
+.arena-phase{
+  font-family:'Nunito',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  color:#334155;
+  text-align:center;
+  margin:0 0 14px;
+  line-height:1.45;
+}
+
+.arena-actions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.arena-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 16px;
+  justify-content:center;
+  font-family:'Nunito',sans-serif;
+  font-size:13px;
+  color:#64748b;
+  margin-bottom:14px;
+}
+.arena-meta strong{ color:#0f172a; }
+
+.arena-lb-wrap{
+  overflow:auto;
+  border-radius:16px;
+  border:1px solid rgba(15,23,42,.08);
+  margin-bottom:16px;
+  max-height:min(220px, 40vh);
+}
+.arena-lb-table{
+  width:100%;
+  border-collapse:collapse;
+  font-family:'Nunito',sans-serif;
+  font-size:14px;
+}
+.arena-lb-table thead th{
+  background:linear-gradient(180deg,#f1f5f9,#e2e8f0);
+  color:#475569;
+  font-weight:800;
+  text-align:left;
+  padding:10px 12px;
+  position:sticky;
+  top:0;
+  z-index:1;
+}
+.arena-lb-table tbody td{
+  padding:10px 12px;
+  border-top:1px solid rgba(15,23,42,.06);
+  color:#334155;
+}
+.arena-lb-table tbody tr.is-me{
+  background:rgba(219,234,254,.55);
+}
+.arena-lb-table tbody tr.is-me td{ font-weight:700; }
+
+.arena-q-block{
+  margin-top:8px;
+}
+
+.arena-podium{
+  margin-top:14px;
+  padding:16px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#fef3c7,#fde68a);
+  border:2px solid rgba(245,158,11,.4);
+  text-align:center;
+}
+.arena-podium-win{
+  font-family:'Baloo 2',cursive;
+  font-size:22px;
+  font-weight:800;
+  color:#92400e;
+  margin:0 0 8px;
+}
+.arena-podium-sub{
+  font-family:'Nunito',sans-serif;
+  font-size:13px;
+  color:#78350f;
+  margin:0;
+  line-height:1.45;
+}
+
+.arena-reward-banner{
+  margin-top:14px;
+  padding:14px 16px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#d1fae5,#a7f3d0);
+  border:2px solid rgba(16,185,129,.45);
+  font-family:'Nunito',sans-serif;
+  font-size:14px;
+  color:#065f46;
+  line-height:1.5;
+}

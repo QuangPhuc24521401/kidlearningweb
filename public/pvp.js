@@ -513,6 +513,7 @@
     });
   };
 
+  document.addEventListener('DOMContentLoaded', function(){
     renderSubjectChips();
   });
 })();
