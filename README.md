@@ -6,22 +6,22 @@
 
 ---
 
-## 📚 Tính năng chính
+##  Tính năng chính
 
 | Trang | Đường dẫn | Mô tả |
 |-------|-----------|-------|
-| 🏠 Trang chủ | `index.html` | Menu các môn học, hiển thị tiến độ & badge gắn vào từng môn. |
-| 🎒 Bài học | `lessons/<môn>/index.html` → `lessons/lesson.html` | 6 môn: Nhận biết, Tư duy, Âm nhạc, Ghép hình, Mỹ thuật, Ngôn ngữ. Mỗi môn chia **chủ đề (topic)** mở khoá tuần tự, có sao thưởng và phát giọng đọc TTS. |
-| 🏆 Tiến độ & huy hiệu | `progress.html` | Tổng sao, streak ngày, các huy hiệu (study streak, top score, arena champion, …). |
-| 🏟️ Đấu trường | `arena.html` | **Nhiều người** cùng một phiên có thời hạn → ai điểm cao nhất nhận điểm vinh dự + huy hiệu. |
-| ⚔️ PvP 1v1 | `pvp.html` | Tạo phòng / nhập mã / quick match — đúng và nhanh hơn thắng. |
-| 👩‍🏫 Cô giáo AI | `mentor.html` | Trợ giảng giọng nói (FPT.AI TTS + Web Speech fallback), có thể gọi video Jitsi với giáo viên thật. |
-| 🧑‍🏫 Dashboard giáo viên | `mentor-teacher.html` | Quản lý lớp, mở cuộc gọi với học sinh. |
-| 🔐 Auth | `auth/login.html`, `auth/register.html`, `auth/forgot.html` | Đăng ký / đăng nhập / quên mật khẩu qua Firebase Auth. |
+|  Trang chủ | `index.html` | Menu các môn học, hiển thị tiến độ & badge gắn vào từng môn. |
+|  Bài học | `lessons/<môn>/index.html` → `lessons/lesson.html` | 6 môn: Nhận biết, Tư duy, Âm nhạc, Ghép hình, Mỹ thuật, Ngôn ngữ. Mỗi môn chia **chủ đề (topic)** mở khoá tuần tự, có sao thưởng và phát giọng đọc TTS. |
+|  Tiến độ & huy hiệu | `progress.html` | Tổng sao, streak ngày, các huy hiệu (study streak, top score, arena champion, …). |
+|  Đấu trường | `arena.html` | **Nhiều người** cùng một phiên có thời hạn → ai điểm cao nhất nhận điểm vinh dự + huy hiệu. |
+|  PvP 1v1 | `pvp.html` | Tạo phòng / nhập mã / quick match — đúng và nhanh hơn thắng. |
+|  Cô giáo AI | `mentor.html` | Trợ giảng giọng nói (FPT.AI TTS + Web Speech fallback), có thể gọi video Jitsi với giáo viên thật. |
+|  Dashboard giáo viên | `mentor-teacher.html` | Quản lý lớp, mở cuộc gọi với học sinh. |
+|  Auth | `auth/login.html`, `auth/register.html`, `auth/forgot.html` | Đăng ký / đăng nhập / quên mật khẩu qua Firebase Auth. |
 
 ---
 
-## 🛠️ Tech stack
+##  Tech stack
 
 - **Frontend**: HTML/CSS/JS thuần (no bundler, no framework), thiết kế *liquid glass* + topbar điều hướng + dropdown avatar mobile.
 - **Backend**: [Firebase](https://firebase.google.com/) — Auth (Email/Password), Firestore (tiến độ, đấu trường, PvP), Hosting.
@@ -31,7 +31,7 @@
 
 ---
 
-## 📁 Cấu trúc thư mục
+##  Cấu trúc thư mục
 
 ```
 kid-learning-git/
@@ -67,7 +67,7 @@ kid-learning-git/
 
 ---
 
-## 🚀 Chạy local
+##  Chạy local
 
 > Project là static site, **không cần build**.
 
@@ -87,7 +87,7 @@ Mở trình duyệt `http://localhost:5173` (hoặc cổng tương ứng).
 
 ---
 
-## 🔥 Cấu hình Firebase
+##  Cấu hình Firebase
 
 ### 1. Tạo project + bật Auth & Firestore
 
@@ -105,7 +105,7 @@ Mở **Firestore → Rules**, dán nội dung từ `kidlearningweb/firestore.rul
 
 ---
 
-## 🔊 Cấu hình TTS (giọng Tiếng Việt)
+##  Cấu hình TTS (giọng Tiếng Việt)
 
 App ưu tiên dùng **FPT.AI TTS** (giọng tự nhiên), fallback Web Speech API nếu chưa có key.
 
@@ -120,7 +120,7 @@ App ưu tiên dùng **FPT.AI TTS** (giọng tự nhiên), fallback Web Speech AP
 
 ---
 
-## 🏟️ Đấu trường & ⚔️ PvP
+##  Đấu trường &  PvP
 
 ### Đấu trường (`arena.html`)
 - Một document Firestore cố định `arena_sessions/live`.
@@ -134,7 +134,7 @@ App ưu tiên dùng **FPT.AI TTS** (giọng tự nhiên), fallback Web Speech AP
 
 ---
 
-## 🎯 Hệ thống huy hiệu
+##  Hệ thống huy hiệu
 
 Tự động unlock dựa trên dữ liệu trong `localStorage` (đồng bộ Firestore khi đăng nhập):
 
@@ -147,15 +147,15 @@ Xem `achievements.js` để xem định nghĩa và mở rộng thêm.
 
 ---
 
-## 📱 Mobile
+##  Mobile
 
 - Topbar trên màn nhỏ: logo + menu links (chip cuộn ngang) + avatar.
-- Các nút **🎵 Nhạc / ⚙️ Cài đặt / 🚪 Đăng xuất** được gộp vào **dropdown khi bấm avatar** để màn hình đỡ chật.
+- Các nút ** Nhạc /  Cài đặt /  Đăng xuất** được gộp vào **dropdown khi bấm avatar** để màn hình đỡ chật.
 - Đấu trường / PvP / bài học đều thu gọn padding, font dùng `clamp()` để vừa các màn 360–480px.
 
 ---
 
-## 🧰 Phím tắt khi dev
+##  Phím tắt khi dev
 
 | Hành động | Cách làm |
 |-----------|----------|
@@ -166,7 +166,7 @@ Xem `achievements.js` để xem định nghĩa và mở rộng thêm.
 
 ---
 
-## 📌 Lưu ý
+##  Lưu ý
 
 - **Không commit** API key Firebase nhạy cảm hay FPT.AI key vào git (đã có `.gitignore` cho `secrets/`).
 - Một số tính năng (đồng bộ tiến độ, đấu trường, PvP) yêu cầu **đăng nhập** + **Firestore Rules đã publish**.
@@ -174,6 +174,6 @@ Xem `achievements.js` để xem định nghĩa và mở rộng thêm.
 
 ---
 
-## 📄 Giấy phép
+##  Giấy phép
 
 ISC — dùng cho mục đích học tập / đồ án.
