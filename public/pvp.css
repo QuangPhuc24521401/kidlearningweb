@@ -1,0 +1,282 @@
+/* PvP — đấu kiến thức */
+
+.page-pvp.page-scroll{
+  padding-top:calc(var(--topbar-h) + 24px);
+  padding-bottom:40px;
+}
+
+.pvp-wrap{
+  width:min(560px, calc(100vw - 32px));
+  margin:0 auto;
+  position:relative;
+  z-index:10;
+}
+
+.pvp-card{
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.82));
+  border:1px solid rgba(255,255,255,.65);
+  border-radius:28px;
+  padding:22px 22px 26px;
+  box-shadow:0 14px 40px rgba(15,23,42,.1);
+  backdrop-filter:blur(18px);
+}
+
+.pvp-card h1{
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-weight:800;
+  font-size:22px;
+  color:#0f172a;
+  margin:0 0 6px;
+  text-align:center;
+}
+.pvp-lead{
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-size:14px;
+  color:#64748b;
+  text-align:center;
+  margin:0 0 18px;
+  line-height:1.5;
+}
+
+.pvp-subject-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:center;
+  margin-bottom:16px;
+}
+.pvp-chip{
+  border:2px solid rgba(15,23,42,.12);
+  background:rgba(255,255,255,.8);
+  border-radius:999px;
+  padding:8px 14px;
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  color:#334155;
+  transition:background .15s, border-color .15s, transform .12s;
+}
+.pvp-chip:hover{ transform:translateY(-1px) }
+.pvp-chip.is-on{
+  background:linear-gradient(135deg,#dbeafe,#e0e7ff);
+  border-color:#2563eb;
+  color:#1d4ed8;
+}
+
+.pvp-actions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:12px;
+}
+.pvp-btn{
+  border:none;
+  border-radius:16px;
+  padding:14px 18px;
+  font-family:'Baloo 2',cursive;
+  font-size:17px;
+  font-weight:800;
+  cursor:pointer;
+  transition:transform .12s, filter .12s;
+}
+.pvp-btn:active{ transform:translateY(2px) }
+.pvp-btn-primary{
+  background:linear-gradient(135deg,#34d399,#10b981);
+  color:#fff;
+  box-shadow:0 5px 0 #047857, 0 10px 24px rgba(16,185,129,.3);
+}
+.pvp-btn-secondary{
+  background:linear-gradient(135deg,#93c5fd,#3b82f6);
+  color:#fff;
+  box-shadow:0 5px 0 #1d4ed8, 0 10px 24px rgba(37,99,235,.25);
+}
+.pvp-btn-ghost{
+  background:rgba(255,255,255,.9);
+  color:#475569;
+  border:2px solid rgba(15,23,42,.12);
+  box-shadow:none;
+  font-size:15px;
+}
+
+.pvp-code-box{
+  text-align:center;
+  padding:14px;
+  background:rgba(241,245,249,.9);
+  border-radius:16px;
+  margin:14px 0;
+  border:2px dashed rgba(37,99,235,.35);
+}
+.pvp-code-label{
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-size:12px;
+  font-weight:700;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.pvp-code-value{
+  font-family:ui-monospace,monospace;
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:.2em;
+  color:#1e40af;
+  margin-top:6px;
+}
+
+.pvp-input-row{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+.pvp-input-row input{
+  flex:1;
+  border:2px solid rgba(15,23,42,.12);
+  border-radius:14px;
+  padding:12px 14px;
+  font-family:ui-monospace,monospace;
+  font-size:18px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  text-align:center;
+}
+
+.pvp-hidden{ display:none !important; }
+
+/* Arena */
+.pvp-scoreboard{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:16px;
+}
+.pvp-player-pill{
+  flex:1;
+  text-align:center;
+  padding:12px 10px;
+  border-radius:18px;
+  background:rgba(255,255,255,.75);
+  border:2px solid rgba(15,23,42,.1);
+  font-family:var(--font-ui,'Nunito',sans-serif);
+}
+.pvp-player-pill.is-me{
+  border-color:#10b981;
+  background:rgba(16,185,129,.08);
+}
+.pvp-player-pill.is-lead{ box-shadow:0 0 0 2px rgba(234,179,8,.6); }
+.pvp-p-name{
+  font-size:12px;
+  font-weight:800;
+  color:#64748b;
+  margin-bottom:4px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pvp-p-score{
+  font-size:26px;
+  font-weight:900;
+  color:#0f172a;
+}
+.pvp-vs{
+  align-self:center;
+  font-weight:900;
+  color:#94a3b8;
+  font-size:14px;
+}
+
+.pvp-q-meta{
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-size:12px;
+  font-weight:700;
+  color:#64748b;
+  text-align:center;
+  margin-bottom:6px;
+}
+.pvp-question{
+  font-family:'Baloo 2',cursive;
+  font-size:clamp(18px,4vw,22px);
+  font-weight:800;
+  color:#0f172a;
+  text-align:center;
+  margin:0 0 16px;
+  line-height:1.35;
+}
+
+.pvp-answers{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:10px;
+}
+.pvp-ans{
+  border:2px solid rgba(15,23,42,.1);
+  border-radius:18px;
+  padding:16px 12px;
+  font-size:clamp(22px,5vw,30px);
+  cursor:pointer;
+  background:rgba(255,255,255,.92);
+  transition:transform .12s, box-shadow .12s;
+  font-family:inherit;
+}
+.pvp-ans:hover:not(:disabled){
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(15,23,42,.1);
+}
+.pvp-ans:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.pvp-ans.is-picked{
+  border-color:#2563eb;
+  background:#eff6ff;
+}
+
+.pvp-status{
+  margin-top:14px;
+  text-align:center;
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-size:14px;
+  font-weight:700;
+  color:#475569;
+  min-height:22px;
+}
+
+.pvp-result-banner{
+  margin-top:14px;
+  padding:16px;
+  border-radius:18px;
+  text-align:center;
+  font-family:var(--font-ui,'Nunito',sans-serif);
+  font-weight:800;
+  font-size:16px;
+}
+.pvp-result-banner.win{
+  background:linear-gradient(135deg,#d1fae5,#a7f3d0);
+  color:#065f46;
+}
+.pvp-result-banner.lose{
+  background:linear-gradient(135deg,#fee2e2,#fecaca);
+  color:#991b1b;
+}
+.pvp-result-banner.draw{
+  background:linear-gradient(135deg,#f1f5f9,#e2e8f0);
+  color:#334155;
+}
+
+:root[data-theme="dark"] .pvp-card{
+  background:linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.88));
+  border-color:rgba(255,255,255,.12);
+}
+:root[data-theme="dark"] .pvp-card h1{ color:#f1f5f9 }
+:root[data-theme="dark"] .pvp-lead{ color:#94a3b8 }
+:root[data-theme="dark"] .pvp-chip{
+  background:rgba(30,41,59,.9);
+  border-color:rgba(255,255,255,.14);
+  color:#e2e8f0;
+}
+:root[data-theme="dark"] .pvp-player-pill{ background:rgba(30,41,59,.7); border-color:rgba(255,255,255,.1) }
+:root[data-theme="dark"] .pvp-p-name{ color:#94a3b8 }
+:root[data-theme="dark"] .pvp-p-score{ color:#f1f5f9 }
+:root[data-theme="dark"] .pvp-question{ color:#f1f5f9 }
+:root[data-theme="dark"] .pvp-ans{ background:rgba(30,41,59,.75); border-color:rgba(255,255,255,.12) }
