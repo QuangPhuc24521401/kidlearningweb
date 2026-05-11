@@ -296,7 +296,7 @@
 /* ═══════════ MOBILE ═══════════ */
 @media (max-width:640px){
   .page-pvp.page-scroll{
-    padding-top:calc(var(--topbar-h) + 72px);
+    padding-top:calc(var(--topbar-h) + 60px);
     padding-bottom:32px;
   }
   .pvp-wrap{

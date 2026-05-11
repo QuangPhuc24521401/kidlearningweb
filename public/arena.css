@@ -185,7 +185,7 @@
 @media (max-width:640px){
   /* Bù padding khi topbar wrap thành 2 dòng */
   .page-arena.page-scroll{
-    padding-top:calc(var(--topbar-h) + 72px);
+    padding-top:calc(var(--topbar-h) + 60px);
     padding-bottom:32px;
   }
   .arena-wrap{

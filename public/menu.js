@@ -233,11 +233,21 @@ function mountUserBar(){
     bar.id = 'userBar';
   }
   bar.className = slot ? 'user-bar user-bar--topbar' : 'user-bar';
+  var safeName = name.replace(/"/g,'&quot;');
+  var shortName = name.length > 16 ? name.slice(0,15) + '…' : name;
   bar.innerHTML =
-    '<span class="ub-avatar">👤</span>' +
-    '<span class="ub-name" title="' + (name.replace(/"/g,'&quot;')) + '">' + (name.length > 16 ? name.slice(0,15) + '…' : name) + '</span>' +
-    '<span class="ub-divider"></span>' +
-    '<span class="ub-stars" title="Tổng sao đã đạt">🌟 ' + stars + '</span>';
+    '<button type="button" class="ub-trigger" aria-haspopup="menu" aria-expanded="false" aria-label="Mở menu tài khoản">' +
+      '<span class="ub-avatar" aria-hidden="true">👤</span>' +
+      '<span class="ub-name" title="' + safeName + '">' + shortName + '</span>' +
+      '<span class="ub-divider" aria-hidden="true"></span>' +
+      '<span class="ub-stars" title="Tổng sao đã đạt">🌟 ' + stars + '</span>' +
+      '<span class="ub-caret" aria-hidden="true">▾</span>' +
+    '</button>' +
+    '<div class="ub-menu" role="menu" hidden>' +
+      '<button type="button" role="menuitem" class="ubm-item" data-action="music"><span class="ubm-icon">🎵</span><span>Bật / tắt nhạc</span></button>' +
+      '<button type="button" role="menuitem" class="ubm-item" data-action="settings"><span class="ubm-icon">⚙️</span><span>Cài đặt</span></button>' +
+      '<button type="button" role="menuitem" class="ubm-item ubm-danger" data-action="logout"><span class="ubm-icon">🚪</span><span>Đăng xuất</span></button>' +
+    '</div>';
   if(slot){
     slot.innerHTML = '';
     slot.appendChild(bar);
@@ -246,4 +256,48 @@ function mountUserBar(){
   } else if(bar.parentNode !== document.body){
     document.body.appendChild(bar);
   }
+  _wireUserBarMenu(bar);
+}
+
+function _wireUserBarMenu(bar){
+  if(!bar || bar.getAttribute('data-wired') === '1') return;
+  bar.setAttribute('data-wired', '1');
+  var trigger = bar.querySelector('.ub-trigger');
+  var menu = bar.querySelector('.ub-menu');
+  if(!trigger || !menu) return;
+
+  function closeMenu(){
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    bar.classList.remove('is-open');
+  }
+  function openMenu(){
+    menu.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    bar.classList.add('is-open');
+  }
+  trigger.addEventListener('click', function(e){
+    e.stopPropagation();
+    if(menu.hidden) openMenu(); else closeMenu();
+  });
+  document.addEventListener('click', function(e){
+    if(menu.hidden) return;
+    if(!bar.contains(e.target)) closeMenu();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !menu.hidden){ closeMenu(); trigger.focus(); }
+  });
+  menu.querySelectorAll('.ubm-item').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var act = btn.getAttribute('data-action');
+      closeMenu();
+      if(act === 'music'){
+        if(typeof toggleMusic === 'function') toggleMusic();
+      } else if(act === 'settings'){
+        if(typeof openSettings === 'function') openSettings();
+      } else if(act === 'logout'){
+        if(typeof handleLogout === 'function') handleLogout();
+      }
+    });
+  });
 }
