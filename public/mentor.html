@@ -582,38 +582,56 @@ function showBubble(html){
   document.getElementById('bubbleText').innerHTML = html;
 }
 
-/* ── TTS for teacher ── */
+/* ── TTS for teacher (Google Cloud → Web Speech fallback) ── */
 let teacherAudio = null;
 async function speakTeacher(text){
   const clean = text.replace(/[\u{1F000}-\u{1FFFF}]/gu,'').replace(/[⭐✨💫🌟🎀🌸]/g,'').trim();
   if(teacherAudio){ teacherAudio.pause(); teacherAudio=null; }
   speechSynthesis.cancel();
 
-  const keyFromConfig = (typeof window.__FPT_TTS_API_KEY__ === 'string') ? window.__FPT_TTS_API_KEY__.trim() : '';
-  const voiceFromConfig = (typeof window.__FPT_TTS_VOICE__ === 'string') ? window.__FPT_TTS_VOICE__.trim() : '';
-  const key   = keyFromConfig || localStorage.getItem('fpt_key') || '';
-  const voice = localStorage.getItem('fpt_voice') || voiceFromConfig || 'lannhi';
+  const useProxy = !!window.__GOOGLE_TTS_USE_PROXY__;
+  const gKey = (typeof window.__GOOGLE_TTS_API_KEY__ === 'string' ? window.__GOOGLE_TTS_API_KEY__.trim() : '');
+  const voice = (typeof window.__GOOGLE_TTS_VOICE__ === 'string' && window.__GOOGLE_TTS_VOICE__) || 'vi-VN-Neural2-A';
 
-  if(key && !key.includes('YOUR_')){
+  if(useProxy || gKey){
     try{
-      const res = await fetch('https://api.fpt.ai/hmi/tts/v5',{
-        method:'POST',
-        headers:{'api-key':key,'speed':'-1','voice':voice,'Content-Type':'text/plain'},
-        body: clean
-      });
+      let url, opts;
+      if(useProxy){
+        url = '/api/tts-google';
+        opts = { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: clean, voice }) };
+      } else {
+        url = 'https://texttospeech.googleapis.com/v1/text:synthesize?key=' + encodeURIComponent(gKey);
+        opts = {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            input:{ text: clean },
+            voice:{ languageCode:'vi-VN', name: voice },
+            audioConfig:{ audioEncoding:'MP3', speakingRate:0.95, pitch:1.0 }
+          })
+        };
+      }
+      const res = await fetch(url, opts);
       const data = await res.json();
-      if(data.async){
-        await new Promise(r=>setTimeout(r,1400));
-        teacherAudio = new Audio(data.async);
+      if(res.ok && data.audioContent){
+        teacherAudio = new Audio('data:audio/mp3;base64,' + data.audioContent);
         teacherAudio.onended = ()=>{ setTeacherState('idle'); teacherAudio=null; };
         teacherAudio.play();
         return;
       }
-    }catch(e){}
+    }catch(e){ /* fall through to Web Speech */ }
   }
-  // Fallback Web Speech
+
+  // Fallback: Web Speech với giọng vi-VN tốt nhất có sẵn
   const u = new SpeechSynthesisUtterance(clean);
-  u.lang='vi-VN'; u.rate=0.88; u.pitch=1.15;
+  u.lang='vi-VN'; u.rate=0.92; u.pitch=1.10;
+  try{
+    const voices = speechSynthesis.getVoices() || [];
+    const preferRx = [/HoaiMy.*Natural/i, /HoaiMy.*Online/i, /HoaiMy/i, /NamMinh/i, /Natural/i, /Online/i, /Microsoft.*vi/i, /Google.*Vietnamese/i, /^vi[-_]/i];
+    let pick = null;
+    for(const rx of preferRx){ pick = voices.find(v => rx.test(v.name) || rx.test(v.lang)); if(pick) break; }
+    if(!pick) pick = voices.find(v => (v.lang || '').toLowerCase().startsWith('vi')) || null;
+    if(pick) u.voice = pick;
+  }catch(e){}
   u.onend = ()=> setTeacherState('idle');
   speechSynthesis.speak(u);
 }

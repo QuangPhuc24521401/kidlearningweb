@@ -107,16 +107,54 @@ Mở **Firestore → Rules**, dán nội dung từ `kidlearningweb/firestore.rul
 
 ##  Cấu hình TTS (giọng Tiếng Việt)
 
-App ưu tiên dùng **FPT.AI TTS** (giọng tự nhiên), fallback Web Speech API nếu chưa có key.
+App có **2 engine** — không cần nhập key trên UI:
 
-### Local
-- Bấm nút ⚙️ (Cài đặt) → nhập key vào ô FPT.AI → lưu. Key lưu `localStorage` máy bạn.
+| Engine | Chất lượng | Free | Cách bật |
+|--------|------------|------|----------|
+| 🌐 **Google Cloud TTS** (Neural2/Wavenet) | ⭐⭐⭐⭐⭐ | 1.000.000 ký tự/tháng | Cấu hình qua **file** hoặc **Vercel ENV** (xem dưới) |
+| 🔈 **Trình duyệt** (Web Speech API) | ⭐⭐⭐ – ⭐⭐⭐⭐⭐ | Miễn phí | Có sẵn. Trên **Microsoft Edge** / **Windows 11** có giọng « HoaiMy / NamMinh (Natural) » miễn phí — chất lượng cực tốt |
 
-### Production (Vercel)
-- Trong Vercel Dashboard → Environment Variables thêm:
-  - `FPT_TTS_API_KEY` = key thực
-  - `FPT_TTS_VOICE` = `lannhi` (hoặc `linhsan`, `minhquang`, `giahuy`, …)
-- File `secrets/tts.config.js` đang là stub; URL production sẽ rewrite về `/api/tts-config` (xem `vercel.json`).
+Trong app, mở ⚙️ → mục « 🎙️ Giọng đọc »:
+
+- Engine: **Tự động** (mặc định, ưu tiên Google nếu có key, ngược lại trình duyệt), **Google Cloud**, hoặc **Trình duyệt**.
+- Chips chọn **giọng** Google (Neural2-A nữ / Neural2-D nam / Wavenet-A / Wavenet-D).
+- Nút **🔊 Thử giọng** để nghe trước.
+
+### Cách 1 — Local (file)
+
+Mở `kidlearningweb/public/secrets/tts.config.js`, dán key vào dòng:
+
+```js
+window.__GOOGLE_TTS_API_KEY__ = 'AIza...your-key-here...';
+```
+
+> **Quan trọng**: vào Google Cloud Console → API key → **Restrict key**:
+> - **Application restrictions**: HTTP referrers → thêm `https://your-domain.com/*`, `http://localhost:*/*`.
+> - **API restrictions**: chỉ chọn **Cloud Text-to-Speech API**.
+>
+> Cách này phơi key ra cho người xem source — referrer restriction giúp giới hạn lạm dụng.
+
+### Cách 2 — Production (Vercel ENV) — KHUYẾN NGHỊ
+
+Trong **Vercel Dashboard → Settings → Environment Variables**:
+
+| Biến | Ví dụ |
+|------|-------|
+| `GOOGLE_TTS_API_KEY` | `AIza...` |
+| `GOOGLE_TTS_VOICE` (tuỳ chọn) | `vi-VN-Neural2-A` |
+
+Redeploy → app sẽ tự gọi `/api/tts-google` proxy. **Key không bao giờ xuống browser**.
+
+### Lấy Google Cloud TTS key
+
+1. Vào [console.cloud.google.com](https://console.cloud.google.com) → tạo project.
+2. **APIs & Services → Library** → tìm **Cloud Text-to-Speech API** → **Enable**.
+3. **APIs & Services → Credentials → + Create credentials → API key**.
+4. Bấm key vừa tạo → **Restrict key** như hướng dẫn ở trên.
+
+### Không cần Google?
+
+Cứ để trống — app dùng **Web Speech API** của trình duyệt. Trên Edge / Win 11, giọng « HoaiMy Online (Natural) » là Azure Neural miễn phí, nghe rất tự nhiên.
 
 ---
 
