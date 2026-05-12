@@ -386,7 +386,7 @@
     var cacheKey = voice + "|" + speakingRate + "|" + pitch + "|" + text;
     if(ttsCache[cacheKey]){ playAudioUrl(ttsCache[cacheKey], text, opts); return; }
 
-    showTtsPill("loading", "Đang tải giọng Google Cloud...");
+    showTtsPill("loading", "Đang tải giọng đọc...");
     var url, fetchOpts;
     if(useProxy){
       url = "/api/tts-google";
@@ -416,8 +416,8 @@
         playAudioUrl(blobUrl, text, opts);
       })
       .catch(function(err){
-        console.warn("[TTS] google", err && err.message);
-        showTtsPill("error","Google TTS lỗi – dùng giọng trình duyệt");
+        console.warn("[TTS] proxy", err && err.message);
+        showTtsPill("error","TTS lỗi – dùng giọng trình duyệt");
         speakFallback(text, opts);
       });
   }

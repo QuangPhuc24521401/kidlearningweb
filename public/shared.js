@@ -176,17 +176,15 @@ function ensureSlimSettings(){
         <div class="settings-title">🎙️ Giọng đọc Tiếng Việt</div>
         <div class="tts-engines">
           <button type="button" class="tts-engine-btn" data-engine="auto">⚡ Tự động</button>
-          <button type="button" class="tts-engine-btn" data-engine="google">🌐 Google Cloud</button>
+          <button type="button" class="tts-engine-btn" data-engine="google">☁️ Đám mây Neural</button>
           <button type="button" class="tts-engine-btn" data-engine="web">🔈 Trình duyệt</button>
         </div>
 
         <div class="tts-panel" id="ttsPanelGoogle">
-          <div class="tts-panel-label">Giọng Google Neural2 / Wavenet (vi-VN)</div>
+          <div class="tts-panel-label">Giọng neural đám mây (vi-VN) — miễn phí</div>
           <div class="voice-chips" id="googleVoiceChips">
-            <button type="button" class="chip" data-voice="vi-VN-Neural2-A">🌸 Neural2-A (nữ)</button>
-            <button type="button" class="chip" data-voice="vi-VN-Neural2-D">🎯 Neural2-D (nam)</button>
-            <button type="button" class="chip" data-voice="vi-VN-Wavenet-A">💐 Wavenet-A (nữ)</button>
-            <button type="button" class="chip" data-voice="vi-VN-Wavenet-D">🚀 Wavenet-D (nam)</button>
+            <button type="button" class="chip" data-voice="vi-VN-Neural2-A">🌸 Hoài My (nữ)</button>
+            <button type="button" class="chip" data-voice="vi-VN-Neural2-D">🎯 Nam Minh (nam)</button>
           </div>
           <div class="settings-hint" id="googleStatus">…</div>
         </div>
@@ -303,11 +301,11 @@ function syncTtsEngineUI(){
   const gs = document.getElementById('googleStatus');
   if(gs){
     if(_hasGoogleProxy()){
-      gs.innerHTML = '✅ <strong>Server proxy</strong> sẵn sàng (Vercel ENV) — không cần dán key.';
+      gs.innerHTML = '✅ <strong>Đã sẵn sàng</strong> — server tự chọn Google Cloud (nếu có) hoặc Microsoft Edge Neural (miễn phí).';
     } else if(googleKey){
-      gs.innerHTML = '✅ Có key trong cấu hình — đang gọi trực tiếp Google API.';
+      gs.innerHTML = '✅ Có key Google trong cấu hình — đang gọi trực tiếp Google API.';
     } else {
-      gs.innerHTML = '⚠️ <strong>Chưa cấu hình</strong> Google TTS. Đặt key trong <code>public/secrets/tts.config.js</code> hoặc ENV <code>GOOGLE_TTS_API_KEY</code> trên Vercel.';
+      gs.innerHTML = '⚠️ <strong>Chưa bật proxy.</strong> Trên Vercel deploy, /api/tts-google sẽ tự dùng Microsoft Edge TTS miễn phí.';
     }
   }
   const ws = document.getElementById('webStatus');
@@ -506,13 +504,13 @@ async function speak(rawText){
   }
 
   try{
-    showTTSStatus('loading','Đang tải giọng Google Cloud...');
+    showTTSStatus('loading','Đang tải giọng đọc...');
     const url = await _synthesizeGoogle(text);
     ttsCache[text] = url;
     _playAudioUrl(url, text);
   }catch(err){
-    console.warn('[TTS] google', err && err.message || err);
-    showTTSStatus('error','Google TTS lỗi — dùng giọng trình duyệt');
+    console.warn('[TTS] proxy', err && err.message || err);
+    showTTSStatus('error','TTS lỗi — dùng giọng trình duyệt');
     _speakFallback(text);
   }
 }
