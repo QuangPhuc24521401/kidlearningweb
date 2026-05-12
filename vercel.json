@@ -1,5 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "outputDirectory": "public",
+  "functions": {
+    "api/*.js": {
+      "memory": 1024,
+      "maxDuration": 15
+    }
+  },
   "rewrites": [
     { "source": "/secrets/tts.config.js", "destination": "/api/tts-config" }
   ]
