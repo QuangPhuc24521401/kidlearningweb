@@ -4,11 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kid Learning — Chương trình học cho trẻ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://firestore.googleapis.com">
+<link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
-<script>document.documentElement.style.visibility='hidden';</script>
+<script>
+  /* Smart reveal: nếu đã có dấu vết đăng nhập trong localStorage thì render ngay
+     (tránh flash trắng khi chuyển trang). Chỉ ẩn cho khách / đã logout. */
+  (function(){
+    try{ if(localStorage.getItem('userRole')) return; }catch(e){}
+    document.documentElement.style.visibility='hidden';
+  })();
+</script>
 <script>
   // Quick role guard: nếu localStorage cache đã biết là giáo viên, đẩy ngay.
   (function quickRoleGuard(){

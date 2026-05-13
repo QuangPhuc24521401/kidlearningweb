@@ -903,8 +903,9 @@ function armAutoMusic(){
   tryStartMusic();
 }
 
-// Save time on navigation/visibility changes
-window.addEventListener('beforeunload', saveMusicTime);
+// Save time on navigation/visibility changes.
+// Dùng `pagehide` thay cho `beforeunload` để KHÔNG chặn bfcache → back/forward instant.
+window.addEventListener('pagehide', saveMusicTime);
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) saveMusicTime(); });
 
 /* ─── CONFETTI ─── */
@@ -937,6 +938,54 @@ function _armTtsUnlock(){
   window.addEventListener('keydown',     kick, true);
   window.addEventListener('click',       kick, true);
 }
+
+/* ─── PREFETCH ON HOVER / FOCUS / TOUCH ───
+   Khi user di chuột (hoặc tab tới, hoặc chạm trên mobile) lên 1 link nav
+   hoặc một thẻ môn học (data-subject), inject <link rel="prefetch"> để
+   browser tải sẵn trang đích → click là hiển thị tức thì, không nhấp nháy. */
+const _prefetchedUrls = new Set();
+function _prefetchUrl(url){
+  if(!url) return;
+  if(/^(#|javascript:|mailto:|tel:|data:)/i.test(url)) return;
+  let abs;
+  try{ abs = new URL(url, location.href).href; }
+  catch(e){ return; }
+  // Chỉ prefetch same-origin
+  if(abs.indexOf(location.origin) !== 0) return;
+  if(_prefetchedUrls.has(abs)) return;
+  _prefetchedUrls.add(abs);
+  try{
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.as  = 'document';
+    link.href = abs;
+    document.head.appendChild(link);
+  }catch(e){}
+}
+function _maybePrefetchFromTarget(target){
+  if(!target || !target.closest) return;
+  // Bỏ qua nếu mạng dạng tiết kiệm dữ liệu
+  try{
+    const c = navigator.connection;
+    if(c && (c.saveData || /2g/.test(c.effectiveType||''))) return;
+  }catch(e){}
+  const a = target.closest('a[href]');
+  if(a){
+    const href = a.getAttribute('href');
+    // Skip nếu link mở tab mới
+    if(a.target && a.target !== '_self') return;
+    _prefetchUrl(href);
+    return;
+  }
+  const sub = target.closest('[data-subject]');
+  if(sub){
+    const s = sub.getAttribute('data-subject');
+    if(s) _prefetchUrl('lessons/' + s + '/index.html');
+  }
+}
+document.addEventListener('pointerover', e => _maybePrefetchFromTarget(e.target), {passive:true});
+document.addEventListener('focusin',     e => _maybePrefetchFromTarget(e.target));
+document.addEventListener('touchstart',  e => _maybePrefetchFromTarget(e.target), {passive:true});
 
 /* ─── INIT on DOMContentLoaded ─── */
 document.addEventListener('DOMContentLoaded',()=>{

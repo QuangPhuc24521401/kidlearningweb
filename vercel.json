@@ -10,5 +10,19 @@
   },
   "rewrites": [
     { "source": "/secrets/tts.config.js", "destination": "/api/tts-config" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.(css|js|svg|png|jpg|jpeg|webp|ico|mp3|woff2?)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
   ]
 }
