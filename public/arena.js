@@ -442,8 +442,11 @@
     lastData = null;
   };
 
-  document.addEventListener('DOMContentLoaded', function(){
-    $('arenaHonorTotal') && ($('arenaHonorTotal').textContent =
-      String(parseInt(localStorage.getItem('arena_honor')||'0',10)||0));
-  });
+  function refreshArenaHonor(){
+    var el = $('arenaHonorTotal');
+    if(el) el.textContent = String(parseInt(localStorage.getItem('arena_honor')||'0',10)||0);
+  }
+  document.addEventListener('DOMContentLoaded', refreshArenaHonor);
+  /* Expose cho SPA router để cập nhật điểm vinh dự khi mount lại arena view. */
+  window.arenaRefreshHonor = refreshArenaHonor;
 })();

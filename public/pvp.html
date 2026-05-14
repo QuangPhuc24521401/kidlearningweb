@@ -14,6 +14,8 @@
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
 <link rel="stylesheet" href="pvp.css">
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="spa.css">
 <script>
   (function(){
     try{ if(localStorage.getItem('userRole')) return; }catch(e){}
@@ -102,6 +104,7 @@
   </div>
 </div>
 
+<main id="page-root" data-page="pvp">
 <div class="pvp-wrap">
   <div id="lobby">
     <div class="pvp-card">
@@ -161,9 +164,12 @@
     </div>
   </div>
 </div>
+</main>
 
 <script src="firebase.js"></script>
 <script src="lessons/data/lessons-data.js"></script>
+<script src="achievements.js"></script>
+<script src="arena.js"></script>
 <script src="pvp.js"></script>
 <script>
   (function deepRoleGuard(){
@@ -186,5 +192,6 @@
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
+<script src="spa.js"></script>
 </body>
 </html>

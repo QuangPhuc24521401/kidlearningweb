@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="menu.css">
 <link rel="stylesheet" href="pvp.css">
 <link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="spa.css">
 <script>
   (function(){
     try{ if(localStorage.getItem('userRole')) return; }catch(e){}
@@ -103,6 +104,7 @@
   </div>
 </div>
 
+<main id="page-root" data-page="arena">
 <div class="arena-wrap">
   <div class="arena-card">
     <h1>🏟️ Đấu trường trực tuyến</h1>
@@ -152,11 +154,13 @@
     <div id="arenaRewardBanner" class="arena-reward-banner arena-hidden" role="status"></div>
   </div>
 </div>
+</main>
 
 <script src="firebase.js"></script>
 <script src="lessons/data/lessons-data.js"></script>
 <script src="achievements.js"></script>
 <script src="arena.js"></script>
+<script src="pvp.js"></script>
 <script>
   (function deepRoleGuard(){
     if(localStorage.getItem('userRole')) return;
@@ -175,32 +179,16 @@
     });
   })();
 </script>
-<script src="secrets/tts.config.js"></script>
-<script src="shared.js"></script>
-<script src="menu.js"></script>
 <script>
-(function(){
-  // `pagehide` thay `beforeunload` để cho phép bfcache; nếu trang được lưu vào bfcache
-  // (`event.persisted === true`) thì KHÔNG rời session — user còn quay lại được.
+  /* pagehide thay beforeunload để cho phép bfcache; nếu trang lưu vào bfcache thì KHÔNG rời session. */
   window.addEventListener('pagehide', function(e){
     if(e && e.persisted) return;
     if(typeof arenaLeavePage === 'function') arenaLeavePage();
   });
-  function enterIfReady(){
-    if(typeof firebase === 'undefined' || !firebase.auth) return;
-    if(firebase.auth().currentUser && typeof arenaEnter === 'function') arenaEnter();
-  }
-  if(typeof firebase !== 'undefined' && firebase.auth){
-    firebase.auth().onAuthStateChanged(function(user){
-      if(user && typeof arenaEnter === 'function'){ arenaEnter(); }
-    });
-  }
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', enterIfReady);
-  } else {
-    enterIfReady();
-  }
-})();
 </script>
+<script src="secrets/tts.config.js"></script>
+<script src="shared.js"></script>
+<script src="menu.js"></script>
+<script src="spa.js"></script>
 </body>
 </html>

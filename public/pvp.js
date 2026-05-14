@@ -529,4 +529,13 @@
   document.addEventListener('DOMContentLoaded', function(){
     renderSubjectChips();
   });
+
+  /* Expose cho SPA router: mount lại UI khi quay lại trang PvP / clean realtime listener. */
+  window.pvpInit = function(){
+    try { renderSubjectChips(); } catch(e){}
+  };
+  window.pvpCleanup = function(){
+    try { stopListen(); } catch(e){}
+    try { showLobby(); } catch(e){}
+  };
 })();

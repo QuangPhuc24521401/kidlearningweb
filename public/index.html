@@ -13,6 +13,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="pvp.css">
+<link rel="stylesheet" href="spa.css">
 <script>
   /* Smart reveal: nếu đã có dấu vết đăng nhập trong localStorage thì render ngay
      (tránh flash trắng khi chuyển trang). Chỉ ẩn cho khách / đã logout. */
@@ -106,6 +109,7 @@
   </div>
 </div>
 
+<main id="page-root" data-page="index">
 <!-- Menu card -->
 <div class="card menu-card">
   <div class="menu-hero-block" id="subjects-anchor">
@@ -191,8 +195,13 @@
     </button>
   </div>
 </div>
+</main>
 
 <script src="firebase.js"></script>
+<script src="lessons/data/lessons-data.js"></script>
+<script src="achievements.js"></script>
+<script src="arena.js"></script>
+<script src="pvp.js"></script>
 <script>
   // Deep role guard: nếu localStorage không có userRole nhưng user đã login, đọc Firestore.
   (function deepRoleGuard(){
@@ -216,5 +225,6 @@
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
+<script src="spa.js"></script>
 </body>
 </html>

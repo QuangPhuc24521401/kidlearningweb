@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════════════════
+   SPA.CSS — View Transitions + loading state
+   Tách riêng để không đụng đến shared.css.
+═══════════════════════════════════════════════════ */
+
+/* Loading state mỏng: 1 dải xanh chạy trên đỉnh khi đang fetch trang. */
+html.spa-loading::after{
+  content:'';
+  position:fixed;left:0;top:0;height:3px;width:100%;
+  background:linear-gradient(90deg,#ff70a6,#ffd166,#06d6a0,#4d96ff,#ff70a6);
+  background-size:200% 100%;
+  animation:spaBar 1s linear infinite;
+  z-index:99999;
+  pointer-events:none;
+}
+@keyframes spaBar{
+  from{background-position:0% 0}
+  to  {background-position:200% 0}
+}
+
+/* View Transitions — chỉ áp dụng trên Chromium 111+ / Safari 18+. Trình duyệt khác bỏ qua an toàn. */
+::view-transition-old(root),
+::view-transition-new(root){
+  animation-duration:.28s;
+  animation-timing-function:cubic-bezier(.4,0,.2,1);
+}
+::view-transition-old(root){
+  animation-name:spaFadeOut;
+}
+::view-transition-new(root){
+  animation-name:spaFadeIn;
+}
+@keyframes spaFadeOut{
+  from{opacity:1;transform:translateY(0) scale(1)}
+  to  {opacity:0;transform:translateY(-6px) scale(.995)}
+}
+@keyframes spaFadeIn{
+  from{opacity:0;transform:translateY(8px) scale(.995)}
+  to  {opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Topbar không cần animate khi chuyển — gán riêng view-transition-name để giữ nguyên. */
+header.app-topbar{
+  view-transition-name: kl-topbar;
+}
+::view-transition-old(kl-topbar),
+::view-transition-new(kl-topbar){
+  animation: none;
+}
+
+/* Background trang trí (sky/blob/ground) cũng giữ nguyên */
+.sky, .liquid-bg, .ground, .sprinkles{
+  view-transition-name: var(--vt-name, none);
+}
+
+/* Khi user prefers-reduced-motion → tắt mọi animation transition */
+@media (prefers-reduced-motion: reduce){
+  ::view-transition-old(root),
+  ::view-transition-new(root){
+    animation: none !important;
+  }
+  html.spa-loading::after{ display:none }
+}
