@@ -886,6 +886,25 @@
     }
   }
 
+  function readLessonStudentAvatar(){
+    var mode = localStorage.getItem("studentAvatarMode") === "photo" ? "photo" : "emoji";
+    var emoji = (localStorage.getItem("studentAvatarEmoji") || "🧒").trim() || "🧒";
+    var ringRe = /^#[0-9A-Fa-f]{6}$/;
+    var ringRaw = localStorage.getItem("studentAvatarRing") || "";
+    var ring = ringRe.test(ringRaw.trim()) ? ringRaw.trim() : "#FF9800";
+    var photo = localStorage.getItem("studentAvatarPhoto") || "";
+    var photoOk = mode === "photo"
+      && photo.indexOf("data:image/jpeg;base64,") === 0
+      && photo.length < 200000;
+    return { mode: photoOk ? "photo" : "emoji", emoji: emoji, ring: ring, photo: photoOk ? photo : "" };
+  }
+
+  function safeLessonAvatarDataUrl(u){
+    if(typeof u !== "string" || u.indexOf("data:image/jpeg;base64,") !== 0 || u.length > 200000) return "";
+    if(/["\s<>]/.test(u)) return "";
+    return u;
+  }
+
   /* ── User bar góc phải trên (tên + tổng sao) ── */
   function mountUserBarLesson(){
     var name = (localStorage.getItem("userDisplayName") || "").trim() || "Bé học sinh";
@@ -909,8 +928,29 @@
     var safeName = name.replace(/[<>&"']/g, function(c){
       return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c];
     });
+    var role = localStorage.getItem("userRole") || "parent";
+    var avHtml;
+    if(role === "teacher"){
+      avHtml = '<span class="ub-avatar ub-avatar--lesson ub-avatar--teacher-lesson" aria-hidden="true">👩‍🏫</span>';
+    } else {
+      var sv = readLessonStudentAvatar();
+      var ringEsc = /^#[0-9A-Fa-f]{6}$/.test((sv.ring || "").trim()) ? sv.ring.trim() : "#FF9800";
+      var ph = sv.mode === "photo" ? safeLessonAvatarDataUrl(sv.photo) : "";
+      if(ph){
+        avHtml = '<span class="ub-avatar ub-avatar--lesson ub-avatar--student-lesson ub-avatar--photo-lesson" aria-hidden="true" style="--avatar-ring:' + ringEsc + '">' +
+          '<img class="ub-avatar-img-lesson" src="' + ph + '" alt="" decoding="async" />' +
+          "</span>";
+      } else {
+        var em = String(sv.emoji || "🧒").replace(/[<>&"]/g, function(c){
+          return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c];
+        });
+        avHtml = '<span class="ub-avatar ub-avatar--lesson ub-avatar--student-lesson ub-avatar--emoji-lesson" aria-hidden="true" style="--avatar-ring:' + ringEsc + '">' +
+          '<span class="ub-avatar-emoji-inner-lesson">' + em + "</span>" +
+          "</span>";
+      }
+    }
     bar.innerHTML =
-      '<span class="ub-avatar">👤</span>' +
+      avHtml +
       '<span class="ub-name" title="' + safeName + '">' + (safeName.length > 16 ? safeName.slice(0,15) + "…" : safeName) + '</span>' +
       '<span class="ub-divider"></span>' +
       '<span class="ub-stars" title="Tổng sao đã đạt">🌟 ' + totalStars + '</span>';

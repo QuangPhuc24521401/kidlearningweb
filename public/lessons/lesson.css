@@ -623,6 +623,20 @@ h2#question img.tw-emoji,
   max-width:calc(100vw - 28px);
 }
 .user-bar .ub-avatar{ font-size:18px }
+.user-bar .ub-avatar--lesson.ub-avatar--student-lesson{
+  width:32px;height:32px;border-radius:50%;
+  box-sizing:border-box;overflow:hidden;
+  padding:4px;background:#fff;
+  display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.92),
+    0 0 0 3px var(--avatar-ring,#FF9800);
+}
+.user-bar .ub-avatar--lesson.ub-avatar--photo-lesson{ padding:2px; }
+.user-bar .ub-avatar-img-lesson{
+  width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;
+}
+.user-bar .ub-avatar-emoji-inner-lesson{ font-size:17px;line-height:1; }
 .user-bar .ub-name{
   color:#0d47a1;
   white-space:nowrap;
@@ -649,6 +663,8 @@ h2#question img.tw-emoji,
   }
   .user-bar .ub-name{ max-width:100px }
   .user-bar .ub-avatar{ font-size:16px }
+  .user-bar .ub-avatar--lesson.ub-avatar--student-lesson{ width:29px;height:29px;padding:3px; }
+  .user-bar .ub-avatar-emoji-inner-lesson{ font-size:15px; }
 }
 
 /* Tránh user-bar đè lên các nút có sẵn */

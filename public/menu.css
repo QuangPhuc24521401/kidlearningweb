@@ -185,6 +185,37 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   max-width:96px;
 }
 .ub-trigger .ub-avatar{ font-size:16px; line-height:1; }
+/* Avatar học sinh (emoji hoặc ảnh + viền màu) */
+.ub-trigger .ub-avatar--student{
+  width:32px; height:32px;
+  border-radius:50%;
+  box-sizing:border-box;
+  overflow:hidden;
+  flex-shrink:0;
+  padding:4px;
+  background:#fff;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.92),
+    0 0 0 3px var(--avatar-ring, #FF9800);
+}
+.ub-trigger .ub-avatar--student.ub-avatar--photo{ padding:2px; }
+.ub-trigger .ub-avatar-img{
+  width:100%; height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+}
+.ub-trigger .ub-avatar-emoji-inner{
+  font-size:17px;
+  line-height:1;
+}
+.ub-trigger .ub-avatar--teacher{
+  font-size:18px;
+  line-height:1;
+}
 .ub-trigger .ub-divider{
   width:1.5px;height:16px;
   background:rgba(0,0,0,.12);
@@ -502,6 +533,8 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
     font-size:12px;
   }
   .ub-trigger .ub-avatar{ font-size:15px; }
+  .ub-trigger .ub-avatar--student{ width:29px;height:29px;padding:3px; }
+  .ub-trigger .ub-avatar-emoji-inner{ font-size:15px; }
   .ub-trigger .ub-name{ max-width:72px; font-size:12px; }
   .ub-trigger .ub-divider{ display:none; }
   .ub-trigger .ub-stars{ font-size:12px; }
@@ -631,6 +664,28 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
 @keyframes profilePop{
   from{ transform:scale(.5) rotate(-10deg); opacity:0; }
   to{   transform:scale(1)  rotate(0);     opacity:1; }
+}
+.profile-avatar-big--emoji,
+.profile-avatar-big--photo{
+  box-shadow:
+    0 0 0 4px #fff,
+    0 6px 0 4px var(--avatar-ring, #FF9800),
+    0 14px 30px rgba(0,0,0,.12),
+    0 30px 60px rgba(0,0,0,.10);
+}
+.profile-avatar-big--photo{
+  background:#fff;
+  padding:10px;
+  overflow:hidden;
+}
+.profile-avatar-big--photo .profile-avatar-img{
+  width:100%; height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+}
+.profile-avatar-big--emoji .profile-avatar-emoji-txt{
+  line-height:1;
 }
 .profile-hero-text{
   display:flex;flex-direction:column;align-items:center;gap:6px;

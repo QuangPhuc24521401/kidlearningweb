@@ -120,6 +120,11 @@ function logoutNow(){
   playPop();
   try{ localStorage.removeItem('userRole'); }catch(e){}
   try{ localStorage.removeItem('classRoom'); }catch(e){}
+  try{ localStorage.removeItem('userDisplayName'); }catch(e){}
+  try{ localStorage.removeItem('studentAvatarMode'); }catch(e){}
+  try{ localStorage.removeItem('studentAvatarEmoji'); }catch(e){}
+  try{ localStorage.removeItem('studentAvatarRing'); }catch(e){}
+  try{ localStorage.removeItem('studentAvatarPhoto'); }catch(e){}
   if(isFirebaseReady()){
     try{
       firebase.auth().signOut().finally(()=>window.location.href = resolveUrl('auth/login.html'));

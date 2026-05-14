@@ -678,6 +678,10 @@ function handleLogout(){
   localStorage.removeItem('userRole');
   localStorage.removeItem('classRoom');
   localStorage.removeItem('userDisplayName');
+  localStorage.removeItem('studentAvatarMode');
+  localStorage.removeItem('studentAvatarEmoji');
+  localStorage.removeItem('studentAvatarRing');
+  localStorage.removeItem('studentAvatarPhoto');
   try{
     if(typeof firebase !== 'undefined' && firebase.auth){
       firebase.auth().signOut().finally(()=>{ window.location.href = 'auth/login.html'; });

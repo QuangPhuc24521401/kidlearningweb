@@ -9,6 +9,10 @@ function handleLogout(){
   try{ localStorage.removeItem('userRole'); }catch(e){}
   try{ localStorage.removeItem('classRoom'); }catch(e){}
   try{ localStorage.removeItem('userDisplayName'); }catch(e){}
+  try{ localStorage.removeItem('studentAvatarMode'); }catch(e){}
+  try{ localStorage.removeItem('studentAvatarEmoji'); }catch(e){}
+  try{ localStorage.removeItem('studentAvatarRing'); }catch(e){}
+  try{ localStorage.removeItem('studentAvatarPhoto'); }catch(e){}
   try{
     firebase.auth().signOut().then(()=>{ window.location.href='auth/login.html'; });
   }
@@ -166,12 +170,77 @@ function resetProgress(){
   if(typeof playPop === 'function') playPop();
 }
 
-/* Lấy tiến độ từ Firestore khi user đăng nhập (sync giữa thiết bị) */
+
+/** Đồng bộ avatar học sinh từ Firestore users/{uid} vào localStorage (giữ khớp với auth/cacheUserMeta). */
+function applyStudentAvatarFromUserDoc(data){
+  try{
+    if(!data || data.role === 'teacher'){
+      localStorage.removeItem('studentAvatarMode');
+      localStorage.removeItem('studentAvatarEmoji');
+      localStorage.removeItem('studentAvatarRing');
+      localStorage.removeItem('studentAvatarPhoto');
+      return;
+    }
+    var mode = data.studentAvatarMode === 'photo' ? 'photo' : 'emoji';
+    localStorage.setItem('studentAvatarMode', mode);
+    var em = (typeof data.studentAvatarEmoji === 'string' && data.studentAvatarEmoji.trim())
+      ? data.studentAvatarEmoji.trim() : '🧒';
+    localStorage.setItem('studentAvatarEmoji', em);
+    var ringRe = /^#[0-9A-Fa-f]{6}$/;
+    var ring = (typeof data.studentAvatarRing === 'string' && ringRe.test(data.studentAvatarRing.trim()))
+      ? data.studentAvatarRing.trim() : '#FF9800';
+    localStorage.setItem('studentAvatarRing', ring);
+    if(mode === 'photo'
+      && typeof data.studentAvatarPhoto === 'string'
+      && data.studentAvatarPhoto.indexOf('data:image/jpeg;base64,') === 0
+      && data.studentAvatarPhoto.length < 200000){
+      localStorage.setItem('studentAvatarPhoto', data.studentAvatarPhoto);
+    } else {
+      localStorage.removeItem('studentAvatarPhoto');
+    }
+  }catch(e){}
+}
+
+function _readStudentAvatarFromStorage(){
+  var mode = localStorage.getItem('studentAvatarMode') === 'photo' ? 'photo' : 'emoji';
+  var emoji = (localStorage.getItem('studentAvatarEmoji') || '🧒').trim() || '🧒';
+  var ringRe = /^#[0-9A-Fa-f]{6}$/;
+  var ringRaw = localStorage.getItem('studentAvatarRing') || '';
+  var ring = ringRe.test(ringRaw.trim()) ? ringRaw.trim() : '#FF9800';
+  var photo = localStorage.getItem('studentAvatarPhoto') || '';
+  var photoOk = mode === 'photo'
+    && typeof photo === 'string'
+    && photo.indexOf('data:image/jpeg;base64,') === 0
+    && photo.length < 200000;
+  return { mode: photoOk ? 'photo' : 'emoji', emoji: emoji, ring: ring, photo: photoOk ? photo : '' };
+}
+
+function _safeDataUrlForAttr(u){
+  if(typeof u !== 'string' || u.indexOf('data:image/jpeg;base64,') !== 0 || u.length > 200000) return '';
+  if(/["\s<>]/.test(u)) return '';
+  return u;
+}
+
 function fetchProgressFromCloud(uid){
   try{
     if(typeof firebase === 'undefined' || !firebase.firestore) return;
-    firebase.firestore().collection('learning_progress').doc(uid).get()
-      .then(function(snap){
+    var db = firebase.firestore();
+    var profRef = db.collection('learning_progress').doc(uid);
+    var userRef = db.collection('users').doc(uid);
+    Promise.all([profRef.get(), userRef.get()])
+      .then(function(results){
+        var snap = results[0];
+        var userSnap = results[1];
+        if(userSnap && userSnap.exists){
+          var udata = userSnap.data() || {};
+          applyStudentAvatarFromUserDoc(udata);
+          try{
+            if(udata.displayName) localStorage.setItem('userDisplayName', udata.displayName);
+            if(udata.classRoom)   localStorage.setItem('classRoom', udata.classRoom);
+          }catch(err){}
+          mountUserBar();
+          if(typeof renderProfilePage === 'function') renderProfilePage();
+        }
         function finish(){
           if(typeof recomputeAchievementsAfterCloudMerge === 'function') recomputeAchievementsAfterCloudMerge();
           renderProgressBadges();
@@ -312,7 +381,8 @@ function _readProfileInfo(){
     streak:      streak,
     unlocked:    unlocked,
     totalBadges: totalBadges,
-    honor:       honor
+    honor:       honor,
+    studentAvatar: !role || role !== 'teacher' ? _readStudentAvatarFromStorage() : null
   };
 }
 
@@ -327,10 +397,29 @@ function mountUserBar(){
   bar.className = slot ? 'user-bar user-bar--topbar' : 'user-bar';
   var safeName  = _escapeHtml(info.name);
   var shortName = info.name.length > 16 ? _escapeHtml(info.name.slice(0,15)) + '…' : safeName;
+
+  var avHtml;
+  if(info.isTeacher){
+    avHtml = '<span class="ub-avatar ub-avatar--teacher" aria-hidden="true">👩‍🏫</span>';
+  } else {
+    var sv = info.studentAvatar || _readStudentAvatarFromStorage();
+    var ringEsc = _escapeHtml(sv.ring);
+    var ph = sv.mode === 'photo' ? _safeDataUrlForAttr(sv.photo) : '';
+    if(ph){
+      avHtml = '<span class="ub-avatar ub-avatar--student ub-avatar--photo" aria-hidden="true" style="--avatar-ring:' + ringEsc + '">' +
+        '<img class="ub-avatar-img" src="' + ph + '" alt="" decoding="async" />' +
+        '</span>';
+    } else {
+      avHtml = '<span class="ub-avatar ub-avatar--student ub-avatar--emoji" aria-hidden="true" style="--avatar-ring:' + ringEsc + '">' +
+        '<span class="ub-avatar-emoji-inner">' + _escapeHtml(sv.emoji) + '</span>' +
+        '</span>';
+    }
+  }
+
   /* Avatar = link sang trang Hồ sơ. SPA router sẽ intercept click, không reload. */
   bar.innerHTML =
     '<a href="profile.html" class="ub-trigger ub-trigger--link" aria-label="Mở trang hồ sơ">' +
-      '<span class="ub-avatar" aria-hidden="true">' + (info.isTeacher ? '👩‍🏫' : '👤') + '</span>' +
+      avHtml +
       '<span class="ub-name" title="' + safeName + '">' + shortName + '</span>' +
       '<span class="ub-divider" aria-hidden="true"></span>' +
       '<span class="ub-stars" title="Tổng sao đã đạt">🌟 ' + info.stars + '</span>' +
@@ -367,7 +456,28 @@ function renderProfilePage(){
     if(el) el.hidden = !visible;
   };
 
-  set('profAvatar', info.isTeacher ? '👩‍🏫' : '🧒');
+  var av = document.getElementById('profAvatar');
+  if(av){
+    if(info.isTeacher){
+      av.className = 'profile-avatar-big';
+      av.style.removeProperty('--avatar-ring');
+      av.innerHTML = '';
+      av.textContent = '👩‍🏫';
+    } else {
+      var sv = info.studentAvatar || _readStudentAvatarFromStorage();
+      var ringEscProfile = sv.ring;
+      av.style.setProperty('--avatar-ring', ringEscProfile);
+      var ph2 = sv.mode === 'photo' ? _safeDataUrlForAttr(sv.photo) : '';
+      if(ph2){
+        av.className = 'profile-avatar-big profile-avatar-big--photo';
+        av.innerHTML = '<img class="profile-avatar-img" src="' + ph2 + '" alt="" decoding="async" />';
+      } else {
+        av.className = 'profile-avatar-big profile-avatar-big--emoji';
+        av.innerHTML = '<span class="profile-avatar-emoji-txt">' + _escapeHtml(sv.emoji) + '</span>';
+      }
+    }
+  }
+
   set('profName',   info.name);
   set('profEmail',  info.email || '');
   set('profRole',   info.roleLabel);
