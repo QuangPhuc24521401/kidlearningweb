@@ -20,14 +20,15 @@
 
   /** Set các pathname được SPA xử lý.
       Lưu ý: cùng origin + path khớp 1 trong các pattern dưới đây mới được intercept. */
-  var SPA_ROUTES = ['/', '/index.html', '/arena.html', '/pvp.html', '/progress.html'];
+  var SPA_ROUTES = ['/', '/index.html', '/arena.html', '/pvp.html', '/progress.html', '/profile.html'];
 
-  /** Trả về tên page chuẩn hoá ('index', 'arena', 'pvp', 'progress') hoặc null nếu không phải SPA. */
+  /** Trả về tên page chuẩn hoá ('index', 'arena', 'pvp', 'progress', 'profile') hoặc null nếu không phải SPA. */
   function routeName(pathname){
     if(pathname === '/' || pathname.endsWith('/index.html')) return 'index';
     if(pathname.endsWith('/arena.html'))    return 'arena';
     if(pathname.endsWith('/pvp.html'))      return 'pvp';
     if(pathname.endsWith('/progress.html')) return 'progress';
+    if(pathname.endsWith('/profile.html'))  return 'profile';
     return null;
   }
 
@@ -86,6 +87,10 @@
     pvp: function(){
       if(typeof window.mountUserBar === 'function') window.mountUserBar();
       if(typeof window.pvpInit === 'function') window.pvpInit();
+    },
+    profile: function(){
+      if(typeof window.mountUserBar === 'function') window.mountUserBar();
+      if(typeof window.renderProfilePage === 'function') window.renderProfilePage();
     }
   };
 
@@ -154,18 +159,29 @@
     document.title = bundle.title;
   }
 
+  /** Log chẩn đoán — luôn bật để dễ debug giai đoạn đầu. Tắt bằng `localStorage.setItem('spa_quiet','1')`. */
+  function debug(){
+    try{ if(localStorage.getItem('spa_quiet') === '1') return; }catch(e){}
+    var args = ['%c[spa]', 'color:#3b82f6;font-weight:bold'];
+    for(var i=0;i<arguments.length;i++) args.push(arguments[i]);
+    console.log.apply(console, args);
+  }
+
   /** Navigate tới url (đã chắc chắn là SPA route). */
   function spaNavigate(url, push){
-    if(navigating) return Promise.resolve();
+    if(navigating){ debug('skip — already navigating', url); return Promise.resolve(); }
     navigating = true;
     var prevPage = currentPage;
     var nextPage = routeName(new URL(url, location.href).pathname);
+    var t0 = performance.now();
+    debug('navigate', prevPage, '→', nextPage, url);
 
     // Loading state (tùy CSS sử dụng để hiển thị progress bar nhỏ).
     document.documentElement.classList.add('spa-loading');
 
     return fetchPageHtml(url)
       .then(function(html){
+        debug('fetched', url, '(+' + Math.round(performance.now()-t0) + 'ms)');
         var bundle = extractPageBundle(html);
 
         // Update URL ngay — back/forward đúng dù animation đang chạy
@@ -184,27 +200,37 @@
           updateActiveNav();
           try { window.scrollTo(0, 0); } catch(e){}
           // Mount ngay sau khi DOM swap — Firestore queries / TTS warmup chạy song song với animation.
+          var tm = performance.now();
           try { if(MOUNTS[nextPage]) MOUNTS[nextPage](); }
           catch(e){ console.warn('[spa] mount', nextPage, e); }
+          debug('mount ' + nextPage + ' done (+' + Math.round(performance.now()-tm) + 'ms)');
         };
 
-        // View Transitions API — fade mượt 250ms (Chromium 111+, Safari 18+).
+        // View Transitions API — fade mượt 280ms (Chromium 111+, Safari 18+).
+        // Wrap try/catch để nếu API lỗi vẫn fallback sang sync swap, không gọi location.href = url.
         if(typeof document.startViewTransition === 'function'){
-          var transition = document.startViewTransition(doSwap);
-          return transition.finished.catch(function(){ /* user cancel ok */ });
+          try{
+            var transition = document.startViewTransition(doSwap);
+            return transition.finished.catch(function(){ /* user cancel / fail ok */ });
+          }catch(vtErr){
+            debug('view transition threw, fallback sync swap', vtErr);
+            doSwap();
+            return Promise.resolve();
+          }
         } else {
           doSwap();
           return Promise.resolve();
         }
       })
       .catch(function(err){
-        console.warn('[spa] navigate fallback', url, err);
+        console.warn('[spa] navigate fallback → reload', url, err);
         // Fallback: reload thật
         location.href = url;
       })
       .then(function(){
         document.documentElement.classList.remove('spa-loading');
         navigating = false;
+        debug('navigate done (+' + Math.round(performance.now()-t0) + 'ms)');
       });
   }
 
@@ -221,8 +247,16 @@
     var href = a.getAttribute('href');
     if(!href) return;
     if(/^(#|mailto:|tel:|javascript:|data:)/i.test(href)) return;
-    if(!isSpaUrl(href)) return;
+    if(!isSpaUrl(href)){ debug('click → real nav (non-SPA url)', href); return; }
+    // Self-link: vẫn preventDefault để không reload, nhưng skip navigate.
+    var nextPage = routeName(new URL(href, location.href).pathname);
+    if(nextPage === currentPage){
+      e.preventDefault();
+      debug('click self-link, skip', href);
+      return;
+    }
     e.preventDefault();
+    debug('click intercepted', href);
     spaNavigate(href, true);
   }
   document.addEventListener('click', onClick);
@@ -233,6 +267,7 @@
   });
 
   /** Khởi tạo state ban đầu */
+  debug('spa.js loaded; currentPage =', currentPage, '; pathname =', location.pathname);
   if(currentPage){
     history.replaceState({ spa: true, page: currentPage }, '', location.href);
     updateActiveNav();

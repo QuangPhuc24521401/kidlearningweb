@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ — Kid Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://firestore.googleapis.com">
+<link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="menu.css">
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="pvp.css">
+<link rel="stylesheet" href="spa.css">
+<script>
+  (function(){
+    try{ if(localStorage.getItem('userRole')) return; }catch(e){}
+    document.documentElement.style.visibility='hidden';
+  })();
+</script>
+<script>
+  (function quickRoleGuard(){
+    try{
+      if(localStorage.getItem('userRole') === 'teacher'){
+        window.location.replace('mentor-teacher.html');
+      }
+    }catch(e){}
+  })();
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="page-scroll page-profile">
+
+<header class="app-topbar" role="banner">
+  <div class="app-topbar-inner">
+    <a href="index.html" class="topbar-brand">
+      <img src="favicon.svg" alt="Kid Learning" class="topbar-brand-logo" width="36" height="36" decoding="async">
+      <span class="topbar-brand-text">
+        <span class="topbar-brand-name">Kid Learning</span>
+        <span class="topbar-brand-tag">Hồ sơ học sinh</span>
+      </span>
+    </a>
+    <nav class="topbar-nav" aria-label="Điều hướng chính">
+      <a href="index.html" class="topbar-link">Trang chủ</a>
+      <a href="progress.html" class="topbar-link">Tiến độ &amp; huy hiệu</a>
+      <a href="arena.html" class="topbar-link">Đấu trường</a>
+      <a href="pvp.html" class="topbar-link">PvP</a>
+      <a href="mentor.html" class="topbar-link">Cô giáo AI</a>
+    </nav>
+    <div class="topbar-end">
+      <div id="topbarUserSlot" class="topbar-user-slot"></div>
+      <div class="topbar-tools">
+        <button type="button" id="musicBtn" aria-label="Bật tắt nhạc nền" title="Nhạc nền">🎵</button>
+        <button type="button" id="settingsBtn" aria-label="Cài đặt giọng đọc" title="Cài đặt">⚙️</button>
+        <button type="button" class="topbar-logout" onclick="handleLogout()">Đăng xuất</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="sky">
+  <div class="sun">
+    <div class="sun-ray" style="transform:rotate(0deg)"></div><div class="sun-ray" style="transform:rotate(45deg)"></div>
+    <div class="sun-ray" style="transform:rotate(90deg)"></div><div class="sun-ray" style="transform:rotate(135deg)"></div>
+    <div class="sun-ray" style="transform:rotate(180deg)"></div><div class="sun-ray" style="transform:rotate(225deg)"></div>
+    <div class="sun-ray" style="transform:rotate(270deg)"></div><div class="sun-ray" style="transform:rotate(315deg)"></div>
+  </div>
+  <div class="cloud c1"></div><div class="cloud c2"></div>
+  <div class="cloud c3"></div><div class="cloud c4"></div>
+</div>
+<div class="liquid-bg" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+<div class="ground"></div>
+<div class="sprinkles" id="sprinkles"></div>
+<div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
+
+<div id="settingsModal">
+  <div class="settings-card">
+    <button class="settings-close" onclick="closeSettings()">×</button>
+    <h2>🎙️ Cài đặt giọng đọc</h2>
+    <p>Dùng <strong>FPT.AI</strong> để có giọng Tiếng Việt tự nhiên nhất.<br>Miễn phí 2.000 lượt/ngày sau khi đăng ký.</p>
+    <div class="key-input-wrap">
+      <input class="key-input" id="fptKeyInput" type="password" placeholder="Paste FPT.AI API key vào đây...">
+      <button class="save-btn" onclick="saveKey()">💾 Lưu</button>
+    </div>
+    <div class="key-saved hidden" id="keySavedMsg">✅ API key đã được lưu!</div>
+    <p style="font-family:Nunito,sans-serif;font-size:14px;color:#555;margin:16px 0 6px"><strong>Chọn giọng đọc:</strong></p>
+    <div class="voice-chips" id="voiceChips">
+      <div class="chip active" onclick="setVoice('lannhi',this)">🌸 Lan Nhi (nữ Nam)</div>
+      <div class="chip" onclick="setVoice('linhsan',this)">💐 Linh San (nữ Bắc)</div>
+      <div class="chip" onclick="setVoice('minhquang',this)">🎯 Minh Quang (nam Bắc)</div>
+      <div class="chip" onclick="setVoice('giahuy',this)">🚀 Gia Huy (nam Nam)</div>
+    </div>
+    <p class="settings-link">Chưa có API key? <a href="https://fpt.ai/tts" target="_blank">Đăng ký miễn phí tại fpt.ai →</a></p>
+  </div>
+</div>
+
+<main id="page-root" data-page="profile">
+<div class="card menu-card profile-page-card">
+  <div class="profile-hero">
+    <div class="profile-avatar-big" id="profAvatar">🧒</div>
+    <div class="profile-hero-text">
+      <h1 class="profile-name" id="profName">Bé học sinh</h1>
+      <p class="profile-email" id="profEmail"></p>
+      <span class="profile-role-pill" id="profRole">Tài khoản phụ huynh</span>
+    </div>
+  </div>
+
+  <div class="profile-stats" id="profStatsGrid">
+    <div class="profile-stat-card profile-stat-stars">
+      <div class="profile-stat-icon" aria-hidden="true">🌟</div>
+      <div class="profile-stat-value" id="profStars">0</div>
+      <div class="profile-stat-label">Sao tích lũy</div>
+    </div>
+    <div class="profile-stat-card profile-stat-badges">
+      <div class="profile-stat-icon" aria-hidden="true">🏅</div>
+      <div class="profile-stat-value" id="profBadges">0/0</div>
+      <div class="profile-stat-label">Huy hiệu đã mở</div>
+    </div>
+    <div class="profile-stat-card profile-stat-streak">
+      <div class="profile-stat-icon" aria-hidden="true">🔥</div>
+      <div class="profile-stat-value" id="profStreak">0</div>
+      <div class="profile-stat-label">Chuỗi ngày học</div>
+    </div>
+    <div class="profile-stat-card profile-stat-honor">
+      <div class="profile-stat-icon" aria-hidden="true">🛡️</div>
+      <div class="profile-stat-value" id="profHonor">0</div>
+      <div class="profile-stat-label">Vinh dự đấu trường</div>
+    </div>
+  </div>
+
+  <div class="profile-meta">
+    <div class="profile-meta-row">
+      <span class="profile-meta-icon" aria-hidden="true">📅</span>
+      <span class="profile-meta-label">Ngày tham gia:</span>
+      <span class="profile-meta-value"><strong id="profJoin">—</strong> <span class="profile-meta-sub" id="profAge"></span></span>
+    </div>
+    <div class="profile-meta-row" id="profClassRow" hidden>
+      <span class="profile-meta-icon" aria-hidden="true">🏫</span>
+      <span class="profile-meta-label">Mã lớp:</span>
+      <span class="profile-meta-value"><strong id="profClass">—</strong></span>
+    </div>
+    <div class="profile-meta-row" id="profUidRow" hidden>
+      <span class="profile-meta-icon" aria-hidden="true">🆔</span>
+      <span class="profile-meta-label">Mã tài khoản:</span>
+      <span class="profile-meta-value"><code id="profUid">—</code></span>
+    </div>
+  </div>
+
+  <div class="profile-actions">
+    <a href="progress.html" class="profile-btn profile-btn-primary">
+      <span class="profile-btn-ico" aria-hidden="true">📊</span>
+      <span>Xem tiến độ &amp; huy hiệu</span>
+    </a>
+    <button type="button" class="profile-btn" id="profBtnMusic">
+      <span class="profile-btn-ico" aria-hidden="true">🎵</span>
+      <span>Bật / tắt nhạc nền</span>
+    </button>
+    <button type="button" class="profile-btn" id="profBtnSettings">
+      <span class="profile-btn-ico" aria-hidden="true">⚙️</span>
+      <span>Cài đặt giọng đọc</span>
+    </button>
+    <button type="button" class="profile-btn profile-btn-danger" id="profBtnLogout">
+      <span class="profile-btn-ico" aria-hidden="true">🚪</span>
+      <span>Đăng xuất</span>
+    </button>
+  </div>
+</div>
+</main>
+
+<script src="firebase.js"></script>
+<script src="lessons/data/lessons-data.js"></script>
+<script src="achievements.js"></script>
+<script src="arena.js"></script>
+<script src="pvp.js"></script>
+<script>
+  (function deepRoleGuard(){
+    if(localStorage.getItem('userRole')) return;
+    if(typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore) return;
+    firebase.auth().onAuthStateChanged(function(user){
+      if(!user) return;
+      firebase.firestore().collection('users').doc(user.uid).get()
+        .then(function(snap){
+          var data = snap && snap.exists ? snap.data() : null;
+          var role = data?.role || 'parent';
+          localStorage.setItem('userRole', role);
+          if(data?.classRoom)   localStorage.setItem('classRoom', data.classRoom);
+          if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
+          if(role === 'teacher') window.location.replace('mentor-teacher.html');
+        })
+        .catch(function(err){ console.warn('[deepRoleGuard]', err); });
+    });
+  })();
+</script>
+<script src="secrets/tts.config.js"></script>
+<script src="shared.js"></script>
+<script src="menu.js"></script>
+<script src="spa.js"></script>
+</body>
+</html>

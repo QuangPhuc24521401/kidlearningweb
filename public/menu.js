@@ -23,14 +23,24 @@ function handleLogout(){
     if(firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_')){
       firebase.auth().onAuthStateChanged(function(user){
         if(!user) window.location.href='auth/login.html';
-        else { reveal(); renderProgressBadges(); mountUserBar(); fetchProgressFromCloud(user.uid); }
+        else {
+          reveal();
+          renderProgressBadges();
+          mountUserBar();
+          if(typeof renderProfilePage === 'function') renderProfilePage();
+          fetchProgressFromCloud(user.uid);
+        }
       });
     } else {
       reveal();
       renderProgressBadges();
       mountUserBar();
+      if(typeof renderProfilePage === 'function') renderProfilePage();
     }
-  }catch(e){ reveal(); renderProgressBadges(); mountUserBar(); }
+  }catch(e){
+    reveal(); renderProgressBadges(); mountUserBar();
+    if(typeof renderProfilePage === 'function') renderProfilePage();
+  }
 
   setTimeout(reveal, 4000);
 })();
@@ -223,31 +233,108 @@ function _computeTotalStars(){
   return total;
 }
 
+/* ───────────── Profile info (dropdown avatar) ───────────── */
+
+function _escapeHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function _formatJoinDate(date){
+  if(!date) return '—';
+  var d = String(date.getDate()).padStart(2, '0');
+  var m = String(date.getMonth() + 1).padStart(2, '0');
+  return d + '/' + m + '/' + date.getFullYear();
+}
+
+/** "3 tháng", "5 ngày", "1 năm 2 tháng" — khoảng cách từ `date` tới hiện tại. */
+function _formatAccountAge(date){
+  if(!date) return '';
+  var days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000));
+  if(days < 1)   return 'hôm nay';
+  if(days < 7)   return days + ' ngày';
+  if(days < 30)  return Math.floor(days / 7) + ' tuần';
+  if(days < 365){
+    var m = Math.floor(days / 30);
+    return m + ' tháng';
+  }
+  var y = Math.floor(days / 365);
+  var remM = Math.floor((days % 365) / 30);
+  return y + ' năm' + (remM ? ' ' + remM + ' tháng' : '');
+}
+
+/** Đọc dữ liệu profile từ Firebase auth + localStorage + achievements. */
+function _readProfileInfo(){
+  var role        = localStorage.getItem('userRole') || 'parent';
+  var displayName = (localStorage.getItem('userDisplayName') || '').trim();
+  var classRoom   = localStorage.getItem('classRoom') || '';
+  var stars       = _computeTotalStars();
+
+  var email = '';
+  var createdAt = null;
+  try{
+    if(typeof firebase !== 'undefined' && firebase.auth){
+      var u = firebase.auth().currentUser;
+      if(u){
+        email = u.email || '';
+        var ct = u.metadata && u.metadata.creationTime;
+        if(ct){
+          var dt = new Date(ct);
+          if(!isNaN(dt.getTime())) createdAt = dt;
+        }
+      }
+    }
+  }catch(e){}
+
+  var streak = 0, unlocked = 0, totalBadges = 0, honor = 0;
+  try{
+    if(typeof window.readAchievements === 'function'){
+      var a = window.readAchievements();
+      streak   = a && a.streak ? a.streak : 0;
+      unlocked = a && a.unlocked ? Object.keys(a.unlocked).length : 0;
+    }
+    if(window.ACHIEVEMENT_DEFS && window.ACHIEVEMENT_DEFS.length){
+      totalBadges = window.ACHIEVEMENT_DEFS.length;
+    }
+    honor = parseInt(localStorage.getItem('arena_honor') || '0', 10) || 0;
+  }catch(e){}
+
+  return {
+    role:        role,
+    isTeacher:   role === 'teacher',
+    roleLabel:   role === 'teacher' ? 'Tài khoản giáo viên' : 'Tài khoản phụ huynh',
+    name:        displayName || (role === 'teacher' ? 'Giáo viên' : 'Bé học sinh'),
+    email:       email,
+    classRoom:   classRoom,
+    createdAt:   createdAt,
+    stars:       stars,
+    streak:      streak,
+    unlocked:    unlocked,
+    totalBadges: totalBadges,
+    honor:       honor
+  };
+}
+
 function mountUserBar(){
-  var name = (localStorage.getItem('userDisplayName') || '').trim() || 'Bé học sinh';
-  var stars = _computeTotalStars();
-  var slot = document.getElementById('topbarUserSlot');
-  var bar = document.getElementById('userBar');
+  var info  = _readProfileInfo();
+  var slot  = document.getElementById('topbarUserSlot');
+  var bar   = document.getElementById('userBar');
   if(!bar){
     bar = document.createElement('div');
     bar.id = 'userBar';
   }
   bar.className = slot ? 'user-bar user-bar--topbar' : 'user-bar';
-  var safeName = name.replace(/"/g,'&quot;');
-  var shortName = name.length > 16 ? name.slice(0,15) + '…' : name;
+  var safeName  = _escapeHtml(info.name);
+  var shortName = info.name.length > 16 ? _escapeHtml(info.name.slice(0,15)) + '…' : safeName;
+  /* Avatar = link sang trang Hồ sơ. SPA router sẽ intercept click, không reload. */
   bar.innerHTML =
-    '<button type="button" class="ub-trigger" aria-haspopup="menu" aria-expanded="false" aria-label="Mở menu tài khoản">' +
-      '<span class="ub-avatar" aria-hidden="true">👤</span>' +
+    '<a href="profile.html" class="ub-trigger ub-trigger--link" aria-label="Mở trang hồ sơ">' +
+      '<span class="ub-avatar" aria-hidden="true">' + (info.isTeacher ? '👩‍🏫' : '👤') + '</span>' +
       '<span class="ub-name" title="' + safeName + '">' + shortName + '</span>' +
       '<span class="ub-divider" aria-hidden="true"></span>' +
-      '<span class="ub-stars" title="Tổng sao đã đạt">🌟 ' + stars + '</span>' +
-      '<span class="ub-caret" aria-hidden="true">▾</span>' +
-    '</button>' +
-    '<div class="ub-menu" role="menu" hidden>' +
-      '<button type="button" role="menuitem" class="ubm-item" data-action="music"><span class="ubm-icon">🎵</span><span>Bật / tắt nhạc</span></button>' +
-      '<button type="button" role="menuitem" class="ubm-item" data-action="settings"><span class="ubm-icon">⚙️</span><span>Cài đặt</span></button>' +
-      '<button type="button" role="menuitem" class="ubm-item ubm-danger" data-action="logout"><span class="ubm-icon">🚪</span><span>Đăng xuất</span></button>' +
-    '</div>';
+      '<span class="ub-stars" title="Tổng sao đã đạt">🌟 ' + info.stars + '</span>' +
+    '</a>';
   if(slot){
     slot.innerHTML = '';
     slot.appendChild(bar);
@@ -256,48 +343,100 @@ function mountUserBar(){
   } else if(bar.parentNode !== document.body){
     document.body.appendChild(bar);
   }
-  _wireUserBarMenu(bar);
 }
 
-function _wireUserBarMenu(bar){
-  if(!bar || bar.getAttribute('data-wired') === '1') return;
-  bar.setAttribute('data-wired', '1');
-  var trigger = bar.querySelector('.ub-trigger');
-  var menu = bar.querySelector('.ub-menu');
-  if(!trigger || !menu) return;
+/* ───────────── Render trang Hồ sơ (profile.html) ─────────────
+   Được gọi mỗi khi SPA mount route 'profile' hoặc khi profile.html
+   được load trực tiếp (qua DOMContentLoaded listener bên dưới). */
+function renderProfilePage(){
+  var card = document.querySelector('.profile-page-card');
+  if(!card) return; // không phải trang hồ sơ → skip
 
-  function closeMenu(){
-    menu.hidden = true;
-    trigger.setAttribute('aria-expanded', 'false');
-    bar.classList.remove('is-open');
+  var info = _readProfileInfo();
+
+  var set = function(id, text){
+    var el = document.getElementById(id);
+    if(el) el.textContent = text;
+  };
+  var setHtml = function(id, html){
+    var el = document.getElementById(id);
+    if(el) el.innerHTML = html;
+  };
+  var show = function(id, visible){
+    var el = document.getElementById(id);
+    if(el) el.hidden = !visible;
+  };
+
+  set('profAvatar', info.isTeacher ? '👩‍🏫' : '🧒');
+  set('profName',   info.name);
+  set('profEmail',  info.email || '');
+  set('profRole',   info.roleLabel);
+  set('profStars',  info.stars);
+  set('profBadges', info.unlocked + '/' + info.totalBadges);
+  set('profStreak', info.streak);
+  set('profHonor',  info.honor);
+  set('profJoin',   _formatJoinDate(info.createdAt));
+  set('profAge',    info.createdAt ? '(' + _formatAccountAge(info.createdAt) + ')' : '');
+
+  if(info.isTeacher && info.classRoom){
+    setHtml('profClass', _escapeHtml(info.classRoom));
+    show('profClassRow', true);
+  } else {
+    show('profClassRow', false);
   }
-  function openMenu(){
-    menu.hidden = false;
-    trigger.setAttribute('aria-expanded', 'true');
-    bar.classList.add('is-open');
+
+  // UID hiển thị (rút gọn 6 ký tự đầu… 4 ký tự cuối)
+  try{
+    var u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if(u && u.uid){
+      var uid = u.uid;
+      setHtml('profUid', _escapeHtml(uid.slice(0,6) + '…' + uid.slice(-4)));
+      show('profUidRow', true);
+    } else {
+      show('profUidRow', false);
+    }
+  }catch(e){ show('profUidRow', false); }
+
+  // Teacher: ẩn 2 thẻ stats không phù hợp (huy hiệu, chuỗi, vinh dự) — chỉ giữ sao.
+  // Học sinh: giữ tất cả.
+  var grid = document.getElementById('profStatsGrid');
+  if(grid){
+    grid.querySelectorAll('.profile-stat-card').forEach(function(c){ c.style.display = ''; });
+    if(info.isTeacher){
+      var hideClasses = ['.profile-stat-stars','.profile-stat-badges','.profile-stat-streak','.profile-stat-honor'];
+      hideClasses.forEach(function(sel){
+        var el = grid.querySelector(sel);
+        if(el) el.style.display = 'none';
+      });
+    } else if((info.honor || 0) === 0){
+      // Ẩn ô vinh dự khi chưa đạt
+      var el = grid.querySelector('.profile-stat-honor');
+      if(el) el.style.display = 'none';
+    }
   }
-  trigger.addEventListener('click', function(e){
-    e.stopPropagation();
-    if(menu.hidden) openMenu(); else closeMenu();
+
+  // Wire action buttons (idempotent)
+  _wireProfileActions(card);
+}
+
+function _wireProfileActions(card){
+  if(card.getAttribute('data-wired') === '1') return;
+  card.setAttribute('data-wired', '1');
+  var bM = document.getElementById('profBtnMusic');
+  var bS = document.getElementById('profBtnSettings');
+  var bL = document.getElementById('profBtnLogout');
+  if(bM) bM.addEventListener('click', function(){
+    if(typeof toggleMusic === 'function') toggleMusic();
   });
-  document.addEventListener('click', function(e){
-    if(menu.hidden) return;
-    if(!bar.contains(e.target)) closeMenu();
+  if(bS) bS.addEventListener('click', function(){
+    if(typeof openSettings === 'function') openSettings();
   });
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && !menu.hidden){ closeMenu(); trigger.focus(); }
-  });
-  menu.querySelectorAll('.ubm-item').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var act = btn.getAttribute('data-action');
-      closeMenu();
-      if(act === 'music'){
-        if(typeof toggleMusic === 'function') toggleMusic();
-      } else if(act === 'settings'){
-        if(typeof openSettings === 'function') openSettings();
-      } else if(act === 'logout'){
-        if(typeof handleLogout === 'function') handleLogout();
-      }
-    });
+  if(bL) bL.addEventListener('click', function(){
+    if(typeof handleLogout === 'function') handleLogout();
   });
 }
+
+/* Mount profile khi page load trực tiếp /profile.html (không qua SPA navigation). */
+document.addEventListener('DOMContentLoaded', function(){
+  if(document.querySelector('.profile-page-card')) renderProfilePage();
+});
