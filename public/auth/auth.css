@@ -1,18 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;900&display=swap');
 
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{min-height:100%}
 
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: 'Nunito', Arial, sans-serif;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 24px;
+  align-items: safe center;
+  padding: 24px 16px 32px;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background:
     radial-gradient(circle at 20% 10%, #fff6b7 0%, transparent 40%),
     radial-gradient(circle at 85% 15%, #ffd1f4 0%, transparent 45%),

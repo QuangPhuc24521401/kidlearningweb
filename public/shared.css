@@ -2,7 +2,7 @@
 
 /* ═══════════ BASE ═══════════ */
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html,body{min-height:100%}
 
 :root{
   /* Brand */
@@ -30,8 +30,11 @@ html,body{height:100%}
 
 body{
   min-height:100vh;
+  min-height:100dvh;
   font-family:'Baloo 2',cursive;
-  overflow:hidden;
+  overflow-x:hidden;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
   position:relative;
   background:var(--bg2);
   display:flex;
@@ -83,8 +86,10 @@ body{
 }
 
 /* Allow scrolling on pages with long content (e.g. menu grid) */
+/* Cuộn dọc — nội dung dài (menu, profile, SPA) không bị cắt */
 body.page-scroll{
-  overflow:auto;
+  overflow-x:hidden;
+  overflow-y:auto;
   align-items:flex-start;
   padding:24px 0 34px;
   -webkit-overflow-scrolling:touch;
