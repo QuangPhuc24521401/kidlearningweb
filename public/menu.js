@@ -28,11 +28,38 @@ function handleLogout(){
       firebase.auth().onAuthStateChanged(function(user){
         if(!user) window.location.href='auth/login.html';
         else {
-          reveal();
-          renderProgressBadges();
-          mountUserBar();
-          if(typeof renderProfilePage === 'function') renderProfilePage();
-          fetchProgressFromCloud(user.uid);
+          function runAppShell(){
+            reveal();
+            renderProgressBadges();
+            mountUserBar();
+            if(typeof renderProfilePage === 'function') renderProfilePage();
+            fetchProgressFromCloud(user.uid);
+          }
+          function maybeGuardParentOnboarding(cb){
+            var pathname = '';
+            try{
+              pathname = String(window.location.pathname || '').replace(/\\/g,'/').toLowerCase();
+            }catch(e){}
+            if(pathname.indexOf('student-setup') !== -1){
+              cb();
+              return;
+            }
+            firebase.firestore().collection('users').doc(user.uid).get()
+              .then(function(snap){
+                var data = snap && snap.exists ? snap.data() : null;
+                var role = (data && data.role) ? data.role : 'parent';
+                if(role === 'parent' && data && data.studentProfileComplete === false){
+                  window.location.href = 'auth/student-setup.html';
+                  return;
+                }
+                cb();
+              })
+              .catch(function(err){
+                console.warn('[menu auth guard]', err);
+                cb();
+              });
+          }
+          maybeGuardParentOnboarding(runAppShell);
         }
       });
     } else {

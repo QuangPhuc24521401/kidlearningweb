@@ -21,14 +21,13 @@ import {
 
 const HOME_PARENT_URL  = "../index.html";
 const HOME_TEACHER_URL = "../mentor-teacher.html";
-const LOGIN_URL        = "./login.html";
+const LOGIN_URL           = "./login.html";
+/** Trang tạo avatar + nickname sau khi phụ huynh đã xác thực email và đăng nhập lần đầu. */
+const STUDENT_SETUP_URL   = "./student-setup.html";
 
 /** Emoji có sẵn cho học sinh (bước sau đăng ký phụ huynh). */
 const STUDENT_EMOJIS = ["🧒", "👧", "🐻", "🐼", "🦊", "🐰", "🦄", "🦁", "🐸", "🐨", "🐥", "🚀", "⭐", "🌈", "🎨", "⚽"];
 const RING_HEX = ["#FF9800", "#E91E63", "#2196F3", "#4CAF50", "#9C27B0", "#00BCD4"];
-
-/** User vừa tạo, đang chờ bước avatar + nickname (chưa gửi email verify / signOut). */
-let pendingParentSetup = null;
 
 function normalizeStudentNickname(raw) {
   const s = String(raw || "").trim().replace(/\s+/g, " ");
@@ -224,7 +223,23 @@ function redirectByRole(role) {
   else                    window.location.href = HOME_PARENT_URL;
 }
 
-/* ───────────────────────── Register: PARENT — Bước 2 học sinh ───────────────────────── */
+/** Sau khi email đã xác thực: đồng bộ cache và hoặc mở onboarding avatar, hoặc về home. */
+function routeAfterVerifiedFirestoreSession(meta) {
+  const role = meta?.role || "parent";
+  cacheUserMeta({
+    ...(meta || {}),
+    role,
+    classRoom:   meta?.classRoom ?? "",
+    displayName: meta?.displayName ?? ""
+  });
+  if (role === "parent" && meta?.studentProfileComplete === false) {
+    window.location.href = STUDENT_SETUP_URL;
+    return;
+  }
+  redirectByRole(role);
+}
+
+/* ───────────────────────── Onboarding: avatar + nickname (trang riêng) ───────────────────────── */
 
 function syncStudentPreviewFromPicker() {
   const ringBt = document.querySelector("#studentRingPicker button.is-selected");
@@ -244,34 +259,24 @@ function syncStudentPreviewFromPicker() {
   }
 }
 
-function showParentStudentSetupStep(user, email, password) {
-  pendingParentSetup = { user, email, password };
-  const container = document.querySelector(".auth-container");
-  container?.classList.add("student-setup-active");
-  document.querySelector(".role-tabs")?.setAttribute("hidden", "");
-  document.getElementById("parentForm")?.setAttribute("hidden", "");
-  document.getElementById("teacherForm")?.setAttribute("hidden", "");
-  document.querySelector(".divider")?.setAttribute("hidden", "");
-  document.querySelector(".links")?.setAttribute("hidden", "");
-
-  const h1 = document.getElementById("authTitle");
-  const sub = document.getElementById("authSubtitle");
-  if (h1) h1.textContent = "Gần xong rồi!";
-  if (sub) sub.textContent = "Chọn ảnh đại diện và nickname cho bé — chỉ một bước nữa thôi.";
-
-  document.getElementById("parentStudentSetup")?.removeAttribute("hidden");
-
-  const nickname = document.getElementById("studentNickname");
-  const suggest = document.getElementById("parentChildName")?.value?.trim() || "";
-  if (nickname) nickname.value = suggest;
+/** Đổ vào UI trên trang student-setup.html (Firestore users doc tối thiểu từ bước đăng ký). */
+function prepareStudentSetupForm(meta, _emailIgnored) {
+  const nicknameEl = document.getElementById("studentNickname");
+  if (nicknameEl && nicknameEl.dataset.prefilledNick !== "1") {
+    const fromMeta = typeof meta?.childName === "string" ? meta.childName.trim() : "";
+    if (fromMeta) nicknameEl.value = fromMeta;
+    nicknameEl.dataset.prefilledNick = "1";
+  }
 
   const grid = document.getElementById("studentEmojiPicker");
   if (grid && !grid.dataset.built) {
     grid.dataset.built = "1";
     grid.innerHTML = STUDENT_EMOJIS.map(
-      em => `<button type="button" class="emoji-pick" data-emoji="${em}" aria-label="Chọn">${em}</button>`
+      em =>
+        `<button type="button" class="emoji-pick" data-emoji="${em}" aria-label="Chọn">${em}</button>`
     ).join("");
-    grid.querySelectorAll("button").forEach((b, i) => b.classList.toggle("is-selected", i === 0));
+    grid.querySelectorAll("button").forEach((b, i) =>
+      b.classList.toggle("is-selected", i === 0));
   }
 
   const rings = document.getElementById("studentRingPicker");
@@ -296,9 +301,11 @@ function showParentStudentSetupStep(user, email, password) {
   syncStudentPreviewFromPicker();
 }
 
-async function finalizeParentStudentProfile() {
-  if (!pendingParentSetup?.user) {
-    showNotice("error", "Phiên không hợp lệ. Vui lòng đăng ký lại.");
+async function finalizeStudentOnboarding() {
+  const user = auth.currentUser;
+  if (!user?.emailVerified) {
+    showNotice("error", "Cần đăng nhập và xác thực email trước khi hoàn tất.");
+    window.location.href = LOGIN_URL;
     return;
   }
 
@@ -336,43 +343,24 @@ async function finalizeParentStudentProfile() {
 
   setLoading("studentSetupDoneBtn", true, "Đang lưu...");
 
-  const { user, email, password } = pendingParentSetup;
   try {
     try {
       await updateProfile(user, { displayName: nickname });
     } catch (e) { console.warn("[auth] updateProfile", e); }
 
     await writeUserMeta(user.uid, {
-      role: "parent",
-      email,
       childName: nickname,
       nickname,
       displayName: nickname,
       studentAvatarMode: mode,
       studentAvatarEmoji: emoji,
       studentAvatarRing: ring,
-      studentAvatarPhoto: mode === "photo" ? photoDataUrl : deleteField()
+      studentAvatarPhoto: mode === "photo" ? photoDataUrl : deleteField(),
+      studentProfileComplete: true
     });
 
-    await storeBrowserCredential(email, password);
-
-    try {
-      await sendEmailVerification(user, {
-        url: window.location.origin + "/auth/login.html",
-        handleCodeInApp: false
-      });
-    } catch (ve) { console.warn("sendEmailVerification failed:", ve); }
-
-    pendingParentSetup = null;
-
-    sessionStorage.setItem("auth:flash", JSON.stringify({
-      type: "success",
-      message: `Đã tạo tài khoản cho <b>${email}</b> với nickname <b>${nickname}</b>. Mở email và bấm vào link xác thực để kích hoạt nhé.<br><br>⚠️ Nếu không thấy, kiểm tra <b>Spam / Quảng cáo</b>.`
-    }));
-
-    await signOut(auth);
-
-    window.location.href = LOGIN_URL;
+    const meta = await fetchUserMeta(user.uid);
+    routeAfterVerifiedFirestoreSession(meta || { role: "parent", studentProfileComplete: true });
   } catch (error) {
     const msg = friendlyAuthError(error.code) || ("Lỗi: " + error.message);
     showNotice("error", msg);
@@ -382,6 +370,10 @@ async function finalizeParentStudentProfile() {
 }
 
 function wireRegisterStudentSetupUi() {
+  const root = document.getElementById("studentSetupPaneRoot");
+  if (!root || root.dataset.wired === "1") return;
+  root.dataset.wired = "1";
+
   document.getElementById("studentEmojiPicker")?.addEventListener("click", ev => {
     const bt = ev.target.closest("button[data-emoji]");
     if (!bt) return;
@@ -436,7 +428,62 @@ function wireRegisterStudentSetupUi() {
     syncStudentPreviewFromPicker();
   });
 
-  document.getElementById("studentSetupDoneBtn")?.addEventListener("click", finalizeParentStudentProfile);
+  document.getElementById("studentSetupDoneBtn")?.addEventListener("click", finalizeStudentOnboarding);
+}
+
+function initStudentSetupPage() {
+  try {
+    const flash = sessionStorage.getItem("auth:flash");
+    if (flash) {
+      sessionStorage.removeItem("auth:flash");
+      const obj = JSON.parse(flash);
+      showNotice(obj.type || "info", obj.message);
+    }
+  } catch (e) { /* ignore */ }
+
+  wireRegisterStudentSetupUi();
+
+  document.getElementById("studentSetupLogoutLink")?.addEventListener("click", async ev => {
+    ev.preventDefault();
+    await logout();
+  });
+
+  onAuthStateChanged(auth, async u => {
+    if (!u) {
+      window.location.href = LOGIN_URL;
+      return;
+    }
+    if (!u.emailVerified) {
+      await signOut(auth);
+      sessionStorage.setItem("auth:flash", JSON.stringify({
+        type: "warn",
+        message:
+          "Email chưa được xác thực. Hãy mở email và bấm link xác thực, rồi đăng nhập để tiếp tục."
+      }));
+      window.location.href = LOGIN_URL;
+      return;
+    }
+
+    const meta = await fetchUserMeta(u.uid);
+    const role = meta?.role || "parent";
+    if (role === "teacher") {
+      cacheUserMeta({
+        ...(meta || {}),
+        role:        "teacher",
+        classRoom:   meta?.classRoom ?? "",
+        displayName: meta?.displayName ?? ""
+      });
+      redirectByRole("teacher");
+      return;
+    }
+
+    if (meta?.studentProfileComplete === true) {
+      routeAfterVerifiedFirestoreSession(meta);
+      return;
+    }
+
+    prepareStudentSetupForm(meta || {}, u.email || "");
+  });
 }
 
 /* ───────────────────────── Register: PARENT ───────────────────────── */
@@ -459,18 +506,33 @@ async function handleParentRegister(e) {
   await applyPersistence();
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    /** Bước 1 xong → doc tối thiểu; avatar + nickname cập nhật ở bước 2 */
+    /** Đăng ký chỉ cần tối thiểu — avatar/nickname trong trang onboarding sau đăng nhập lần đầu. */
     await writeUserMeta(cred.user.uid, {
       role: "parent",
       email,
       childName: childName || "",
-      displayName: childName || ""
+      displayName: "",
+      studentProfileComplete: false
     });
 
     await storeBrowserCredential(email, password);
-    clearNotice();
 
-    showParentStudentSetupStep(cred.user, email, password);
+    try {
+      await sendEmailVerification(cred.user, {
+        url: window.location.origin + "/auth/login.html",
+        handleCodeInApp: false
+      });
+    } catch (ve) { console.warn("sendEmailVerification failed:", ve); }
+
+    await signOut(auth);
+
+    sessionStorage.setItem("auth:flash", JSON.stringify({
+      type: "success",
+      message:
+        `Đã gửi email xác thực đến <b>${email}</b>. Sau khi bấm link trong email và đăng nhập <b>lần đầu</b>, Kid Learning sẽ mở màn chọn avatar và nickname cho bé nhé.<br><br>⚠️ Không thấy email? Kiểm tra <b>Spam / Quảng cáo</b>.`
+    }));
+
+    window.location.href = LOGIN_URL;
   } catch (error) {
     const msg = friendlyAuthError(error.code) || ("Lỗi: " + error.message);
     showNotice("error", msg);
@@ -575,14 +637,9 @@ async function handleLogin(e) {
       showNotice("info", `Tài khoản này thuộc loại <b>${roleLabel}</b>. Đang chuyển đến đúng trang...`);
     }
 
-    cacheUserMeta({
-      ...(meta || {}),
-      role:        realRole,
-      classRoom:   meta?.classRoom ?? "",
-      displayName: meta?.displayName ?? ""
-    });
     await storeBrowserCredential(email, password);
-    setTimeout(() => redirectByRole(realRole), roleHint !== realRole ? 900 : 0);
+    const delayMs = roleHint !== realRole ? 900 : 0;
+    setTimeout(() => routeAfterVerifiedFirestoreSession(meta), delayMs);
   } catch (error) {
     const msg = friendlyAuthError(error.code) || ("Lỗi: " + error.message);
     showNotice("error", msg);
@@ -665,28 +722,28 @@ function initAuthUi() {
     }
   } catch (e) { /* ignore */ }
 
-  wireRegisterStudentSetupUi();
-
-  // Nếu user đã login + verified, đẩy về đúng "home" theo role.
+  // Nếu user đã login + verified, đẩy về onboarding hoặc home.
   const path = location.pathname.toLowerCase();
   const isLoginOrRegister = path.endsWith("/login.html") || path.endsWith("/register.html");
   if (isLoginOrRegister) {
     onAuthStateChanged(auth, async user => {
       if (!user || !user.emailVerified) return;
       const meta = await fetchUserMeta(user.uid);
-      const role = meta?.role || "parent";
-      cacheUserMeta({
-        ...(meta || {}),
-        role,
-        classRoom:   meta?.classRoom ?? "",
-        displayName: meta?.displayName ?? ""
-      });
-      redirectByRole(role);
+      routeAfterVerifiedFirestoreSession(meta);
     });
   }
 }
 
-if (document.readyState === "loading") {
+const pathnameLower = typeof location !== "undefined" ? location.pathname.toLowerCase() : "";
+
+if (pathnameLower.endsWith("/student-setup.html")) {
+  const boot = () => initStudentSetupPage();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+} else if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initAuthUi);
 } else {
   initAuthUi();

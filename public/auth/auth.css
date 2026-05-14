@@ -564,6 +564,16 @@ body {
   margin:12px 0 0;
   line-height:1.45;
 }
+.student-setup-alt{
+  text-align:center;
+  margin:18px 0 0;
+  font-size:13px;
+  font-family:var(--font-ui, system-ui, sans-serif);
+}
+.student-setup-alt a{
+  color:#1565C0;
+  font-weight:700;
+}
 
 .auth-container.student-setup-active{
   width:min(480px, 100%);

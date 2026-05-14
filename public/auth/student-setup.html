@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tạo nhân vật cho bé · Kid Learning</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+
+<div class="bg-clouds" aria-hidden="true">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+</div>
+<div class="bg-dots" aria-hidden="true">
+  <i></i><i></i><i></i><i></i><i></i><i></i>
+</div>
+
+<div class="auth-container student-setup-active" data-role="parent">
+  <img class="auth-logo" src="../logo.png" alt="Kid Learning">
+  <h1 id="authTitle">Tạo nhân vật cho bé</h1>
+  <p class="subtitle" id="authSubtitle">Bước này chỉ làm một lần sau khi bạn đã xác thực email và đăng nhập lần đầu.</p>
+
+  <div id="authNotice" class="auth-notice" role="alert"></div>
+
+  <div id="studentSetupPaneRoot" class="student-setup-pane">
+    <div class="setup-badge" aria-hidden="true">✨</div>
+    <h2 class="setup-title">Ảnh đại diện &amp; nickname</h2>
+    <p class="setup-desc">Chọn nhân vật emoji hoặc tải ảnh, đổi màu viền và đặt tên hiển thị cho bé trong Kid Learning.</p>
+
+    <div class="setup-preview-row">
+      <div id="studentPreviewRing" class="setup-preview-ring" style="--ring:#FF9800" data-mode="emoji">
+        <span id="studentPreviewEmoji" class="setup-preview-emoji" aria-hidden="true">🧒</span>
+        <img id="studentPreviewImg" class="setup-preview-img" alt="Ảnh bé đã chọn" hidden decoding="async">
+      </div>
+    </div>
+
+    <label class="setup-label" for="studentNickname">Nickname của bé <span class="req">*</span></label>
+    <div class="input-group">
+      <span class="icon" aria-hidden="true">😊</span>
+      <input id="studentNickname" type="text" maxlength="24" autocomplete="off"
+             placeholder="Ví dụ: Bé Minh, Bunny 203…" aria-describedby="nickHint">
+    </div>
+    <div id="nickHint" class="hint setup-hint">2–24 ký tự. Hiển thị trên trang chủ, đấu trường và hồ sơ.</div>
+
+    <p class="setup-label">Chọn nhân vật</p>
+    <div id="studentEmojiPicker" class="emoji-grid" role="group" aria-label="Chọn ảnh đại diện emoji"></div>
+
+    <p class="setup-label">Màu viền (tự chỉnh)</p>
+    <div id="studentRingPicker" class="ring-colors" role="group" aria-label="Chọn màu viền avatar"></div>
+
+    <p class="setup-label">Hoặc tải ảnh riêng (JPG / PNG)</p>
+    <label class="upload-zone">
+      <input id="studentPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden>
+      <span class="upload-zone-inner">
+        <strong>📷 Chọn ảnh</strong>
+        <span class="upload-sub">Vuông và rõ nét là đẹp nhất — ảnh được nén và lưu trên Firestore của bạn.</span>
+      </span>
+    </label>
+    <button type="button" class="upload-clear-btn" id="studentPhotoClearBtn" hidden>↩️ Dùng lại nhân vật emoji</button>
+
+    <button type="button" class="btn main green" id="studentSetupDoneBtn">Hoàn tất và bắt đầu học</button>
+    <p class="setup-footnote">Sau khi lưu, bạn sẽ được chuyển đến trang chủ bài học.</p>
+
+    <p class="student-setup-alt"><a href="#" id="studentSetupLogoutLink">Đăng xuất</a> và quay lại sau.</p>
+  </div>
+</div>
+
+<script type="module" src="./auth.js"></script>
+</body>
+</html>

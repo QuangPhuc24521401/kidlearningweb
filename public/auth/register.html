@@ -99,7 +99,7 @@
       <input id="parentConfirm" name="confirm_password" type="password" autocomplete="new-password"
              placeholder="Xác nhận mật khẩu" required minlength="6">
     </div>
-    <div class="hint">Tài khoản Phụ huynh dành cho người học (bé). Sau khi đăng nhập, bé sẽ vào màn hình bài học vui nhộn.</div>
+    <div class="hint">Tài khoản Phụ huynh cho bé học qua Kid Learning. Sau khi đăng ký, bạn sẽ nhận email xác thực; kích hoạt xong và đăng nhập <strong>lần đầu</strong>, hệ thống sẽ mời bạn tạo ảnh đại diện và nickname cho bé.</div>
 
     <label class="remember">
       <input id="rememberMeParent" type="checkbox" checked>
@@ -108,47 +108,6 @@
 
     <button class="btn main green" id="parentRegisterBtn" type="submit">Tạo tài khoản phụ huynh</button>
   </form>
-
-  <!-- Bước 2 · chỉ tài khoản phụ huynh/học sinh — hiện sau khi Firebase tạo user thành công -->
-  <div id="parentStudentSetup" class="student-setup-pane" hidden>
-    <div class="setup-badge" aria-hidden="true">✨</div>
-    <h2 class="setup-title">Tạo nhân vật cho bé</h2>
-    <p class="setup-desc">Chọn một ảnh đại diện dễ thương, có thể tải ảnh từ máy, đổi màu viền và đặt nickname hiển thị trong Kid Learning.</p>
-
-    <div class="setup-preview-row">
-      <div id="studentPreviewRing" class="setup-preview-ring" style="--ring:#FF9800" data-mode="emoji">
-        <span id="studentPreviewEmoji" class="setup-preview-emoji" aria-hidden="true">🧒</span>
-        <img id="studentPreviewImg" class="setup-preview-img" alt="Ảnh bé đã chọn" hidden decoding="async">
-      </div>
-    </div>
-
-    <label class="setup-label" for="studentNickname">Nickname của bé <span class="req">*</span></label>
-    <div class="input-group">
-      <span class="icon" aria-hidden="true">😊</span>
-      <input id="studentNickname" type="text" maxlength="24" autocomplete="off"
-             placeholder="Ví dụ: Bé Minh, Bunny 203…" aria-describedby="nickHint">
-    </div>
-    <div id="nickHint" class="hint setup-hint">2–24 ký tự. Hiển thị trên trang chủ, đấu trường và hồ sơ.</div>
-
-    <p class="setup-label">Chọn nhân vật</p>
-    <div id="studentEmojiPicker" class="emoji-grid" role="group" aria-label="Chọn ảnh đại diện emoji"></div>
-
-    <p class="setup-label">Màu viền (tự chỉnh)</p>
-    <div id="studentRingPicker" class="ring-colors" role="group" aria-label="Chọn màu viền avatar"></div>
-
-    <p class="setup-label">Hoặc tải ảnh riêng (JPG / PNG)</p>
-    <label class="upload-zone">
-      <input id="studentPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden>
-      <span class="upload-zone-inner">
-        <strong>📷 Chọn ảnh</strong>
-        <span class="upload-sub">Vuông và rõ nét là đẹp nhất — ảnh được nén và lưu an toàn trên Firestore của bạn.</span>
-      </span>
-    </label>
-    <button type="button" class="upload-clear-btn" id="studentPhotoClearBtn" hidden>↩️ Dùng lại nhân vật emoji</button>
-
-    <button type="button" class="btn main green" id="studentSetupDoneBtn">Hoàn tất &amp; gửi email xác thực</button>
-    <p class="setup-footnote">Sau bước này bạn sẽ đăng xuất. Hãy mở email và bấm link xác thực trước khi đăng nhập.</p>
-  </div>
 
   <!-- ── TEACHER pane ── -->
   <form id="teacherForm" class="role-pane" autocomplete="on" action="#" method="post" novalidate
@@ -259,9 +218,6 @@
       if(container) container.setAttribute('data-role', isTeacher ? 'teacher' : 'parent');
       if(title)    title.textContent    = isTeacher ? 'Tạo tài khoản giáo viên' : 'Tạo tài khoản phụ huynh';
       if(subtitle) subtitle.textContent = isTeacher ? 'Quản lý lớp học của bạn' : 'Cùng bé bắt đầu hành trình học tập';
-      /* Ẩn lại màn học sinh nếu user đổi tab trước khi hoàn tất đăng ký */
-      var su = document.getElementById('parentStudentSetup');
-      if(su) su.hidden = true;
       if(container) container.classList.remove('student-setup-active');
       document.querySelector('.role-tabs')?.removeAttribute('hidden');
       document.querySelector('.divider')?.removeAttribute('hidden');
