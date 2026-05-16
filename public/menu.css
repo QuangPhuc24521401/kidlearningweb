@@ -1044,14 +1044,58 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
     0 1px 0 rgba(255,255,255,.08) inset,
     0 12px 34px rgba(0,0,0,.40);
 }
-:root[data-theme="dark"] .menu-item::before{opacity:.34}
+:root[data-theme="dark"] .menu-item::before{
+  opacity:.18;
+  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.42) 0%,rgba(255,255,255,.12) 38%,rgba(255,255,255,0) 62%);
+}
 
 /* Đảm bảo chữ tiêu đề/phụ trên menu item rõ trong dark mode */
 :root[data-theme="dark"] .mi-title{
-  color:color-mix(in oklab, var(--ink) 92%, #c9b1ff 8%);
+  color:#f1f5f9;
+  text-shadow:0 1px 0 rgba(0,0,0,.35);
 }
 :root[data-theme="dark"] .mi-sub{
-  color:color-mix(in oklab, var(--muted) 88%, #c9b1ff 12%);
+  color:#cbd5e1;
+}
+
+/* Badge "Cơ bản / Logic…" — bỏ nền gần như trong suốt (trước đây khó đọc trên thẻ sáng) */
+:root[data-theme="dark"] .mi-badge{
+  background:rgba(15,23,42,.92);
+  border-color:rgba(226,232,240,.42);
+  color:#f8fafc;
+  letter-spacing:.01em;
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset;
+}
+
+/* Gradient môn (.mi-*) được khai báo SAU khối dark .menu-item nên từng đè lại —
+   các rule dưới đây có specificity cao hơn để giữ thẻ tối và dễ đọc */
+:root[data-theme="dark"] .menu-item.mi-language{
+  background:linear-gradient(165deg,rgba(72,48,74,.93) 0%,rgba(20,34,54,.92) 55%,rgba(22,62,92,.82) 100%);
+  border-color:rgba(251,207,232,.22);
+}
+:root[data-theme="dark"] .menu-item.mi-puzzle{
+  background:linear-gradient(165deg,rgba(52,62,118,.93) 0%,rgba(20,38,72,.94) 50%,rgba(86,76,140,.76) 100%);
+  border-color:rgba(199,210,254,.26);
+}
+:root[data-theme="dark"] .menu-item.mi-music{
+  background:linear-gradient(165deg,rgba(110,74,42,.93) 0%,rgba(32,52,108,.93) 50%,rgba(22,118,146,.74) 100%);
+  border-color:rgba(251,229,209,.26);
+}
+:root[data-theme="dark"] .menu-item.mi-art{
+  background:linear-gradient(165deg,rgba(120,74,124,.93) 0%,rgba(40,104,148,.74) 50%,rgba(22,92,138,.92) 100%);
+  border-color:rgba(254,249,231,.22);
+}
+:root[data-theme="dark"] .menu-item.mi-math{
+  background:linear-gradient(165deg,rgba(48,104,154,.93) 0%,rgba(18,124,146,.74) 50%,rgba(26,118,154,.93) 100%);
+  border-color:rgba(253,224,146,.26);
+}
+:root[data-theme="dark"] .menu-item.mi-mentor{
+  background:linear-gradient(165deg,rgba(90,72,132,.93) 0%,rgba(22,138,146,.74) 50%,rgba(20,84,148,.93) 100%);
+  border-color:rgba(237,216,255,.26);
+}
+
+:root[data-theme="dark"] .mi-tag{
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.55));
 }
 
 .menu-item.is-locked{
@@ -1288,10 +1332,14 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
 }
 :root[data-theme="dark"] .op-label{ color:#d1dae6 !important; }
 :root[data-theme="dark"] .op-value{ color:#fde047 !important; font-weight:900; }
-:root[data-theme="dark"] .mi-status-none{ background:rgba(255,255,255,.08); color:#cbd5e1 }
-:root[data-theme="dark"] .mi-status-prog{ background:rgba(251,191,36,.18); color:#fde68a }
-:root[data-theme="dark"] .mi-status-done{ background:rgba(52,211,153,.18); color:#a7f3d0 }
-:root[data-theme="dark"] .mi-frac{ color:#cbd5e1 }
+:root[data-theme="dark"] .mi-status-none{
+  background:rgba(15,23,42,.94);
+  color:#f1f5f9;
+  border:1px solid rgba(255,255,255,.14);
+}
+:root[data-theme="dark"] .mi-status-prog{ background:rgba(251,191,36,.28); color:#fef3c7; border:1px solid rgba(251,191,36,.35) }
+:root[data-theme="dark"] .mi-status-done{ background:rgba(52,211,153,.25); color:#d1fae5; border:1px solid rgba(52,211,153,.4) }
+:root[data-theme="dark"] .mi-frac{ color:#e2e8f0;font-weight:800 }
 :root[data-theme="dark"] .mi-bar{ background:rgba(255,255,255,.10) }
 
 /* ═══════════ USER BAR (góc phải trên) ═══════════ */

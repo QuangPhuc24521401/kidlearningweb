@@ -44,10 +44,22 @@ function setThemePref(v){
 }
 function applyThemePref(){
   const root = document.documentElement;
-  // manual override: set data-theme on :root
-  if(themePref === 'light') root.setAttribute('data-theme','light');
-  else if(themePref === 'dark') root.setAttribute('data-theme','dark');
-  else root.removeAttribute('data-theme'); // auto → rely on prefers-color-scheme CSS
+  if(themePref === 'light'){
+    root.setAttribute('data-theme','light');
+    return;
+  }
+  if(themePref === 'dark'){
+    root.setAttribute('data-theme','dark');
+    return;
+  }
+  // Auto: mirror OS scheme as explicit attribute so selectors like [data-theme="dark"]
+  // stay in sync (many components only keyed off data-theme, not prefers-color-scheme).
+  try{
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+    root.setAttribute('data-theme', mq && mq.matches ? 'dark' : 'light');
+  }catch(e){
+    root.setAttribute('data-theme','light');
+  }
 }
 
 /* ─── SKY MODE (day/night) ─── */
