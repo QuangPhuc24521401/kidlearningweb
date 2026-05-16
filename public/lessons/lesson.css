@@ -587,6 +587,7 @@ h2#question img.tw-emoji,
   border-radius:14px;
   border:1px solid rgba(16,185,129,.25);
 }
+.finish-actions{
   display:flex;flex-direction:column;align-items:center;gap:12px;
   margin:24px auto 6px;
 }
@@ -764,3 +765,202 @@ h2#question img.tw-emoji,
 :root[data-theme="dark"] .ach-toast-kicker{ color:#a5b4fc }
 :root[data-theme="dark"] .ach-toast-title{ color:#f1f5f9 }
 :root[data-theme="dark"] .ach-toast-desc{ color:#cbd5e1 }
+
+/* ═══════════ Theme: trang bài học đồng bộ dark mode ═══════════ */
+:root[data-theme="dark"]{
+  --ink:#e8eefc;
+  --muted:#cbd5e1;
+}
+
+:root[data-theme="dark"] body{
+  color:var(--ink);
+  background:
+    radial-gradient(ellipse at 80% -10%, rgba(139,92,246,.42) 0%, transparent 45%),
+    radial-gradient(ellipse at 15% 30%, rgba(34,211,238,.22) 0%, transparent 48%),
+    linear-gradient(168deg,#070b18 0%,#0f172a 42%,#0b1122 100%);
+  background-attachment:fixed;
+}
+:root[data-theme="dark"] body::before{
+  top:-70px;
+  right:-70px;
+  width:260px;height:260px;
+  opacity:.38;
+  background:radial-gradient(circle,rgba(251,191,36,.5) 0%,rgba(245,158,11,.08) 55%,transparent 72%);
+  filter:blur(4px);
+  animation-duration:10s;
+}
+:root[data-theme="dark"] body::after{
+  opacity:.09;
+}
+
+:root[data-theme="dark"] .lesson-container{
+  background:linear-gradient(185deg,rgba(24,33,62,.94) 0%,rgba(17,26,52,.92) 50%,rgba(15,23,42,.94) 100%);
+  border:1px solid rgba(148,163,184,.32);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.08) inset,
+    0 22px 56px rgba(0,0,0,.62),
+    0 1px 0 rgba(129,140,248,.12);
+}
+
+:root[data-theme="dark"] .lesson-container::before{
+  border-radius:inherit;
+  background:
+    radial-gradient(circle at 14% 10%,rgba(255,255,255,.07) 0%,transparent 48%),
+    radial-gradient(circle at 82% 20%,rgba(167,139,250,.22) 0%,transparent 55%);
+}
+
+:root[data-theme="dark"] .star-box{
+  background:linear-gradient(145deg,#b45309,#d97706);
+  color:#fffbeb;
+  box-shadow:
+    0 4px 0 #92400e,
+    0 10px 22px rgba(217,119,6,.42);
+}
+
+:root[data-theme="dark"] .topic-badge{
+  box-shadow:
+    0 3px 0 #6d28d9,
+    0 8px 18px rgba(124,58,237,.42);
+}
+
+:root[data-theme="dark"] .progress-text{ color:#b8c4d9 }
+
+:root[data-theme="dark"] .progress-bar{
+  background:rgba(99,102,241,.35);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.38);
+}
+
+:root[data-theme="dark"] h2#question{
+  color:#e0e7ff;
+  text-shadow:0 1px 0 rgba(0,0,0,.38);
+}
+
+:root[data-theme="dark"] #status{ color:#e2e8f0 }
+
+:root[data-theme="dark"] .box{
+  background:linear-gradient(165deg,#2b3456 8%,#1e293b 92%);
+  color:#eef2ff;
+  box-shadow:
+    0 6px 0 #111827,
+    0 14px 28px rgba(0,0,0,.42),
+    inset 0 1px 0 rgba(255,255,255,.1);
+}
+
+:root[data-theme="dark"] .box:hover{
+  box-shadow:
+    0 9px 0 #0f172a,
+    0 22px 40px rgba(0,0,0,.52),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+:root[data-theme="dark"] .box:active{
+  box-shadow:
+    0 2px 0 #030712,
+    0 6px 14px rgba(0,0,0,.42);
+}
+
+/* Giữ nút sai/đúng nổi bật (gradient gốc) */
+:root[data-theme="dark"] .box.correct,
+:root[data-theme="dark"] .box.wrong{ color:#fff !important }
+
+:root[data-theme="dark"] #ttsStatus{
+  background:rgba(23,31,53,.93);
+  border:1px solid rgba(148,163,184,.38);
+  color:#e8eefc;
+  box-shadow:0 14px 40px rgba(0,0,0,.52);
+}
+
+/* Danh sách topic */
+:root[data-theme="dark"] .topic-list-title{
+  color:#dceafe;
+  text-shadow:0 1px 0 rgba(0,0,0,.38);
+}
+
+:root[data-theme="dark"] .topic-list-sub{ color:#b8c4d9 }
+
+:root[data-theme="dark"] .topic-card{
+  background:linear-gradient(165deg,#222c4a 0%,#151d33 92%);
+  color:#ebefff;
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.42),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+:root[data-theme="dark"] .topic-card:hover:not([disabled]){
+  box-shadow:
+    0 16px 36px rgba(0,0,0,.54),
+    inset 0 1px 0 rgba(255,255,255,.1);
+}
+
+:root[data-theme="dark"] .topic-num{ color:#8b97b4 }
+
+:root[data-theme="dark"] .topic-title{ color:#a5bcff }
+
+:root[data-theme="dark"] .topic-meta{ color:#9ca8c9 }
+
+:root[data-theme="dark"] .topic-bar{ background:rgba(255,255,255,.1) }
+
+:root[data-theme="dark"] .topic-status{ color:#c7d2ea }
+
+:root[data-theme="dark"] .topic-locked{
+  background:rgba(15,23,42,.92);
+  color:#aeb8cf;
+}
+
+:root[data-theme="dark"] .topic-card.topic-available{
+  border:2px dashed rgba(125,158,254,.52);
+}
+
+:root[data-theme="dark"] .topic-card.topic-progress{
+  background:linear-gradient(165deg,rgba(146,93,31,.94) 0%,rgba(30,42,92,.93) 100%);
+  border:2px solid rgba(251,191,36,.55);
+}
+
+:root[data-theme="dark"] .topic-card.topic-progress .topic-title{ color:#fde68a }
+
+:root[data-theme="dark"] .topic-card.topic-done{
+  background:linear-gradient(165deg,rgba(20,107,71,.93) 0%,rgba(19,76,118,.93) 100%);
+  border:2px solid rgba(94,234,212,.52);
+}
+
+:root[data-theme="dark"] .topic-card.topic-done .topic-title{ color:#bbf7d0 }
+
+:root[data-theme="dark"] .topic-card.topic-locked{
+  background:linear-gradient(165deg,#1b223d 0%,#121928 92%);
+}
+
+:root[data-theme="dark"] .topic-card.topic-locked .topic-title{ color:#7c89a9 }
+:root[data-theme="dark"] .topic-card.topic-locked .topic-meta{ color:#8893ad }
+
+:root[data-theme="dark"] .topic-back-btn{
+  background:linear-gradient(135deg,#334155,#1e293b);
+  color:#e6ecff;
+  border:1px solid rgba(148,163,184,.42);
+}
+
+/* Thanh người dùng trong bài */
+:root[data-theme="dark"] .user-bar{
+  background:rgba(21,31,53,.93);
+  border:2px solid rgba(148,163,184,.42);
+  color:#cce0ff;
+  box-shadow:0 12px 32px rgba(0,0,0,.52);
+}
+
+:root[data-theme="dark"] .user-bar .ub-name{ color:#dbecff }
+
+:root[data-theme="dark"] .user-bar .ub-divider{ background:rgba(255,255,255,.28) }
+
+:root[data-theme="dark"] .user-bar .ub-stars,
+:root[data-theme="dark"] .user-bar .ub-avatar--lesson.ub-avatar--student-lesson{
+  color:#fcd34d;
+}
+
+:root[data-theme="dark"] .user-bar .ub-avatar--lesson.ub-avatar--student-lesson{
+  background:#1e293b;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.2),
+    0 0 0 3px var(--avatar-ring,#f59e0b);
+}
+
+:root[data-theme="dark"] .btn-finish.ghost:hover{ background:rgba(51,65,85,.94) !important }
+

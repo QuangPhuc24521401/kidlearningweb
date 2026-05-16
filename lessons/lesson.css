@@ -193,3 +193,107 @@
 @keyframes bearHappy{0%{transform:scale(1)}40%{transform:scale(1.35) rotate(10deg)}70%{transform:scale(.9) rotate(-5deg)}100%{transform:scale(1.1) rotate(0)}}
 .teach-skip{font-family:'Nunito',sans-serif;font-size:13px;color:#bbb;cursor:pointer;margin-top:14px;display:inline-block}
 .teach-skip:hover{color:#888;text-decoration:underline}
+
+/* ═══ Dark mode — bài học dùng chung html[data-theme] với shared.js ═══ */
+:root[data-theme="dark"] .lesson-card{
+  background:linear-gradient(168deg,rgba(22,40,74,.92) 0%,rgba(15,26,54,.9) 50%,rgba(18,52,74,.76) 100%);
+  border:1.5px solid rgba(148,163,184,.42);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.08) inset,
+    0 0 0 1px rgba(99,102,241,.22),
+    0 26px 64px rgba(0,0,0,.62),
+    0 0 0 3px rgba(129,140,246,.42);
+}
+
+:root[data-theme="dark"] .lesson-card::before{
+  opacity:.74;
+  background:
+    radial-gradient(circle at 16% 14%,rgba(255,255,255,.08) 0%,rgba(255,255,255,0) 55%),
+    radial-gradient(circle at 88% 20%,rgba(167,139,250,.26) 0%,transparent 54%),
+    linear-gradient(145deg,rgba(255,255,255,.06),transparent);
+}
+
+:root[data-theme="dark"] .lesson-card::after{opacity:.12}
+
+:root[data-theme="dark"] .star-box{
+  background:linear-gradient(145deg,#b45309,#d97706);
+  color:#fffbeb;
+  box-shadow:0 4px 0 #92400e,0 8px 18px rgba(217,119,6,.42);
+}
+
+:root[data-theme="dark"] .progress-wrap{
+  background:rgba(15,23,42,.92);
+  border:1px solid rgba(148,163,184,.42);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.52);
+}
+
+:root[data-theme="dark"] .progress-bar{
+  background:linear-gradient(90deg,#34d399,#22c55e);
+  box-shadow:0 1px 6px rgba(52,211,153,.52);
+}
+
+:root[data-theme="dark"] .visual-area{
+  background:rgba(15,23,42,.55);
+  border:1px solid rgba(148,163,184,.32);
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.52);
+}
+
+:root[data-theme="dark"] .compare-group{
+  background:rgba(15,23,42,.62);
+  border:1px solid rgba(148,163,184,.38);
+}
+
+:root[data-theme="dark"] .seq-num{
+  background:linear-gradient(135deg,#4f76ff,#3b5bdb);
+}
+
+:root[data-theme="dark"] .sort-item{ color:#b8c4d9 }
+
+:root[data-theme="dark"] #question{
+  color:#e8ecff;
+  text-shadow:0 1px 0 rgba(0,0,0,.35);
+}
+
+:root[data-theme="dark"] .box{
+  background:linear-gradient(155deg,#2d3a61 12%,#1c2744 94%);
+  color:#eef2ff;
+  box-shadow:0 7px 0 #0f172a,0 12px 30px rgba(0,0,0,.52);
+}
+
+:root[data-theme="dark"] .box.shape-box{
+  background:linear-gradient(155deg,#3c3268 16%,#2a2854 94%);
+  box-shadow:0 7px 0 #4338ca,0 12px 30px rgba(67,56,202,.42);
+}
+
+:root[data-theme="dark"] .box.correct,
+:root[data-theme="dark"] .box.wrong{ color:#fff !important }
+
+:root[data-theme="dark"] #status.ok{ color:#4ade80 }
+:root[data-theme="dark"] #status.no{ color:#f87171 }
+
+:root[data-theme="dark"] .complete-wrap h2{ color:#e0e9ff }
+
+:root[data-theme="dark"] .complete-wrap p{ color:#aab8dc }
+
+:root[data-theme="dark"] .teach-card{
+  background:linear-gradient(170deg,#1c2540ee 0%,#121a34f0 62%,#0f1629f8 100%);
+  border-color:rgba(148,163,184,.4);
+}
+
+:root[data-theme="dark"] .teach-card::before{opacity:.5}
+
+:root[data-theme="dark"] .teach-bubble{
+  background:linear-gradient(135deg,#2a2316,#3d3118);
+  border-color:#eab308;
+  color:#fde68a;
+}
+
+:root[data-theme="dark"] .teach-keyword{
+  color:#fecaca;
+  background:rgba(239,68,68,.28);
+}
+
+:root[data-theme="dark"] .mic-label{ color:#94a3b8 }
+
+:root[data-theme="dark"] .teach-skip{ color:#64748b }
+:root[data-theme="dark"] .teach-skip:hover{ color:#94a3b8 }
