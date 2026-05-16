@@ -162,7 +162,7 @@ function ensureSlimSettings(){
     card.innerHTML = `
       <button class="settings-close" onclick="closeSettings()">×</button>
       <h2>⚙️ Cài đặt</h2>
-      <p>Âm thanh • Giọng đọc • Giao diện • Tài khoản</p>
+      <p class="settings-lead">Âm thanh • Giọng đọc • Giao diện • Tài khoản</p>
 
       <div class="settings-section">
         <div class="settings-title">🔊 Âm thanh</div>

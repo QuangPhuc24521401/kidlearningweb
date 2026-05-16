@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════
    SPA.JS — Mini SPA router cho Kid Learning Web
 
-   Chuyển trang giữa 4 page (index / progress / arena / pvp)
+   Chuyển trang giữa index / progress / pvp / profile
    KHÔNG reload, KHÔNG mất nhạc nền, KHÔNG mất state Firebase.
 
    Cơ chế:
@@ -20,12 +20,11 @@
 
   /** Set các pathname được SPA xử lý.
       Lưu ý: cùng origin + path khớp 1 trong các pattern dưới đây mới được intercept. */
-  var SPA_ROUTES = ['/', '/index.html', '/arena.html', '/pvp.html', '/progress.html', '/profile.html'];
+  var SPA_ROUTES = ['/', '/index.html', '/pvp.html', '/progress.html', '/profile.html'];
 
-  /** Trả về tên page chuẩn hoá ('index', 'arena', 'pvp', 'progress', 'profile') hoặc null nếu không phải SPA. */
+  /** Trả về tên page chuẩn hoá ('index', 'pvp', 'progress', 'profile') hoặc null nếu không phải SPA. */
   function routeName(pathname){
     if(pathname === '/' || pathname.endsWith('/index.html')) return 'index';
-    if(pathname.endsWith('/arena.html'))    return 'arena';
     if(pathname.endsWith('/pvp.html'))      return 'pvp';
     if(pathname.endsWith('/progress.html')) return 'progress';
     if(pathname.endsWith('/profile.html'))  return 'profile';
@@ -63,27 +62,6 @@
       if(typeof window.renderAchievementsPanel === 'function') window.renderAchievementsPanel();
       if(typeof window.mountUserBar          === 'function') window.mountUserBar();
     },
-    arena: function(){
-      // arena.js đã expose window.arenaEnter; chỉ gọi nếu đã đăng nhập.
-      if(typeof window.mountUserBar === 'function') window.mountUserBar();
-      if(typeof window.arenaRefreshHonor === 'function') window.arenaRefreshHonor();
-      try{
-        if(typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser
-           && typeof window.arenaEnter === 'function'){
-          window.arenaEnter();
-        }
-      }catch(e){}
-      // Đăng ký 1-lần listener auth → vào arena khi user đăng nhập (chỉ khi đang ở arena route).
-      if(!window.__spaArenaAuthBound){
-        window.__spaArenaAuthBound = true;
-        try{
-          firebase.auth().onAuthStateChanged(function(user){
-            if(currentPage !== 'arena') return;
-            if(user && typeof window.arenaEnter === 'function') window.arenaEnter();
-          });
-        }catch(e){}
-      }
-    },
     pvp: function(){
       if(typeof window.mountUserBar === 'function') window.mountUserBar();
       if(typeof window.pvpInit === 'function') window.pvpInit();
@@ -95,9 +73,6 @@
   };
 
   var UNMOUNTS = {
-    arena: function(){
-      if(typeof window.arenaLeavePage === 'function') window.arenaLeavePage();
-    },
     pvp: function(){
       if(typeof window.pvpCleanup === 'function') window.pvpCleanup();
     }

@@ -25,6 +25,16 @@
   backdrop-filter:blur(18px);
 }
 
+.arena-muted-note{
+  font-family:'Nunito',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  color:#475569;
+  margin:-4px 0 12px;
+  line-height:1.45;
+}
+.arena-muted-note a{ color:#2563eb;font-weight:800 }
+
 .arena-card h1{
   font-family:var(--font-ui,'Nunito',sans-serif);
   font-weight:800;

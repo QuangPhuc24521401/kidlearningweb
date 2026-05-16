@@ -697,21 +697,18 @@
       if(status){ status.innerText = "Con giỏi quá! 🏆"; prettifyEmoji(status); }
       var donePromise = reactDone();
       launchConfetti();
-      saveProgress({ finished: true, sessionStars: stars });
+      saveProgress({ finished: true });
 
-      // Đợi câu chúc mừng đọc xong rồi mới điều hướng. Tối thiểu 1.8s để bé
-      // nhìn confetti, tối đa 5s để không treo nếu speech bị ngắt.
+      /* Không tự nhảy trang — để bé nhìn chúc mừng + confetti rồi bấm nút */
       if(currentTopic && container){
         var backUrl = window.location.pathname;
         container.innerHTML =
           '<div class="finish-actions">' +
-            '<button class="btn-finish primary" onclick="window.location.href=\'' + backUrl + '\'">📚 Bài tiếp theo</button>' +
-            '<button class="btn-finish ghost"  onclick="window.location.href=\'../../index.html\'">🏠 Về trang chủ</button>' +
+            '<p class="finish-lead">Sao của bài này đã được ghi vào tiến độ!</p>' +
+            '<button class="btn-finish primary" type="button" onclick="window.location.href=\'' + backUrl + '\'">📚 Chọn bài tiếp theo</button>' +
+            '<button class="btn-finish ghost" type="button" onclick="window.location.href=\'../../index.html\'">🏠 Về trang chủ</button>' +
           '</div>';
-        var minWait = new Promise(function(r){ setTimeout(r, 1800); });
-        Promise.all([waitForSpeech(donePromise, 5000), minWait]).then(function(){
-          window.location.href = backUrl;
-        });
+        waitForSpeech(donePromise, 8000).catch(function(){});
       }
       return;
     }
@@ -770,7 +767,7 @@
           stars++;
           var starsEl = document.getElementById("stars");
           if(starsEl) starsEl.innerText = stars;
-          saveProgress();
+          saveProgress({ addStars: 1 });
           // Đợi câu khen đọc xong rồi mới chuyển sang câu hỏi tiếp theo.
           // waitForSpeech bao 4.5s để không treo nếu câu khen bị huỷ giữa chừng.
           waitForSpeech(reactCorrect(), 4500).then(function(){
@@ -831,7 +828,6 @@
     var total      = lessons.length || 0;
     var done       = Math.max(0, Math.min(currentIndex, total));
     var finished   = !!opts.finished;
-    var sessionStr = (typeof opts.sessionStars === "number") ? opts.sessionStars : stars;
 
     var all = {};
     try{ all = JSON.parse(localStorage.getItem("learning_progress") || "{}") || {}; }catch(e){ all = {}; }
@@ -842,9 +838,12 @@
     entry.total         = Math.max(entry.total || 0, total);
     entry.bestRun       = Math.max(entry.bestRun || 0, done);
     entry.lastSessionAt = Date.now();
+    var gain = typeof opts.addStars === "number" ? opts.addStars : 0;
+    if(gain > 0){
+      entry.totalStars = (entry.totalStars || 0) + gain;
+    }
     if(finished){
       entry.completedRuns = (entry.completedRuns || 0) + 1;
-      entry.totalStars    = (entry.totalStars    || 0) + sessionStr;
       entry.bestRun       = entry.total;
     }
 

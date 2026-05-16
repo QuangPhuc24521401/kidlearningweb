@@ -574,8 +574,19 @@ h2#question img.tw-emoji,
 .topic-back-btn:hover{ transform: translateY(-2px); filter:brightness(.97) }
 .topic-back-btn:active{ transform: translateY(1px) }
 
-/* Finish actions (sau khi xong 1 bài) */
-.finish-actions{
+.finish-lead{
+  font-family:'Nunito',sans-serif;
+  font-size:15px;
+  font-weight:800;
+  color:#0f766e;
+  margin:0 0 16px;
+  line-height:1.45;
+  text-align:center;
+  padding:12px 14px;
+  background:rgba(16,185,129,.12);
+  border-radius:14px;
+  border:1px solid rgba(16,185,129,.25);
+}
   display:flex;flex-direction:column;align-items:center;gap:12px;
   margin:24px auto 6px;
 }
@@ -600,6 +611,18 @@ h2#question img.tw-emoji,
   border:2px solid #bfdcff;
 }
 .btn-finish.ghost:hover{ background:#f0f7ff }
+
+:root[data-theme="dark"] .finish-lead{
+  color:#99f6e4;
+  background:rgba(45,212,191,.14);
+  border-color:rgba(94,234,212,.35);
+}
+:root[data-theme="dark"] .btn-finish.ghost{
+  background:rgba(30,41,59,.75);
+  color:#93c5fd;
+  border-color:rgba(147,197,253,.45);
+}
+:root[data-theme="dark"] .btn-finish.ghost:hover{ background:rgba(51,65,85,.9) }
 
 /* ═══════════ USER BAR (góc phải trên) ═══════════ */
 .user-bar{
