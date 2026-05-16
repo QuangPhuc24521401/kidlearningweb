@@ -247,16 +247,18 @@
   background:linear-gradient(135deg,#4f76ff,#3b5bdb);
 }
 
-:root[data-theme="dark"] .sort-item{ color:#b8c4d9 }
+:root[data-theme="dark"] .compare-vs{font-size:22px;font-weight:800;color:#e9c4ff}
+
+:root[data-theme="dark"] .sort-item{ color:#dae5f6 }
 
 :root[data-theme="dark"] #question{
-  color:#e8ecff;
+  color:#f6f9ff;
   text-shadow:0 1px 0 rgba(0,0,0,.35);
 }
 
 :root[data-theme="dark"] .box{
   background:linear-gradient(155deg,#2d3a61 12%,#1c2744 94%);
-  color:#eef2ff;
+  color:#fbfcff;
   box-shadow:0 7px 0 #0f172a,0 12px 30px rgba(0,0,0,.52);
 }
 
@@ -265,15 +267,22 @@
   box-shadow:0 7px 0 #4338ca,0 12px 30px rgba(67,56,202,.42);
 }
 
+:root[data-theme="dark"] .seq-gap{
+  border-color:rgba(129,173,255,.75);
+  color:#cce0ff;
+}
+
 :root[data-theme="dark"] .box.correct,
 :root[data-theme="dark"] .box.wrong{ color:#fff !important }
 
-:root[data-theme="dark"] #status.ok{ color:#4ade80 }
-:root[data-theme="dark"] #status.no{ color:#f87171 }
+:root[data-theme="dark"] #status{ color:#f1f5f9 }
 
-:root[data-theme="dark"] .complete-wrap h2{ color:#e0e9ff }
+:root[data-theme="dark"] #status.ok{ color:#7af0a8 }
+:root[data-theme="dark"] #status.no{ color:#ffa4a4 }
 
-:root[data-theme="dark"] .complete-wrap p{ color:#aab8dc }
+:root[data-theme="dark"] .complete-wrap h2{ color:#f0f6ff }
+
+:root[data-theme="dark"] .complete-wrap p{ color:#ceddf4 }
 
 :root[data-theme="dark"] .teach-card{
   background:linear-gradient(170deg,#1c2540ee 0%,#121a34f0 62%,#0f1629f8 100%);
@@ -285,15 +294,15 @@
 :root[data-theme="dark"] .teach-bubble{
   background:linear-gradient(135deg,#2a2316,#3d3118);
   border-color:#eab308;
-  color:#fde68a;
+  color:#fff7d6;
 }
 
 :root[data-theme="dark"] .teach-keyword{
-  color:#fecaca;
+  color:#ffd4d6;
   background:rgba(239,68,68,.28);
 }
 
-:root[data-theme="dark"] .mic-label{ color:#94a3b8 }
+:root[data-theme="dark"] .mic-label{ color:#c8dae8 }
 
-:root[data-theme="dark"] .teach-skip{ color:#64748b }
-:root[data-theme="dark"] .teach-skip:hover{ color:#94a3b8 }
+:root[data-theme="dark"] .teach-skip{ color:#9eb6d4 }
+:root[data-theme="dark"] .teach-skip:hover{ color:#d4e5f9 }
