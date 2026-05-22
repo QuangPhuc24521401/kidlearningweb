@@ -147,6 +147,14 @@ body.page-mentor{overflow:auto}
 .ask-send:active:not(:disabled){transform:translateY(2px);box-shadow:none}
 .ask-send:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
 
+.mentor-api-hint{
+  font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;line-height:1.45;
+  padding:10px 12px;border-radius:12px;margin:0;
+  background:#fff7ed;border:2px solid #fdba74;color:#9a3412;
+}
+.mentor-api-hint.ok{background:#ecfdf5;border-color:#86efac;color:#166534}
+.mentor-api-hint[hidden]{display:none}
+
 /* Divider */
 .divider{display:flex;align-items:center;gap:10px;margin:4px 0}
 .divider::before,.divider::after{content:'';flex:1;height:1.5px;background:linear-gradient(90deg,transparent,#e0d0ff,transparent)}
@@ -381,6 +389,8 @@ body.page-mentor{overflow:auto}
       </div>
     </div>
 
+    <p id="mentorApiHint" class="mentor-api-hint" hidden role="status"></p>
+
     <!-- Gõ câu hỏi -->
     <div class="ask-row">
       <input type="text" id="askInput" class="ask-input"
@@ -425,6 +435,7 @@ body.page-mentor{overflow:auto}
 
 <script src="firebase.js"></script>
 <script src="secrets/tts.config.js"></script>
+<script src="secrets/mentor.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
 <script>
@@ -538,8 +549,45 @@ function stopListen(){
 }
 
 /* ── Ask AI (OpenAI qua /api/mentor-chat trên Vercel) ── */
-const MENTOR_CHAT_URL = '/api/mentor-chat';
+function getMentorChatUrl(){
+  const custom = typeof window.__MENTOR_CHAT_URL__ === 'string' ? window.__MENTOR_CHAT_URL__.trim() : '';
+  return custom || '/api/mentor-chat';
+}
 let isAsking = false;
+
+function setMentorApiHint(msg, ok){
+  const el = document.getElementById('mentorApiHint');
+  if(!el) return;
+  if(!msg){ el.hidden = true; el.textContent = ''; return; }
+  el.hidden = false;
+  el.textContent = msg;
+  el.classList.toggle('ok', !!ok);
+}
+
+async function checkMentorApi(){
+  const url = getMentorChatUrl();
+  try{
+    const res = await fetch(url, { method: 'GET' });
+    if(res.status === 404){
+      setMentorApiHint('⚠️ Chưa có API trên server này. Cần deploy project kidlearningweb lên Vercel (có thư mục api/) rồi mở đúng link .vercel.app.', false);
+      return;
+    }
+    const data = await res.json().catch(()=>({}));
+    if(res.ok && data.configured){
+      setMentorApiHint('✅ Cô Mai AI đã sẵn sàng.', true);
+      setTimeout(()=> setMentorApiHint('', true), 4000);
+      return;
+    }
+    if(res.ok && !data.configured){
+      setMentorApiHint('⚠️ Vercel chưa có OPENAI_API_KEY hoặc chưa Redeploy sau khi thêm biến.', false);
+      return;
+    }
+    setMentorApiHint('⚠️ API lỗi (' + res.status + '). Kiểm tra Vercel → Deployments.', false);
+  }catch(e){
+    setMentorApiHint('⚠️ Không gọi được ' + url + '. Mở site trên Vercel hoặc cấu hình secrets/mentor.config.js.', false);
+  }
+}
+window.addEventListener('load', function(){ checkMentorApi(); });
 
 function setAskFormDisabled(disabled){
   const input = document.getElementById('askInput');
@@ -577,25 +625,41 @@ async function askQuestion(text){
   showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
 
   let reply = null;
+  let apiNote = '';
   try{
-    const res = await fetch(MENTOR_CHAT_URL,{
+    const res = await fetch(getMentorChatUrl(),{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ message: text.trim() })
     });
     const data = await res.json().catch(()=>({}));
-    if(res.ok && data.reply) reply = data.reply;
-    else if(!res.ok && data.configured === false){
-      console.warn('[mentor] Chưa có OPENAI_API_KEY — dùng câu trả lời mẫu');
+    if(res.ok && data.reply){
+      reply = data.reply;
+      setMentorApiHint('', true);
+    }else if(res.status === 404){
+      apiNote = ' (API chưa deploy — cần Vercel)';
+      setMentorApiHint('⚠️ Chưa có /api/mentor-chat trên server này. Deploy lên Vercel và mở link .vercel.app.', false);
+    }else if(data.configured === false){
+      apiNote = ' (chưa gắn OPENAI_API_KEY)';
+      setMentorApiHint('⚠️ Thêm OPENAI_API_KEY trên Vercel → Redeploy.', false);
+    }else if(!res.ok){
+      apiNote = ' (AI: ' + (data.error || res.status) + ')';
+      console.warn('[mentor]', data.error || res.status);
+      setMentorApiHint('⚠️ OpenAI lỗi: ' + (data.error || res.status) + '. Xem billing / key trên platform.openai.com.', false);
     }
   }catch(err){
+    apiNote = ' (mất kết nối API)';
     console.warn('[mentor] API lỗi:', err);
+    setMentorApiHint('⚠️ Không kết nối được API. Dùng link Vercel hoặc cấu hình mentor.config.js.', false);
   }finally{
     isAsking = false;
     setAskFormDisabled(false);
   }
 
-  if(!reply) reply = getFallbackReply(text);
+  if(!reply){
+    reply = getFallbackReply(text);
+    if(apiNote) showStatus('error', 'Đang dùng câu mẫu' + apiNote);
+  }
   setTeacherState('talking');
   showBubble(reply);
   speakTeacher(reply);
@@ -607,6 +671,8 @@ function getFallbackReply(text){
   const t = text.toLowerCase();
   if(t.includes('hình tròn')||t.includes('tron')) return 'Hình tròn giống như bánh pizza hay mặt trời đó con! Không có góc nào cả, tròn xoe 🔵 Con thấy đồng xu ở nhà không? Đó cũng là hình tròn!';
   if(t.includes('hình vuông')||t.includes('vuong')) return 'Hình vuông có 4 cạnh bằng nhau và 4 góc vuông nha con ⬜ Giống như gạch lát nhà mình đó! Con đếm thử 4 góc xem nào?';
+  if(t.includes('tam giác')||t.includes('tam giac')||(t.includes('tam')&&t.includes('cạnh'))||(t.includes('canh')&&t.includes('giac')))
+    return 'Tam giác có 3 cạnh nha con! 🔺 Ba cạnh nối lại giống mái nhà hay bánh pizza cắt một miếng. Con thử vẽ tam giác trên giấy xem!';
   if(t.includes('màu')||t.includes('mau')) return 'Màu sắc đẹp lắm con ơi! 🌈 Cầu vồng có 7 màu: đỏ, cam, vàng, lục, lam, chàm, tím. Con thích màu nào nhất?';
   if(t.includes('đếm')||t.includes('dem')||t.includes('số')) return 'Con giỏi quá! Cùng cô đếm nào: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 🔢 Con thử đếm theo cô nhé!';
   if(t.includes('kể chuyện')||t.includes('ke chuyen')) return 'Ngày xưa có chú Gấu con rất thích học bài. Mỗi ngày chú đếm hoa trong rừng: 1, 2, 3... Nhờ vậy chú Gấu trở thành học sinh giỏi nhất lớp! 🐻⭐ Con cũng sẽ giỏi như chú Gấu nhé!';
