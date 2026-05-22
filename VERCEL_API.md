@@ -1,8 +1,10 @@
 # Sửa lỗi 404 `/api/mentor-chat`
 
-## Nguyên nhân
+## Nguyên nhân (đã kiểm tra)
 
-Vercel đang deploy **chỉ thư mục `public`** (static), **không** build thư mục `api/` → mọi request `/api/*` trả **404**.
+Site `kidlearningweb.vercel.app` trả **200** cho `mentor.html` nhưng **404** cho `/api/tts-google` và `/api/mentor-chat` → Vercel **không deploy Functions**.
+
+Thường do **Root Directory = `public`** trong project settings (chỉ upload static, bỏ qua thư mục `api/` ở ngoài).
 
 ## Cách sửa trên Vercel Dashboard
 

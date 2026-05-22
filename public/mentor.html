@@ -570,7 +570,7 @@ async function checkMentorApi(){
   try{
     const res = await fetch(url, { method: 'GET' });
     if(res.status === 404){
-      setMentorApiHint('⚠️ Chưa có API trên server này. Cần deploy project kidlearningweb lên Vercel (có thư mục api/) rồi mở đúng link .vercel.app.', false);
+      setMentorApiHint('⚠️ 404 /api/mentor-chat — Vercel đang chỉ host file tĩnh. Vào Settings → Root Directory: XÓA "public" (để trống) → Redeploy. Xem file VERCEL_API.md.', false);
       return;
     }
     const data = await res.json().catch(()=>({}));
@@ -639,7 +639,7 @@ async function askQuestion(text){
       setMentorApiHint('', true);
     }else if(res.status === 404){
       apiNote = ' (API chưa deploy — cần Vercel)';
-      setMentorApiHint('⚠️ Chưa có /api/mentor-chat trên server này. Deploy lên Vercel và mở link .vercel.app.', false);
+      setMentorApiHint('⚠️ 404 API — sửa Root Directory trên Vercel (không đặt public) hoặc gắn URL Vercel trong secrets/mentor.config.js.', false);
     }else if(data.configured === false){
       apiNote = ' (chưa gắn OPENAI_API_KEY)';
       setMentorApiHint('⚠️ Thêm OPENAI_API_KEY trên Vercel → Redeploy.', false);

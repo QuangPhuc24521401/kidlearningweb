@@ -1,16 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
+  "framework": null,
   "installCommand": "npm install",
-  "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "public/**", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/secrets/tts.config.js", "dest": "/api/tts-config" },
-    { "src": "/secrets/mentor.config.js", "dest": "/api/mentor-config" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "outputDirectory": "public",
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 15
+    }
+  },
+  "rewrites": [
+    { "source": "/secrets/tts.config.js", "destination": "/api/tts-config" },
+    { "source": "/secrets/mentor.config.js", "destination": "/api/mentor-config" }
   ],
   "headers": [
     {

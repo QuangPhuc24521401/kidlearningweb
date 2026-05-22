@@ -1,7 +1,4 @@
-// Vercel Serverless — proxy OpenAI cho Cô giáo AI (key chỉ trên server)
-//
-// POST /api/mentor-chat  body: { message: string }
-// Trả về: { reply: string } hoặc { error, configured: false }
+// Vercel Serverless — POST/GET /api/mentor-chat
 
 const SYSTEM_PROMPT = `Bạn là Cô Mai, giáo viên mầm non vui vẻ, dịu dàng và yêu trẻ em.
 Bạn đang nói chuyện với bé 3-6 tuổi đang học app Kid Learning.
