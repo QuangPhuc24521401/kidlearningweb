@@ -549,7 +549,7 @@ function stopListen(){
   document.getElementById('micLabel').textContent = 'Bấm 🎤 và nói với Cô Mai!';
 }
 
-/* ── Ask AI (OpenAI qua /api/mentor-chat trên Vercel) ── */
+/* ── Ask AI (Google Gemini miễn phí — /api/mentor-chat trên Vercel) ── */
 function getMentorChatUrl(){
   const custom = typeof window.__MENTOR_CHAT_URL__ === 'string' ? window.__MENTOR_CHAT_URL__.trim() : '';
   return custom || '/api/mentor-chat';
@@ -580,7 +580,7 @@ async function checkMentorApi(){
       return;
     }
     if(res.ok && !data.configured){
-      setMentorApiHint('⚠️ Vercel chưa có OPENAI_API_KEY hoặc chưa Redeploy sau khi thêm biến.', false);
+      setMentorApiHint('⚠️ Vercel chưa có GEMINI_API_KEY hoặc chưa Redeploy. Lấy key miễn phí: aistudio.google.com/apikey', false);
       return;
     }
     setMentorApiHint('⚠️ API lỗi (' + res.status + '). Kiểm tra Vercel → Deployments.', false);
@@ -641,12 +641,12 @@ async function askQuestion(text){
       apiNote = ' (API chưa deploy — cần Vercel)';
       setMentorApiHint('⚠️ 404 API — sửa Root Directory trên Vercel (không đặt public) hoặc gắn URL Vercel trong secrets/mentor.config.js.', false);
     }else if(data.configured === false){
-      apiNote = ' (chưa gắn OPENAI_API_KEY)';
-      setMentorApiHint('⚠️ Thêm OPENAI_API_KEY trên Vercel → Redeploy.', false);
+      apiNote = ' (chưa gắn GEMINI_API_KEY)';
+      setMentorApiHint('⚠️ Thêm GEMINI_API_KEY trên Vercel → Redeploy. Key miễn phí: aistudio.google.com/apikey', false);
     }else if(!res.ok){
       apiNote = ' (AI: ' + (data.error || res.status) + ')';
       console.warn('[mentor]', data.error || res.status);
-      setMentorApiHint('⚠️ OpenAI lỗi: ' + (data.error || res.status) + '. Xem billing / key trên platform.openai.com.', false);
+      setMentorApiHint('⚠️ Gemini: ' + (data.error || res.status) + '. Kiểm tra key tại aistudio.google.com hoặc đợi vài phút nếu vượt giới hạn miễn phí.', false);
     }
   }catch(err){
     apiNote = ' (mất kết nối API)';

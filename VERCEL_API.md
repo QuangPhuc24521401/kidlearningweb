@@ -1,46 +1,34 @@
-# Sửa lỗi 404 `/api/mentor-chat`
+# Cô giáo AI — API `/api/mentor-chat`
 
-## Nguyên nhân (đã kiểm tra)
+Dùng **Google Gemini** (miễn phí qua [Google AI Studio](https://aistudio.google.com/apikey)), không dùng OpenAI trả phí.
 
-Site `kidlearningweb.vercel.app` trả **200** cho `mentor.html` nhưng **404** cho `/api/tts-google` và `/api/mentor-chat` → Vercel **không deploy Functions**.
+## Cấu hình Vercel
 
-Thường do **Root Directory = `public`** trong project settings (chỉ upload static, bỏ qua thư mục `api/` ở ngoài).
+| Biến | Bắt buộc | Ghi chú |
+|------|----------|---------|
+| `GEMINI_API_KEY` | Có | Key `AIza...` từ AI Studio |
+| `GEMINI_MODEL` | Không | Mặc định `gemini-2.0-flash` |
 
-## Cách sửa trên Vercel Dashboard
+**Root Directory:** để trống (không đặt `public`).
 
-1. Vào project **kidlearningweb** trên [vercel.com](https://vercel.com).
-2. **Settings → General → Root Directory**
-3. Để **trống** hoặc `.` (KHÔNG đặt `public`).
-4. **Save** → **Deployments → Redeploy** (bỏ chọn “Use existing Build Cache”).
-5. Sau deploy, mở tab **Functions** — phải thấy `api/mentor-chat`, `api/tts-google`, …
+Sau khi thêm/sửa biến → **Redeploy**.
 
 ## Kiểm tra
-
-Trình duyệt hoặc curl:
 
 ```
 GET https://kidlearningweb.vercel.app/api/mentor-chat
 ```
 
-Kết quả đúng: JSON `{"ok":true,"configured":true,...}` (status **200**), không phải 404.
+Đúng: `{"ok":true,"configured":true,"provider":"gemini",...}`
 
-## Mở app
+## Lỗi 404 `/api/*`
 
-- Dùng link **https://kidlearningweb.vercel.app/mentor.html**
-- Nếu dùng **Firebase Hosting** (`firebaseapp.com`), sửa `public/secrets/mentor.config.js`:
+Vercel chỉ deploy static → xem mục Root Directory ở README / commit trước.
+
+## Firebase Hosting
+
+Sửa `public/secrets/mentor.config.js`:
 
 ```js
 window.__MENTOR_CHAT_URL__ = 'https://kidlearningweb.vercel.app/api/mentor-chat';
 ```
-
-(rồi deploy lại Firebase static)
-
-## Biến môi trường
-
-**Settings → Environment Variables:**
-
-| Tên | Bắt buộc |
-|-----|----------|
-| `OPENAI_API_KEY` | Có |
-
-Sau khi thêm/sửa → **Redeploy**.

@@ -15,7 +15,7 @@
 |  Tiến độ & huy hiệu | `progress.html` | Tổng sao, streak ngày, các huy hiệu (study streak, top score, arena champion, …). |
 |  Đấu trường | `arena.html` | **Nhiều người** cùng một phiên có thời hạn → ai điểm cao nhất nhận điểm vinh dự + huy hiệu. |
 |  PvP 1v1 | `pvp.html` | Tạo phòng / nhập mã / quick match — đúng và nhanh hơn thắng. |
-|  Cô giáo AI | `mentor.html` | Hỏi đáp qua OpenAI (`/api/mentor-chat`), TTS + Web Speech, gọi video Jitsi với giáo viên thật. |
+|  Cô giáo AI | `mentor.html` | Hỏi đáp qua **Google Gemini** miễn phí (`/api/mentor-chat`), TTS + Web Speech, gọi video Jitsi với giáo viên thật. |
 |  Dashboard giáo viên | `mentor-teacher.html` | Quản lý lớp, mở cuộc gọi với học sinh. |
 |  Auth | `auth/login.html`, `auth/register.html`, `auth/forgot.html` | Đăng ký / đăng nhập / quên mật khẩu qua Firebase Auth. |
 
@@ -43,7 +43,7 @@ kid-learning-git/
     ├── api/
     │   ├── tts-config.js           ← Vercel: TTS key từ ENV
     │   ├── tts-google.js           ← Vercel: TTS proxy
-    │   └── mentor-chat.js          ← Vercel: Cô giáo AI (OpenAI)
+    │   └── mentor-chat/index.js    ← Vercel: Cô giáo AI (Gemini)
     └── public/                     ← static site root
         ├── index.html              ← trang chủ
         ├── arena.html              ← đấu trường nhiều người
@@ -160,14 +160,14 @@ Cứ để trống — app dùng **Web Speech API** của trình duyệt. Trên 
 
 ---
 
-##  Cô giáo AI (OpenAI)
+##  Cô giáo AI (Google Gemini — miễn phí)
 
-Trang `mentor.html` gọi **`POST /api/mentor-chat`** (Vercel serverless). **Không** dùng ChatGPT Plus trực tiếp — cần **OpenAI API key** riêng.
+Trang `mentor.html` gọi **`POST /api/mentor-chat`** (Vercel serverless) → **Google Gemini** ([AI Studio](https://aistudio.google.com/apikey), có hạn mức miễn phí, **không** cần thẻ như OpenAI trả phí).
 
-### Bước 1 — Tạo key
+### Bước 1 — Tạo key miễn phí
 
-1. [platform.openai.com](https://platform.openai.com) → đăng nhập → **API keys** → **Create secret key**.
-2. Bật **billing** / nạp credit nhỏ (Plus không thay thế API).
+1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) → đăng nhập Google.
+2. **Create API key** → copy key (`AIza...`).
 
 ### Bước 2 — Vercel
 
@@ -175,14 +175,18 @@ Trang `mentor.html` gọi **`POST /api/mentor-chat`** (Vercel serverless). **Kh�
 
 | Biến | Ví dụ |
 |------|-------|
-| `OPENAI_API_KEY` | `sk-proj-...` |
-| `OPENAI_MODEL` (tuỳ chọn) | `gpt-4o-mini` |
+| `GEMINI_API_KEY` | `AIza...` |
+| `GEMINI_MODEL` (tuỳ chọn) | `gemini-2.0-flash` |
+
+Có thể **xóa** `OPENAI_API_KEY` cũ (không còn dùng).
 
 **Redeploy** project.
 
 ### Bước 3 — Kiểm tra
 
-Mở `https://your-app.vercel.app/mentor.html` → câu hỏi nhanh hoặc mic. Nếu chưa có key, app vẫn chạy **câu trả lời mẫu** (fallback).
+`GET https://your-app.vercel.app/api/mentor-chat` → `"configured":true`, `"provider":"gemini"`.
+
+Mở `mentor.html` → hỏi thử. Nếu chưa có key, app dùng **câu trả lời mẫu** (fallback).
 
 ### Local có API
 
@@ -191,7 +195,7 @@ cd kidlearningweb
 npx vercel dev
 ```
 
-Mở URL `vercel dev` in ra (thường `http://localhost:3000`), không chỉ `serve public` — vì `/api/*` cần Vercel.
+Đặt `GEMINI_API_KEY` trong Vercel env hoặc `.env` khi chạy `vercel dev`.
 
 ---
 
