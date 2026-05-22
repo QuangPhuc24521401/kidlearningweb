@@ -559,12 +559,8 @@ function renderProfilePage(){
 function _wireProfileActions(card){
   if(card.getAttribute('data-wired') === '1') return;
   card.setAttribute('data-wired', '1');
-  var bM = document.getElementById('profBtnMusic');
   var bS = document.getElementById('profBtnSettings');
   var bL = document.getElementById('profBtnLogout');
-  if(bM) bM.addEventListener('click', function(){
-    if(typeof toggleMusic === 'function') toggleMusic();
-  });
   if(bS) bS.addEventListener('click', function(){
     if(typeof openSettings === 'function') openSettings();
   });

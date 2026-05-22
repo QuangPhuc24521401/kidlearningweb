@@ -2,7 +2,7 @@
    SPA.JS — Mini SPA router cho Kid Learning Web
 
    Chuyển trang giữa index / progress / pvp / profile
-   KHÔNG reload, KHÔNG mất nhạc nền, KHÔNG mất state Firebase.
+   KHÔNG reload, KHÔNG mất state Firebase.
 
    Cơ chế:
    - Chặn click trên <a href="..."> cùng origin & trỏ tới 1 SPA route.

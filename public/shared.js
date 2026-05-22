@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════
    SHARED.JS — dùng chung cho tất cả trang
-   Bao gồm: TTS (FPT.AI), nhạc nền, confetti,
+   Bao gồm: TTS, hiệu ứng âm thanh (Web Audio), confetti,
             settings modal, sprinkles init
 ═══════════════════════════════════════════════════ */
 
@@ -29,7 +29,6 @@ function isGoogleReady(){
 
 /* ─── THEME (light/dark/auto) ─── */
 let themePref = 'auto';
-let themeMedia = null;
 let skyTimer = null;
 
 function getThemePref(){
@@ -42,31 +41,35 @@ function setThemePref(v){
   applySkyMode();
   syncThemeUI();
 }
+/** Giờ sáng / tối theo đồng hồ máy (có thể chỉnh biên). */
+const THEME_DAY_START_HOUR = 6;   // từ 6:00 → giao diện sáng
+const THEME_NIGHT_START_HOUR = 18; // từ 18:00 → giao diện tối
+
+function getAutoSkyMode(){
+  const h = new Date().getHours();
+  return (h >= THEME_DAY_START_HOUR && h < THEME_NIGHT_START_HOUR) ? 'day' : 'night';
+}
+
+function getAutoThemeFromTime(){
+  return getAutoSkyMode() === 'day' ? 'light' : 'dark';
+}
+
 function applyThemePref(){
   const root = document.documentElement;
-  if(themePref === 'light'){
+  const pref = themePref || getThemePref();
+  if(pref === 'light'){
     root.setAttribute('data-theme','light');
     return;
   }
-  if(themePref === 'dark'){
+  if(pref === 'dark'){
     root.setAttribute('data-theme','dark');
     return;
   }
-  // Auto: mirror OS scheme as explicit attribute so selectors like [data-theme="dark"]
-  // stay in sync (many components only keyed off data-theme, not prefers-color-scheme).
-  try{
-    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
-    root.setAttribute('data-theme', mq && mq.matches ? 'dark' : 'light');
-  }catch(e){
-    root.setAttribute('data-theme','light');
-  }
+  // Tự động: theo giờ thực (không theo cài đặt sáng/tối của hệ điều hành)
+  root.setAttribute('data-theme', getAutoThemeFromTime());
 }
 
 /* ─── SKY MODE (day/night) ─── */
-function getAutoSkyMode(){
-  const h = new Date().getHours();
-  return (h >= 6 && h < 18) ? 'day' : 'night';
-}
 
 function applySkyMode(){
   const root = document.documentElement;
@@ -106,15 +109,23 @@ function initTheme(){
   themePref = getThemePref();
   applyThemePref();
   applySkyMode();
-  // keep in sync for auto mode (optional but nice)
-  try{
-    themeMedia = window.matchMedia?.('(prefers-color-scheme: dark)') || null;
-    themeMedia?.addEventListener?.('change', ()=>{ if(getThemePref()==='auto') applyThemePref(); });
-  }catch(e){}
 
-  // Re-evaluate sky mode periodically for auto mode (hour changes)
+  // Chế độ Tự động: kiểm tra lại mỗi phút để đổi sáng/tối đúng lúc (vd. 6h, 18h)
   clearInterval(skyTimer);
-  skyTimer = setInterval(()=>{ if(getThemePref()==='auto') applySkyMode(); }, 60*1000);
+  skyTimer = setInterval(()=>{
+    if(getThemePref() !== 'auto') return;
+    applyThemePref();
+    applySkyMode();
+  }, 60 * 1000);
+
+  // Tab khác đổi theme trong Cài đặt → áp dụng ngay tab này
+  window.addEventListener('storage', (ev)=>{
+    if(ev.key !== 'theme_pref') return;
+    themePref = ev.newValue || 'auto';
+    applyThemePref();
+    applySkyMode();
+    syncThemeUI();
+  });
 }
 
 /* ─── SETTINGS UI (hide API key) ─── */
@@ -146,23 +157,6 @@ function logoutNow(){
   window.location.href = resolveUrl('auth/login.html');
 }
 
-function setMusicVolume(v){
-  const vol = Math.max(0, Math.min(1, Number(v)));
-  try{ localStorage.setItem('music_volume', String(vol)); }catch(e){}
-  try{
-    const m = getMaster();
-    m.musicGain.gain.setTargetAtTime(vol, m.ac.currentTime, 0.02);
-  }catch(e){
-    try{ bgAudio.volume = vol; }catch(e2){}
-  }
-}
-function getMusicVolume(){
-  try{
-    const v = Number(localStorage.getItem('music_volume'));
-    return Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0.35;
-  }catch(e){ return 0.35; }
-}
-
 function ensureSlimSettings(){
   const modal = document.getElementById('settingsModal');
   const card  = document.querySelector('#settingsModal .settings-card');
@@ -174,20 +168,7 @@ function ensureSlimSettings(){
     card.innerHTML = `
       <button class="settings-close" onclick="closeSettings()">×</button>
       <h2>⚙️ Cài đặt</h2>
-      <p class="settings-lead">Âm thanh • Giọng đọc • Giao diện • Tài khoản</p>
-
-      <div class="settings-section">
-        <div class="settings-title">🔊 Âm thanh</div>
-        <div class="settings-row">
-          <button type="button" class="settings-action" id="musicToggleBtn">🎵 Bật/Tắt nhạc nền</button>
-          <div class="settings-hint" id="musicHint">Nhạc sẽ chạy sau lần chạm/click đầu tiên.</div>
-        </div>
-        <div class="settings-row">
-          <div class="settings-label">Âm lượng</div>
-          <input id="musicVol" class="settings-range" type="range" min="0" max="100" step="1">
-          <div class="settings-val" id="musicVolVal">35%</div>
-        </div>
-      </div>
+      <p class="settings-lead">Giọng đọc • Giao diện • Tài khoản</p>
 
       <div class="settings-section" id="ttsSection">
         <div class="settings-title">🎙️ Giọng đọc Tiếng Việt</div>
@@ -222,10 +203,11 @@ function ensureSlimSettings(){
       <div class="settings-section" id="themeSection">
         <div class="settings-title">🌗 Giao diện</div>
         <div class="theme-choices">
-          <button type="button" class="theme-btn" data-theme="auto">Tự động</button>
+          <button type="button" class="theme-btn" data-theme="auto" title="Sáng 6h–18h, tối ban đêm">Theo giờ</button>
           <button type="button" class="theme-btn" data-theme="light">Sáng</button>
           <button type="button" class="theme-btn" data-theme="dark">Tối</button>
         </div>
+        <div class="settings-hint theme-auto-hint">Theo giờ: giao diện sáng từ 6:00 đến trước 18:00, còn lại là tối (theo đồng hồ máy).</div>
       </div>
 
       <div class="settings-section">
@@ -244,21 +226,6 @@ function ensureSlimSettings(){
         setThemePref(btn.getAttribute('data-theme'));
       });
     });
-
-    // Wire music toggle
-    const mt = card.querySelector('#musicToggleBtn');
-    if(mt) mt.addEventListener('click', ()=>toggleMusic());
-
-    // Wire volume
-    const range = card.querySelector('#musicVol');
-    const valEl = card.querySelector('#musicVolVal');
-    if(range){
-      range.addEventListener('input', ()=>{
-        const vol = Number(range.value)/100;
-        if(valEl) valEl.textContent = Math.round(vol*100)+'%';
-        setMusicVolume(vol);
-      });
-    }
 
     // Wire TTS engine choice
     card.querySelectorAll('.tts-engine-btn').forEach(btn=>{
@@ -291,13 +258,6 @@ function ensureSlimSettings(){
     if(logoutBtn) logoutBtn.addEventListener('click', logoutNow);
   }
 
-  // Sync UI values each open
-  const vol = getMusicVolume();
-  const range = card.querySelector('#musicVol');
-  const valEl = card.querySelector('#musicVolVal');
-  if(range) range.value = String(Math.round(vol*100));
-  if(valEl) valEl.textContent = Math.round(vol*100)+'%';
-  setMusicVolume(vol);
   syncThemeUI();
   syncTtsEngineUI();
   syncTtsVoiceUI();
@@ -351,10 +311,11 @@ function ensureThemeControls(){
   row.innerHTML = `
     <div class="theme-label">🌗 Giao diện</div>
     <div class="theme-choices">
-      <button type="button" class="theme-btn" data-theme="auto">Tự động</button>
+      <button type="button" class="theme-btn" data-theme="auto" title="Sáng 6h–18h, tối ban đêm">Theo giờ</button>
       <button type="button" class="theme-btn" data-theme="light">Sáng</button>
       <button type="button" class="theme-btn" data-theme="dark">Tối</button>
     </div>
+    <div class="settings-hint theme-auto-hint">Theo giờ: sáng 6:00–18:00, tối các giờ còn lại.</div>
   `;
   card.appendChild(row);
 
@@ -655,7 +616,7 @@ function _speakFallback(text){
 /* ─── SOUND FX ─── */
 function getAC(){ return window._ac||(window._ac=new(window.AudioContext||window.webkitAudioContext)()); }
 
-// Master audio chain to avoid clipping ("rè") when music + SFX overlap
+// Master audio chain — chỉ hiệu ứng (đúng/sai/pop), tránh clip khi chồng âm
 function getMaster(){
   if(window._master) return window._master;
   const ac = getAC();
@@ -667,30 +628,16 @@ function getMaster(){
   comp.attack.setValueAtTime(0.005, ac.currentTime);
   comp.release.setValueAtTime(0.12, ac.currentTime);
 
-  const musicGain = ac.createGain();
-  const sfxGain   = ac.createGain();
-  musicGain.gain.setValueAtTime(getMusicVolume(), ac.currentTime);
+  const sfxGain = ac.createGain();
   sfxGain.gain.setValueAtTime(0.9, ac.currentTime);
-
-  musicGain.connect(comp);
   sfxGain.connect(comp);
   comp.connect(ac.destination);
 
-  window._master = { ac, comp, musicGain, sfxGain, musicSrc: null };
+  window._master = { ac, comp, sfxGain };
   return window._master;
 }
 
-function ensureMusicRouted(){
-  try{
-    if(!bgAudio) return;
-    const m = getMaster();
-    if(m.musicSrc) return;
-    m.musicSrc = m.ac.createMediaElementSource(bgAudio);
-    m.musicSrc.connect(m.musicGain);
-  }catch(e){}
-}
 function playCorrect(){
-  duckBg();
   try{
     const m=getMaster(); const c=m.ac;
     [[523,.05],[659,.18],[784,.3],[1047,.46]].forEach(([f,w])=>{
@@ -704,7 +651,6 @@ function playCorrect(){
   }catch(e){}
 }
 function playWrong(){
-  duckBg();
   try{
     const m=getMaster(); const c=m.ac;
     const o=c.createOscillator(),g=c.createGain();
@@ -718,7 +664,6 @@ function playWrong(){
   }catch(e){}
 }
 function playPop(){
-  duckBg(260, 0.45);
   try{
     const m=getMaster(); const c=m.ac;
     const o=c.createOscillator(),g=c.createGain();
@@ -732,198 +677,6 @@ function playPop(){
   }catch(e){}
 }
 
-/* ─── BACKGROUND MUSIC ─── */
-// MP3-only background music (loops + resumes across pages).
-const MUSIC_TRACK_CANDIDATES = [
-  // root pages
-  "assets/The Name Of Life - Spirited Away (Piano).mp3",
-  // nested pages (auth/, lessons/)
-  "../assets/The Name Of Life - Spirited Away (Piano).mp3",
-  // if you place next to html (optional)
-  "The Name Of Life - Spirited Away (Piano).mp3",
-  "../The Name Of Life - Spirited Away (Piano).mp3"
-];
-const MUSIC_TIME_KEY = 'music_time';
-const MUSIC_SRC_KEY  = 'music_src';
-
-let musicOn = false;
-let pendingAutoMusic = false;
-
-let bgAudio = null;
-let saveTimeTimer = null;
-let duckTimer = null;
-let lastBgVolume = null;
-
-function resolveAbsUrl(path){
-  try{ return new URL(path, window.location.href).toString(); }
-  catch(e){ return path; }
-}
-
-function pickTrackSrc(){
-  // Keep previously working src if present
-  try{
-    const prev = localStorage.getItem(MUSIC_SRC_KEY);
-    if(prev) return prev;
-  }catch(e){}
-  return resolveAbsUrl(MUSIC_TRACK_CANDIDATES[0]);
-}
-
-function initBgAudio(){
-  if(bgAudio) return;
-  bgAudio = new Audio();
-  bgAudio.preload = 'auto';
-  bgAudio.loop = true; // auto replay when finished
-  bgAudio.volume = getMusicVolume();
-  bgAudio.src = pickTrackSrc();
-
-  // Try next candidate if current fails
-  bgAudio.addEventListener('error', ()=>{
-    const cur = bgAudio?.src || '';
-    const abs = MUSIC_TRACK_CANDIDATES.map(resolveAbsUrl);
-    const idx = abs.findIndex(u => u === cur);
-    const next = abs[idx+1];
-    if(next){
-      bgAudio.src = next;
-      bgAudio.load();
-    }
-  });
-
-  // Save working src + restore time once ready
-  bgAudio.addEventListener('canplay', ()=>{
-    try{ localStorage.setItem(MUSIC_SRC_KEY, bgAudio.src); }catch(e){}
-    restoreMusicTime();
-  });
-
-  // Periodically save time while playing (so page transitions feel continuous)
-  bgAudio.addEventListener('play', ()=>{
-    ensureMusicRouted();
-    clearInterval(saveTimeTimer);
-    saveTimeTimer = setInterval(saveMusicTime, 2500);
-  });
-  bgAudio.addEventListener('pause', ()=>{
-    clearInterval(saveTimeTimer);
-    saveTimeTimer = null;
-    saveMusicTime();
-  });
-}
-
-function duckBg(ms=420, factor=0.35){
-  try{
-    if(!bgAudio) return;
-    if(bgAudio.paused) return;
-    const base = getMusicVolume();
-    const target = Math.max(0, Math.min(1, base * factor));
-    try{
-      const m=getMaster();
-      m.musicGain.gain.setTargetAtTime(target, m.ac.currentTime, 0.01);
-    }catch(e){
-      if(lastBgVolume == null) lastBgVolume = bgAudio.volume;
-      bgAudio.volume = target;
-    }
-    clearTimeout(duckTimer);
-    duckTimer = setTimeout(()=>{
-      try{
-        const m=getMaster();
-        m.musicGain.gain.setTargetAtTime(base, m.ac.currentTime, 0.02);
-      }catch(e){
-        try{ bgAudio.volume = base; }catch(e2){}
-      }
-      lastBgVolume = null;
-      duckTimer = null;
-    }, ms);
-  }catch(e){}
-}
-
-function saveMusicTime(){
-  try{
-    if(!bgAudio) return;
-    // guard NaN / Infinity
-    const t = Number(bgAudio.currentTime);
-    if(!Number.isFinite(t) || t < 0) return;
-    localStorage.setItem(MUSIC_TIME_KEY, String(t));
-  }catch(e){}
-}
-
-function restoreMusicTime(){
-  try{
-    if(!bgAudio) return;
-    const t = Number(localStorage.getItem(MUSIC_TIME_KEY) || '0');
-    if(Number.isFinite(t) && t > 0){
-      // avoid jumping past duration if metadata not ready
-      if(Number.isFinite(bgAudio.duration) && bgAudio.duration > 0){
-        bgAudio.currentTime = Math.min(t, Math.max(0, bgAudio.duration - 1));
-      } else {
-        bgAudio.currentTime = t;
-      }
-    }
-  }catch(e){}
-}
-
-function stopAllMusic(){
-  try{ saveMusicTime(); }catch(e){}
-  try{ bgAudio?.pause(); }catch(e){}
-}
-
-async function startTrack(){
-  initBgAudio();
-  if(!bgAudio) return false;
-  try{
-    ensureMusicRouted();
-    try{ bgAudio.volume = getMusicVolume(); }catch(e){}
-    restoreMusicTime();
-    await bgAudio.play(); // may be blocked until first user gesture
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-function toggleMusic(){
-  musicOn=!musicOn;
-  try{ localStorage.setItem('music_pref', musicOn?'on':'off'); }catch(e){}
-  const btn = document.getElementById('musicBtn');
-  if(btn) btn.textContent = musicOn ? '🔇' : '🎵';
-  if(musicOn){
-    // Autoplay with sound is blocked by browsers → start after first user gesture.
-    pendingAutoMusic = true;
-    tryStartMusic();
-  } else {
-    pendingAutoMusic = false;
-    stopAllMusic();
-  }
-}
-
-function tryStartMusic(){
-  if(!musicOn) return;
-  startTrack().then(ok=>{ pendingAutoMusic = !ok; });
-}
-
-function armAutoMusic(){
-  // Default: auto-on first visit, but only actually plays after first gesture.
-  let pref = 'on';
-  try{ pref = localStorage.getItem('music_pref') || 'on'; }catch(e){}
-  musicOn = (pref !== 'off');
-  const btn = document.getElementById('musicBtn');
-  if(btn) btn.textContent = musicOn ? '🔇' : '🎵';
-  pendingAutoMusic = musicOn;
-
-  const kick = ()=>{
-    if(pendingAutoMusic) tryStartMusic();
-    window.removeEventListener('pointerdown', kick, true);
-    window.removeEventListener('keydown', kick, true);
-    window.removeEventListener('touchstart', kick, true);
-  };
-  window.addEventListener('pointerdown', kick, true);
-  window.addEventListener('touchstart', kick, true);
-  window.addEventListener('keydown', kick, true);
-
-  // Try immediately (will succeed on some browsers / after prior allow)
-  tryStartMusic();
-}
-
-// Save time on navigation/visibility changes.
-// Dùng `pagehide` thay cho `beforeunload` để KHÔNG chặn bfcache → back/forward instant.
-window.addEventListener('pagehide', saveMusicTime);
-document.addEventListener('visibilitychange', ()=>{ if(document.hidden) saveMusicTime(); });
 
 /* ─── CONFETTI ─── */
 function launchConfetti(x,y){
@@ -945,6 +698,10 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.rand
 function _armTtsUnlock(){
   const kick = ()=>{
     _unlockTtsAudio();
+    try{
+      const ac = getAC();
+      if(ac.state === 'suspended') ac.resume();
+    }catch(e){}
     window.removeEventListener('pointerdown', kick, true);
     window.removeEventListener('touchstart', kick, true);
     window.removeEventListener('keydown', kick, true);
@@ -1007,10 +764,6 @@ document.addEventListener('touchstart',  e => _maybePrefetchFromTarget(e.target)
 /* ─── INIT on DOMContentLoaded ─── */
 document.addEventListener('DOMContentLoaded',()=>{
   initTheme();
-  // Music button
-  const mb = document.getElementById('musicBtn');
-  if(mb) mb.onclick = toggleMusic;
-  armAutoMusic();
   _armTtsUnlock();
   // Settings button
   const sb = document.getElementById('settingsBtn');

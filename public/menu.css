@@ -391,8 +391,7 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   gap:8px;
 }
 
-/* Nút nhạc / cài đặt trong topbar (ghi đè vị trí fixed từ shared.css) */
-.app-topbar #musicBtn,
+/* Nút cài đặt trong topbar (ghi đè vị trí fixed từ shared.css) */
 .app-topbar #settingsBtn{
   position:relative;
   top:auto; left:auto; right:auto;
@@ -403,12 +402,10 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   border:1px solid rgba(15,23,42,.10);
   background:linear-gradient(180deg,#f8fafc,#f1f5f9);
 }
-.app-topbar #musicBtn:hover,
 .app-topbar #settingsBtn:hover{
   transform:translateY(-1px);
   box-shadow:0 4px 12px rgba(15,23,42,.08);
 }
-.app-topbar #musicBtn:active,
 .app-topbar #settingsBtn:active{
   transform:translateY(0);
 }
@@ -456,7 +453,6 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   background:rgba(99,102,241,.2);
   color:#e0e7ff;
 }
-:root[data-theme="dark"] .app-topbar #musicBtn,
 :root[data-theme="dark"] .app-topbar #settingsBtn{
   background:linear-gradient(180deg,rgba(30,41,59,.9),rgba(15,23,42,.85));
   border-color:rgba(255,255,255,.12);

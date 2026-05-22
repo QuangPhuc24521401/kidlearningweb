@@ -153,11 +153,6 @@ button{touch-action:manipulation}
 .fox-tail{animation:foxTailWag 1.8s ease-in-out infinite;transform-origin:20% 50%}
 @keyframes foxTailWag{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(15deg)}}
 
-/* ═══════════ MUSIC BUTTON ═══════════ */
-#musicBtn{position:fixed;top:18px;left:18px;z-index:9999;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#ffec6e,#ffc107);box-shadow:0 4px 0 #e65100,0 8px 20px rgba(255,193,7,.4);font-size:22px;transition:transform .15s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;justify-content:center}
-#musicBtn:hover{transform:scale(1.15) rotate(10deg)}
-#musicBtn:active{transform:scale(.9) translateY(3px);box-shadow:none}
-
 /* ═══════════ SETTINGS BUTTON ═══════════ */
 #settingsBtn{position:fixed;top:18px;right:18px;z-index:9999;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#b0bec5,#546e7a);box-shadow:0 4px 0 #37474f,0 8px 20px rgba(0,0,0,.2);font-size:22px;transition:transform .2s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;justify-content:center}
 #settingsBtn:hover{transform:scale(1.12) rotate(60deg)}
@@ -307,6 +302,7 @@ button{touch-action:manipulation}
 .settings-hint{font-family:'Nunito',sans-serif;font-size:12px;color:#9ca3af}
 .settings-val{font-family:'Nunito',sans-serif;font-size:12px;color:#6b7280;font-weight:800;min-width:44px;text-align:right}
 .settings-range{flex:1}
+.theme-auto-hint{margin-top:8px}
 .settings-action{
   border:none;
   border-radius:14px;
@@ -331,9 +327,7 @@ button{touch-action:manipulation}
 @media (max-width:560px){
   body{padding:14px}
   .card{border-radius:34px}
-  #musicBtn,#settingsBtn{top:14px}
-  #musicBtn{left:14px}
-  #settingsBtn{right:14px}
+  #settingsBtn{top:14px;right:14px}
 }
 
 @media (prefers-reduced-motion:reduce){

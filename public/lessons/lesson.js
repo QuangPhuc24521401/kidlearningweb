@@ -2,41 +2,31 @@
 // Chạy được kể cả khi mở trực tiếp bằng file:// (nháy đúp file HTML).
 
 (function(){
-  /** Đọc theme từ cùng khóa với shared.js để trang bài không còn sáng khi máy/OS tối. */
+  /** Theme đồng bộ shared.js: auto = theo giờ thực (6h–18h sáng). */
   try{
-    (function applyLessonPageTheme(){
+    var THEME_DAY_START = 6;
+    var THEME_NIGHT_START = 18;
+    function themeFromClock(){
+      var h = new Date().getHours();
+      return (h >= THEME_DAY_START && h < THEME_NIGHT_START) ? 'light' : 'dark';
+    }
+    function applyLessonPageTheme(){
       var pref = (typeof localStorage !== 'undefined') ? (localStorage.getItem('theme_pref') || 'auto') : 'auto';
       var root = document.documentElement;
       if(pref === 'light') root.setAttribute('data-theme', 'light');
       else if(pref === 'dark') root.setAttribute('data-theme', 'dark');
-      else{
-        var mq = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-        root.setAttribute('data-theme', (mq && mq.matches) ? 'dark' : 'light');
-      }
-    })();
-    if(typeof window.matchMedia === 'function'){
-      try{
-        var _tmq = window.matchMedia('(prefers-color-scheme: dark)');
-        _tmq && _tmq.addEventListener && _tmq.addEventListener('change', function lessonThemeMq(){
-          try{
-            if((localStorage.getItem('theme_pref') || 'auto') !== 'auto') return;
-            document.documentElement.setAttribute('data-theme', _tmq.matches ? 'dark' : 'light');
-          }catch(err){}
-        });
-      }catch(e){}
+      else root.setAttribute('data-theme', themeFromClock());
     }
+    applyLessonPageTheme();
+    setInterval(function(){
+      try{
+        if((localStorage.getItem('theme_pref') || 'auto') !== 'auto') return;
+        document.documentElement.setAttribute('data-theme', themeFromClock());
+      }catch(e){}
+    }, 60 * 1000);
     window.addEventListener('storage', function(ev){
       if(ev.key !== 'theme_pref') return;
-      try{
-        var p = ev.newValue || 'auto';
-        var r = document.documentElement;
-        if(p === 'light') r.setAttribute('data-theme', 'light');
-        else if(p === 'dark') r.setAttribute('data-theme', 'dark');
-        else{
-          var m = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-          r.setAttribute('data-theme', (m && m.matches) ? 'dark' : 'light');
-        }
-      }catch(err){}
+      try{ applyLessonPageTheme(); }catch(err){}
     });
   }catch(e){}
 
