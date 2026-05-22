@@ -507,47 +507,36 @@ function stopListen(){
   document.getElementById('micLabel').textContent = 'Bấm 🎤 và nói với Cô Mai!';
 }
 
-/* ── Ask AI ── */
+/* ── Ask AI (OpenAI qua /api/mentor-chat trên Vercel) ── */
+const MENTOR_CHAT_URL = '/api/mentor-chat';
+
 async function askQuestion(text){
   if(!text.trim()) return;
   document.getElementById('micHeard').textContent = '💬 "' + text + '"';
   setTeacherState('thinking');
   showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
 
+  let reply = null;
   try{
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
+    const res = await fetch(MENTOR_CHAT_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 200,
-        system: `Bạn là Cô Mai, giáo viên mầm non vui vẻ, dịu dàng và yêu trẻ em.
-Bạn đang nói chuyện với bé 3-6 tuổi đang học app Kid Learning.
-Quy tắc:
-- Trả lời ngắn gọn, dễ hiểu (tối đa 3 câu ngắn)
-- Dùng ngôn ngữ đơn giản, vui tươi, nhiều emoji
-- Khen ngợi và khuyến khích bé thường xuyên
-- Nếu bé hỏi về hình dạng, màu sắc, số đếm thì giải thích bằng ví dụ gần gũi
-- Kết thúc bằng một câu hỏi nhỏ hoặc lời khen
-- Xưng "cô", gọi bé là "con"`,
-        messages:[{ role:'user', content: text }]
-      })
+      body: JSON.stringify({ message: text.trim() })
     });
-
-    const data = await res.json();
-    const reply = data.content?.[0]?.text || 'Cô chưa nghe rõ, con nói lại nhé! 😊';
-    setTeacherState('talking');
-    showBubble(reply);
-    speakTeacher(reply);
-    saveHistory(text, reply);
-
-  } catch(err){
-    // Fallback nếu không có API
-    const fallback = getFallbackReply(text);
-    setTeacherState('talking');
-    showBubble(fallback);
-    speakTeacher(fallback);
+    const data = await res.json().catch(()=>({}));
+    if(res.ok && data.reply) reply = data.reply;
+    else if(!res.ok && data.configured === false){
+      console.warn('[mentor] Chưa có OPENAI_API_KEY — dùng câu trả lời mẫu');
+    }
+  }catch(err){
+    console.warn('[mentor] API lỗi:', err);
   }
+
+  if(!reply) reply = getFallbackReply(text);
+  setTeacherState('talking');
+  showBubble(reply);
+  speakTeacher(reply);
+  saveHistory(text, reply);
 }
 
 /* ── Fallback replies khi không có internet ── */

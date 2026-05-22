@@ -15,7 +15,7 @@
 |  Tiến độ & huy hiệu | `progress.html` | Tổng sao, streak ngày, các huy hiệu (study streak, top score, arena champion, …). |
 |  Đấu trường | `arena.html` | **Nhiều người** cùng một phiên có thời hạn → ai điểm cao nhất nhận điểm vinh dự + huy hiệu. |
 |  PvP 1v1 | `pvp.html` | Tạo phòng / nhập mã / quick match — đúng và nhanh hơn thắng. |
-|  Cô giáo AI | `mentor.html` | Trợ giảng giọng nói (FPT.AI TTS + Web Speech fallback), có thể gọi video Jitsi với giáo viên thật. |
+|  Cô giáo AI | `mentor.html` | Hỏi đáp qua OpenAI (`/api/mentor-chat`), TTS + Web Speech, gọi video Jitsi với giáo viên thật. |
 |  Dashboard giáo viên | `mentor-teacher.html` | Quản lý lớp, mở cuộc gọi với học sinh. |
 |  Auth | `auth/login.html`, `auth/register.html`, `auth/forgot.html` | Đăng ký / đăng nhập / quên mật khẩu qua Firebase Auth. |
 
@@ -41,7 +41,9 @@ kid-learning-git/
     ├── firestore.rules             ← rules mẫu (users, learning_progress, arena_sessions, pvp_rooms)
     ├── vercel.json                 ← rewrite cho TTS API key
     ├── api/
-    │   └── tts-config.js           ← Vercel serverless: trả API key TTS từ ENV
+    │   ├── tts-config.js           ← Vercel: TTS key từ ENV
+    │   ├── tts-google.js           ← Vercel: TTS proxy
+    │   └── mentor-chat.js          ← Vercel: Cô giáo AI (OpenAI)
     └── public/                     ← static site root
         ├── index.html              ← trang chủ
         ├── arena.html              ← đấu trường nhiều người
@@ -155,6 +157,41 @@ Redeploy → app sẽ tự gọi `/api/tts-google` proxy. **Key không bao giờ
 ### Không cần Google?
 
 Cứ để trống — app dùng **Web Speech API** của trình duyệt. Trên Edge / Win 11, giọng « HoaiMy Online (Natural) » là Azure Neural miễn phí, nghe rất tự nhiên.
+
+---
+
+##  Cô giáo AI (OpenAI)
+
+Trang `mentor.html` gọi **`POST /api/mentor-chat`** (Vercel serverless). **Không** dùng ChatGPT Plus trực tiếp — cần **OpenAI API key** riêng.
+
+### Bước 1 — Tạo key
+
+1. [platform.openai.com](https://platform.openai.com) → đăng nhập → **API keys** → **Create secret key**.
+2. Bật **billing** / nạp credit nhỏ (Plus không thay thế API).
+
+### Bước 2 — Vercel
+
+**Settings → Environment Variables**:
+
+| Biến | Ví dụ |
+|------|-------|
+| `OPENAI_API_KEY` | `sk-proj-...` |
+| `OPENAI_MODEL` (tuỳ chọn) | `gpt-4o-mini` |
+
+**Redeploy** project.
+
+### Bước 3 — Kiểm tra
+
+Mở `https://your-app.vercel.app/mentor.html` → câu hỏi nhanh hoặc mic. Nếu chưa có key, app vẫn chạy **câu trả lời mẫu** (fallback).
+
+### Local có API
+
+```bash
+cd kidlearningweb
+npx vercel dev
+```
+
+Mở URL `vercel dev` in ra (thường `http://localhost:3000`), không chỉ `serve public` — vì `/api/*` cần Vercel.
 
 ---
 
