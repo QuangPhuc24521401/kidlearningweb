@@ -9,7 +9,8 @@
     }
   },
   "rewrites": [
-    { "source": "/secrets/tts.config.js", "destination": "/api/tts-config" }
+    { "source": "/secrets/tts.config.js", "destination": "/api/tts-config" },
+    { "source": "/secrets/mentor.config.js", "destination": "/api/mentor-config" }
   ],
   "headers": [
     {

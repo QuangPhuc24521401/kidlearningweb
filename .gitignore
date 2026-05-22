@@ -10,3 +10,4 @@ secrets/*.js
 # Stub shipped so local / Firebase static hosting không 404; bản production có thể dùng Vercel rewrite → /api/tts-config
 !public/secrets/
 !public/secrets/tts.config.js
+!public/secrets/mentor.config.js
