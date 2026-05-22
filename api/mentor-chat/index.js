@@ -1,7 +1,4 @@
 // Vercel Serverless — Cô giáo AI qua Google Gemini (gói miễn phí Google AI Studio)
-//
-// POST /api/mentor-chat  { message }
-// GET  /api/mentor-chat  → { ok, configured, provider, model }
 
 const SYSTEM_PROMPT = `Bạn là Cô Mai, giáo viên mầm non vui vẻ, dịu dàng và yêu trẻ em.
 Bạn đang nói chuyện với bé 3-6 tuổi đang học app Kid Learning.
@@ -14,11 +11,39 @@ Quy tắc:
 - Kết thúc bằng một câu hỏi nhỏ hoặc lời khen
 - Xưng "cô", gọi bé là "con"`;
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+/** Model free tier ổn định hơn gemini-2.0-flash (hay báo quota 0). */
+const MODEL_FALLBACKS = [
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-2.0-flash-lite"
+];
+
 const MAX_USER_CHARS = 500;
 
 function getGeminiKey() {
   return process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY || "";
+}
+
+function getModelList() {
+  const custom = (process.env.GEMINI_MODEL || "").trim();
+  if (custom) {
+    return custom
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [...MODEL_FALLBACKS];
+}
+
+function isQuotaOrRateError(msg) {
+  const m = String(msg || "").toLowerCase();
+  return (
+    m.includes("quota") ||
+    m.includes("rate") ||
+    m.includes("limit") ||
+    m.includes("429") ||
+    m.includes("resource_exhausted")
+  );
 }
 
 function setCors(res) {
@@ -27,10 +52,10 @@ function setCors(res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
-async function askGemini(apiKey, message) {
+async function askGemini(apiKey, message, model) {
   const url =
     "https://generativelanguage.googleapis.com/v1beta/models/" +
-    encodeURIComponent(MODEL) +
+    encodeURIComponent(model) +
     ":generateContent?key=" +
     encodeURIComponent(apiKey);
 
@@ -67,6 +92,24 @@ async function askGemini(apiKey, message) {
   return reply;
 }
 
+async function askGeminiWithFallback(apiKey, message) {
+  const models = getModelList();
+  let lastErr = null;
+
+  for (const model of models) {
+    try {
+      const reply = await askGemini(apiKey, message, model);
+      return { reply, model };
+    } catch (err) {
+      lastErr = err;
+      if (!isQuotaOrRateError(err.message)) throw err;
+      console.warn("[mentor-chat] quota/rate on", model, "→ try next");
+    }
+  }
+
+  throw lastErr || new Error("Gemini hết hạn mức miễn phí");
+}
+
 export default async function handler(req, res) {
   setCors(res);
 
@@ -76,13 +119,15 @@ export default async function handler(req, res) {
   }
 
   const apiKey = getGeminiKey();
+  const models = getModelList();
 
   if (req.method === "GET") {
     res.status(200).json({
       ok: true,
       configured: !!apiKey,
       provider: "gemini",
-      model: MODEL,
+      model: models[0],
+      models,
       freeTier: true
     });
     return;
@@ -113,7 +158,7 @@ export default async function handler(req, res) {
 
   if (!apiKey) {
     res.status(503).json({
-      error: "Chưa cấu hình GEMINI_API_KEY trên Vercel (lấy miễn phí tại aistudio.google.com/apikey)",
+      error: "Chưa cấu hình GEMINI_API_KEY (aistudio.google.com/apikey)",
       configured: false,
       provider: "gemini"
     });
@@ -121,15 +166,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const reply = await askGemini(apiKey, message);
+    const { reply, model } = await askGeminiWithFallback(apiKey, message);
     res.setHeader("Cache-Control", "no-store");
-    res.status(200).json({ reply, provider: "gemini", model: MODEL });
+    res.status(200).json({ reply, provider: "gemini", model });
   } catch (err) {
-    console.error("[mentor-chat]", err.message || err);
-    res.status(502).json({
-      error: err.message || String(err),
+    const msg = err.message || String(err);
+    console.error("[mentor-chat]", msg);
+    const status = isQuotaOrRateError(msg) ? 429 : 502;
+    res.status(status).json({
+      error: msg,
       configured: true,
-      provider: "gemini"
+      provider: "gemini",
+      rateLimited: isQuotaOrRateError(msg)
     });
   }
 }

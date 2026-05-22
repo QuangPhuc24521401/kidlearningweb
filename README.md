@@ -176,7 +176,7 @@ Trang `mentor.html` gọi **`POST /api/mentor-chat`** (Vercel serverless) → **
 | Biến | Ví dụ |
 |------|-------|
 | `GEMINI_API_KEY` | `AIza...` |
-| `GEMINI_MODEL` (tuỳ chọn) | `gemini-2.0-flash` |
+| `GEMINI_MODEL` (tuỳ chọn) | `gemini-1.5-flash` — **không** dùng `gemini-2.0-flash` nếu báo quota 0 |
 
 Có thể **xóa** `OPENAI_API_KEY` cũ (không còn dùng).
 

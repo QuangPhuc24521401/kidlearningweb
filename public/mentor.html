@@ -646,7 +646,12 @@ async function askQuestion(text){
     }else if(!res.ok){
       apiNote = ' (AI: ' + (data.error || res.status) + ')';
       console.warn('[mentor]', data.error || res.status);
-      setMentorApiHint('⚠️ Gemini: ' + (data.error || res.status) + '. Kiểm tra key tại aistudio.google.com hoặc đợi vài phút nếu vượt giới hạn miễn phí.', false);
+      const errText = String(data.error || res.status || '');
+      if(data.rateLimited || /quota|rate|limit/i.test(errText)){
+        setMentorApiHint('⚠️ Cô Mai nghỉ chút (giới hạn miễn phí Gemini). Con thử lại sau 1–2 phút nhé! Hoặc xóa GEMINI_MODEL trên Vercel nếu đang đặt gemini-2.0-flash.', false);
+      }else{
+        setMentorApiHint('⚠️ Gemini: ' + errText.slice(0,120) + '. Kiểm tra key tại aistudio.google.com/apikey', false);
+      }
     }
   }catch(err){
     apiNote = ' (mất kết nối API)';
