@@ -126,66 +126,12 @@ button{touch-action:manipulation}
 
 /* ═══════════ SKY BACKGROUND ═══════════ */
 .sky{position:fixed;inset:0;z-index:0;background:linear-gradient(175deg,var(--bg1) 0%,var(--bg2) 45%,var(--bg3) 100%);overflow:hidden}
-[data-sky="day"] .sky{overflow:visible}
-.sun{
-  position:absolute;
-  top:-40px;right:80px;
-  width:140px;height:140px;
-  overflow:visible;
-  background:radial-gradient(circle,var(--sun1,#ffe082) 0%,var(--sun2,#ffca28) 55%,#ffb300 100%);
-  border-radius:50%;
-  box-shadow:
-    0 0 50px 18px rgba(255,202,40,.45),
-    0 0 100px 36px rgba(255,193,7,.22);
-  animation:sunPulse 4s ease-in-out infinite;
-  z-index:1;
-}
-
-/* Ban ngày: vòng tia dày (24 tia) — quay chậm quanh mặt trời */
-[data-sky="day"] .sun::before{
-  content:'';
-  position:absolute;
-  left:50%;top:50%;
-  width:300%;height:300%;
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  background:repeating-conic-gradient(
-    from -7.5deg,
-    rgba(255, 252, 210, 1) 0deg 3.5deg,
-    rgba(255, 235, 120, 0.75) 3.5deg 6deg,
-    transparent 6deg 15deg
-  );
-  animation:sunCoronaSpin 48s linear infinite;
-  opacity:.92;
-  pointer-events:none;
-  z-index:-1;
-}
-@keyframes sunCoronaSpin{
-  from{transform:translate(-50%,-50%) rotate(0deg)}
-  to{transform:translate(-50%,-50%) rotate(360deg)}
-}
-
-[data-sky="night"] .sun::before{display:none}
-
+.sun{position:absolute;top:-40px;right:80px;width:140px;height:140px;background:radial-gradient(circle,var(--sun1,#ffe082),var(--sun2,#ffca28));border-radius:50%;box-shadow:0 0 60px 20px rgba(255,202,40,.4);animation:sunPulse 4s ease-in-out infinite}
 .sun::after{content:'';position:absolute;inset:0;border-radius:50%;opacity:var(--moonCraterOpacity,0);background:
   radial-gradient(circle at 38% 42%,rgba(0,0,0,.10) 0 10px,transparent 11px),
   radial-gradient(circle at 62% 58%,rgba(0,0,0,.08) 0 8px,transparent 9px),
   radial-gradient(circle at 52% 30%,rgba(0,0,0,.06) 0 6px,transparent 7px);}
 @keyframes sunPulse{0%,100%{box-shadow:0 0 60px 20px rgba(255,202,40,var(--sunGlow,.4))}50%{box-shadow:0 0 90px 40px rgba(255,202,40,calc(var(--sunGlow,.4) + .1))}}
-
-/* Tia HTML (8 cái) — ban ngày ẩn vì đã có vòng tia CSS; ban đêm tắt hết */
-.sun-ray{
-  position:absolute;top:50%;left:50%;
-  width:190px;height:5px;
-  background:linear-gradient(90deg,#fff9c4 0%,var(--ray,#ffd54f) 28%,transparent 72%);
-  transform-origin:left center;
-  border-radius:3px;
-  animation:rayRotate 20s linear infinite;
-  opacity:var(--rayOpacity,.6);
-  filter:drop-shadow(0 0 2px rgba(255,200,50,.35));
-}
-[data-sky="day"] .sun .sun-ray{display:none}
-@keyframes rayRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .cloud{position:absolute;background:var(--cloud,rgba(255,255,255,.82));border-radius:60px;animation:cloudDrift linear infinite}
 .cloud::before,.cloud::after{content:'';position:absolute;background:inherit;border-radius:50%}
 .cloud::before{width:55%;height:170%;top:-45%;left:12%}
