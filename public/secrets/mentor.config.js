@@ -1,9 +1,7 @@
 /**
- * Cấu hình API Cô giáo AI (tuỳ chọn).
- *
- * Mặc định: POST /api/mentor-chat (cùng domain Vercel).
- *
- * Nếu host HTML ở chỗ khác (Firebase static), đặt URL đầy đủ tới Vercel:
- * window.__MENTOR_CHAT_URL__ = 'https://ten-app.vercel.app/api/mentor-chat';
+ * API Cô giáo AI.
+ * - Để trống: gọi /api/mentor-chat (cùng domain — cần Vercel có Functions).
+ * - Firebase Hosting: bỏ comment dòng dưới (URL Vercel của bạn).
  */
 window.__MENTOR_CHAT_URL__ = '';
+// window.__MENTOR_CHAT_URL__ = 'https://kidlearningweb.vercel.app/api/mentor-chat';
