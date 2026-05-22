@@ -763,6 +763,11 @@ document.addEventListener('touchstart',  e => _maybePrefetchFromTarget(e.target)
 
 /* ─── INIT on DOMContentLoaded ─── */
 document.addEventListener('DOMContentLoaded',()=>{
+  try{
+    document.documentElement.style.visibility = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+  }catch(e){}
   initTheme();
   _armTtsUnlock();
   // Settings button

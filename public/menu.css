@@ -16,6 +16,12 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   padding-bottom:48px;
 }
 
+.page-profile.page-scroll,
+.page-pvp.page-scroll{
+  padding-top:calc(var(--topbar-h) + 28px);
+  padding-bottom:48px;
+}
+
 .page-mentor.page-scroll{
   padding-top:calc(var(--topbar-h) + 24px);
   padding-bottom:40px;
@@ -556,6 +562,8 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
 
   .page-home.page-scroll,
   .page-progress.page-scroll,
+  .page-profile.page-scroll,
+  .page-pvp.page-scroll,
   .page-mentor.page-scroll{
     padding-top:calc(var(--topbar-h) + 60px);
   }

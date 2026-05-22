@@ -134,6 +134,15 @@
     document.title = bundle.title;
   }
 
+  /** View Transition đôi khi để overflow:hidden trên html — gỡ sau mỗi lần chuyển trang. */
+  function unlockPageScroll(){
+    try{
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.visibility = '';
+      document.body.style.overflow = '';
+    }catch(e){}
+  }
+
   /** Log chẩn đoán — luôn bật để dễ debug giai đoạn đầu. Tắt bằng `localStorage.setItem('spa_quiet','1')`. */
   function debug(){
     try{ if(localStorage.getItem('spa_quiet') === '1') return; }catch(e){}
@@ -205,6 +214,7 @@
       .then(function(){
         document.documentElement.classList.remove('spa-loading');
         navigating = false;
+        unlockPageScroll();
         debug('navigate done (+' + Math.round(performance.now()-t0) + 'ms)');
       });
   }
@@ -251,6 +261,7 @@
     /* Initial mount — đảm bảo trang được mount khi load trực tiếp (không qua SPA navigation).
        Đặt vào DOMContentLoaded để tất cả script (firebase, arena.js, pvp.js…) đã được parse. */
     var doInitialMount = function(){
+      unlockPageScroll();
       try { if(MOUNTS[currentPage]) MOUNTS[currentPage](); }
       catch(e){ console.warn('[spa] initial mount', currentPage, e); }
     };
