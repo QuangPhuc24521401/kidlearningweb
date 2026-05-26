@@ -1,6 +1,6 @@
 # Kid Learning Web
 
-Website học tập dành cho trẻ mầm non: bài học tương tác, theo dõi tiến độ và huy hiệu, đấu trường nhiều người, đối kháng 1v1, trợ giảng AI (Cô Mai) và gọi video với giáo viên thật. Ứng dụng chạy trên trình duyệt (HTML, CSS, JavaScript thuần, không build), đồng bộ dữ liệu qua Firebase và triển khai tĩnh trên Vercel.
+Website học tập dành cho trẻ mầm non: bài học tương tác, theo dõi tiến độ và huy hiệu, đấu trường nhiều người, đối kháng 1v1 và trợ giảng AI (Cô Mai). Ứng dụng chạy trên trình duyệt (HTML, CSS, JavaScript thuần, không build), đồng bộ dữ liệu qua Firebase và triển khai tĩnh trên Vercel.
 
 Repository: [github.com/QuangPhuc24521401/kidlearningweb](https://github.com/QuangPhuc24521401/kidlearningweb)
 
@@ -10,7 +10,7 @@ Demo: [kidlearningweb.vercel.app](https://kidlearningweb.vercel.app)
 
 ## Tóm tắt
 
-Kid Learning Web là đồ án web giáo dục sớm, giao diện thân thiện với trẻ em và phụ huynh. Học sinh đăng nhập, chọn môn học, làm bài theo chủ đề mở khóa tuần tự, nhận sao thưởng và huy hiệu. Giọng đọc hỗ trợ đọc câu hỏi và phản hồi (Google Cloud TTS hoặc giọng trình duyệt). Trang Cô giáo AI cho phép hỏi đáp bằng tiếng Việt; khi hết quota Gemini, hệ thống vẫn trả lời bằng câu mẫu offline. Giáo viên có thể quản lý lớp và mở cuộc gọi Jitsi từ dashboard riêng.
+Kid Learning Web là đồ án web giáo dục sớm, giao diện thân thiện với trẻ em và phụ huynh. Học sinh đăng nhập, chọn môn học, làm bài theo chủ đề mở khóa tuần tự, nhận sao thưởng và huy hiệu. Giọng đọc hỗ trợ đọc câu hỏi và phản hồi (Google Cloud TTS hoặc giọng trình duyệt). Trang Cô giáo AI cho phép hỏi đáp bằng tiếng Việt; khi hết quota Gemini, hệ thống vẫn trả lời bằng câu mẫu offline. Giáo viên có dashboard xem thống kê, tiến độ học và lịch sử hỏi Cô AI.
 
 ---
 
@@ -24,7 +24,7 @@ Kid Learning Web là đồ án web giáo dục sớm, giao diện thân thiện 
 | Đấu trường | `arena.html` | Nhiều người trong một phiên có thời hạn, xếp hạng theo điểm |
 | PvP | `pvp.html` | Tạo phòng, nhập mã hoặc ghép nhanh; đúng và nhanh hơn thắng |
 | Cô giáo AI | `mentor.html` | Hỏi đáp qua API Gemini, mic và gõ chữ, TTS tiếng Việt |
-| Giáo viên | `mentor-teacher.html` | Quản lý lớp, mở video call với học sinh |
+| Giáo viên | `mentor-teacher.html` | Thống kê lớp, tiến độ học, lịch sử hỏi Cô AI |
 | Đăng nhập | `auth/login.html`, `register.html`, `forgot.html` | Firebase Authentication (email/mật khẩu) |
 
 ---
@@ -35,7 +35,6 @@ Kid Learning Web là đồ án web giáo dục sớm, giao diện thân thiện 
 - **Backend:** Firebase Auth, Firestore (tiến độ, arena, PvP, người dùng)
 - **TTS:** Google Cloud Text-to-Speech (proxy `/api/tts-google`) hoặc Web Speech API
 - **AI mentor:** Google Gemini qua `/api/mentor-chat` (Vercel serverless)
-- **Video:** Jitsi Meet (iframe)
 - **Hosting:** Vercel (static từ `public/`, API trong `api/`)
 
 ---

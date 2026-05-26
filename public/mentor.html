@@ -9,7 +9,6 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="dns-prefetch" href="https://firestore.googleapis.com">
 <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
-<link rel="dns-prefetch" href="https://meet.jit.si">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
@@ -118,20 +117,6 @@ body.page-mentor.page-scroll{
 /* ── CONTROLS ── */
 .controls{display:flex;flex-direction:column;gap:12px;width:100%}
 
-.class-room-row{
-  display:flex;gap:8px;align-items:center;margin:6px 0 10px;flex-wrap:wrap;width:100%;
-}
-.class-room-row label{
-  font-family:'Nunito',sans-serif;font-size:13px;color:#475569;font-weight:700;flex-shrink:0;
-}
-.class-room-input{
-  flex:1;min-width:0;max-width:100%;
-  padding:10px 12px;border:2px solid #cbd5e1;border-radius:12px;
-  font-family:'Courier New',monospace;font-weight:700;text-transform:uppercase;
-  outline:none;box-sizing:border-box;
-}
-.class-room-input:focus{border-color:#c9b1ff;box-shadow:0 0 0 3px rgba(201,177,255,.3)}
-
 /* Mic row */
 .mic-row{display:flex;gap:10px;align-items:center}
 .big-mic{
@@ -188,42 +173,6 @@ body.page-mentor.page-scroll{
 .ask-send:active:not(:disabled){transform:translateY(2px);box-shadow:none}
 .ask-send:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
 
-/* Divider */
-.divider{display:flex;align-items:center;gap:10px;margin:4px 0}
-.divider::before,.divider::after{content:'';flex:1;height:1.5px;background:linear-gradient(90deg,transparent,#e0d0ff,transparent)}
-.divider span{font-family:'Nunito',sans-serif;font-size:12px;color:#ccc;font-weight:700;white-space:nowrap}
-
-/* Call real teacher button */
-.call-btn{
-  width:100%;padding:18px;border:none;border-radius:22px;cursor:pointer;
-  background:linear-gradient(135deg,#43e97b,#38f9d7);color:#1a4d2e;
-  font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;
-  box-shadow:0 7px 0 #1a9e5e,0 12px 28px rgba(56,214,138,.35);
-  transition:transform .15s cubic-bezier(.34,1.56,.64,1),box-shadow .15s;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-}
-.call-btn:hover{transform:translateY(-5px) scale(1.02)}
-.call-btn:active{transform:translateY(3px);box-shadow:none}
-.call-btn .call-icon{font-size:26px;animation:callRing 1.5s ease-in-out infinite}
-@keyframes callRing{0%,100%{transform:rotate(0)}15%{transform:rotate(15deg)}30%{transform:rotate(-15deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-10deg)}75%{transform:rotate(5deg)}}
-.call-sub{font-family:'Nunito',sans-serif;font-size:12px;color:#2e7d32;margin-top:4px;text-align:center}
-
-/* ── JITSI OVERLAY ── */
-#jitsiOverlay{
-  position:fixed;inset:0;z-index:99999;
-  background:rgba(0,0,0,.85);
-  display:none;flex-direction:column;
-}
-#jitsiOverlay.open{display:flex}
-.jitsi-bar{
-  background:linear-gradient(135deg,#1a1a2e,#2d2d44);
-  padding:12px 20px;display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;
-}
-.jitsi-bar h3{color:white;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
-.jitsi-close{border:none;background:linear-gradient(135deg,#ff6b6b,#c0392b);color:white;border-radius:12px;padding:10px 18px;font-family:'Baloo 2',cursive;font-size:16px;font-weight:700;cursor:pointer}
-#jitsiFrame{flex:1;border:none;width:100%}
-
 /* ── STATUS PILL ── */
 #aiStatus{
   position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9999;
@@ -262,7 +211,6 @@ body.page-mentor.page-scroll{
   .quick-btn{padding:10px 10px;font-size:12px;text-align:center;line-height:1.3}
   .ask-row{flex-direction:column;gap:8px}
   .ask-send{width:100%;padding:14px 16px}
-  .call-btn{font-size:18px;padding:16px}
   #aiStatus{bottom:12px;max-width:calc(100vw - 24px);font-size:12px}
 }
 
@@ -292,10 +240,6 @@ body.page-mentor.page-scroll{
 :root[data-theme="dark"] .quick-btn{
   background:rgba(30,41,59,.75);color:#e8eefc;border-color:rgba(148,163,184,.35);
 }
-:root[data-theme="dark"] .class-room-input{
-  background:rgba(15,23,42,.85);color:#e8eefc;border-color:rgba(148,163,184,.4);
-}
-
 </style>
 </head>
 <body class="page-scroll page-mentor">
@@ -359,19 +303,6 @@ body.page-mentor.page-scroll{
 
 <!-- AI Status pill -->
 <div id="aiStatus"><div class="status-dot" id="statusDot"></div><span id="statusMsg">Đang suy nghĩ...</span></div>
-
-<!-- Jitsi video call overlay -->
-<div id="jitsiOverlay">
-  <div class="jitsi-bar">
-    <h3>📹 Gọi video với Cô Giáo</h3>
-    <button class="jitsi-close" onclick="endCall()">✖ Kết thúc cuộc gọi</button>
-  </div>
-  <div style="background:#fff8e1;color:#8a6d00;padding:10px 14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;text-align:center;border-bottom:2px solid #ffd76a">
-    💡 Nếu thấy "<i>The conference has not yet started</i>" → bấm <b>Log-in</b> → <b>Continue with Google</b> để bắt đầu phòng. Chỉ cần làm <b>1 lần</b> cho mỗi phòng.
-    <a href="#" onclick="(function(){window.open(document.getElementById('jitsiFrame').src,'_blank');})();return false;" style="margin-left:8px;color:#1565C0;font-weight:800;text-decoration:none">Mở tab mới ↗</a>
-  </div>
-  <iframe id="jitsiFrame" allow="camera; microphone; fullscreen; display-capture"></iframe>
-</div>
 
 <main class="mentor-page-wrap" id="page-root">
 <div class="mentor-card">
@@ -499,25 +430,6 @@ body.page-mentor.page-scroll{
       <button class="quick-btn" onclick="askQuestion('Cô ơi con muốn học thêm về hình dạng')">🔷 Học thêm hình dạng</button>
     </div>
 
-    <div class="divider"><span>— hoặc gặp trực tiếp —</span></div>
-
-    <!-- Lớp của bé -->
-    <div class="class-room-row">
-      <label for="classRoomInput">🏫 Mã lớp của bé:</label>
-      <input id="classRoomInput" class="class-room-input" type="text"
-             placeholder="VD: LOPA2024">
-      <button onclick="saveClassRoom()" type="button"
-              style="background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-family:'Baloo 2',cursive;font-weight:800;font-size:13px;cursor:pointer">💾 Lưu</button>
-    </div>
-    <div id="classRoomMsg" style="font-family:'Nunito',sans-serif;font-size:12px;color:#64748b;margin:0 0 10px;min-height:16px"></div>
-
-    <!-- Call real teacher -->
-    <button class="call-btn" onclick="callRealTeacher()">
-      <span class="call-icon">📹</span>
-      Gọi Cô Giáo Thật
-    </button>
-    <div class="call-sub">Kết nối video call với giáo viên mầm non thật sự</div>
-
   </div>
 </div>
 </main>
@@ -543,51 +455,6 @@ setTimeout(()=>{document.documentElement.style.visibility='';}, 4000);
 /* ══════════════════════════════════════════
    AI CÔ GIÁO ENGINE
 ══════════════════════════════════════════ */
-
-// Tên phòng Jitsi — mỗi lớp có phòng riêng. Tính toán động vì user có thể đổi mã lớp.
-function getClassRoomCode(){
-  return (localStorage.getItem('classRoom') || 'LOPA2024').toUpperCase();
-}
-function getRoomName(){
-  return 'KidLearning-CoGiao-' + getClassRoomCode();
-}
-let ROOM_NAME = getRoomName();
-
-/* ── Mã lớp UI ── */
-function _showClassRoomMsg(msg, isError){
-  const el = document.getElementById('classRoomMsg');
-  if(!el) return;
-  el.textContent = msg || '';
-  el.style.color = isError ? '#b91c1c' : '#16a34a';
-}
-function loadClassRoomUI(){
-  const input = document.getElementById('classRoomInput');
-  if(input) input.value = getClassRoomCode();
-  _showClassRoomMsg('Phòng hiện tại: ' + getRoomName(), false);
-}
-function saveClassRoom(){
-  const input = document.getElementById('classRoomInput');
-  if(!input) return;
-  const code = input.value.trim().replace(/\s+/g,'').toUpperCase();
-  if(code.length < 3){
-    _showClassRoomMsg('Mã lớp phải dài ít nhất 3 ký tự (vd LOPA2024)', true);
-    return;
-  }
-  localStorage.setItem('classRoom', code);
-  ROOM_NAME = getRoomName();
-  _showClassRoomMsg('✅ Đã lưu mã lớp: ' + code, false);
-  // Đồng bộ vào Firestore users/{uid}.classRoom (best-effort)
-  try{
-    const u = firebase.auth().currentUser;
-    if(u && firebase.firestore){
-      firebase.firestore().collection('users').doc(u.uid).set(
-        { classRoom: code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
-        { merge: true }
-      ).catch(function(err){ console.warn('[saveClassRoom] firestore', err); });
-    }
-  }catch(e){}
-}
-window.addEventListener('load', loadClassRoomUI);
 
 /* ── Speech recognition ── */
 let recognition = null;
@@ -906,7 +773,7 @@ function showStatus(type, msg){
 }
 function hideStatus(){ document.getElementById('aiStatus').classList.remove('show'); }
 
-/* ── Save history to localStorage (giáo viên thật xem được) ── */
+/* ── Lưu lịch sử hỏi đáp (localStorage) ── */
 function saveHistory(q, a){
   try{
     const h = JSON.parse(localStorage.getItem('mentor_history')||'[]');
@@ -914,98 +781,6 @@ function saveHistory(q, a){
     if(h.length>50) h.shift();
     localStorage.setItem('mentor_history', JSON.stringify(h));
   }catch(e){}
-}
-
-/* ── Jitsi video call ── */
-let _activeCallDocRef = null;     // Firestore doc ref của cuộc gọi đang diễn ra
-let _activeCallId     = null;
-
-function _getStudentInfo(){
-  let name = '', email = '', uid = '';
-  try{
-    name  = localStorage.getItem('userDisplayName') || '';
-    const u = firebase.auth().currentUser;
-    if(u){
-      email = u.email || '';
-      uid   = u.uid   || '';
-      if(!name) name = u.displayName || u.email || 'Bé học sinh';
-    }
-  }catch(e){}
-  return { name: name || 'Bé học sinh', email, uid };
-}
-
-// meet.jit.si là server duy nhất ổn định cho phép nhúng vào iframe.
-// Hầu hết các server Jitsi cộng đồng (ffmuc.net, element.io...) đặt X-Frame-Options:DENY
-// → không nhúng được, chỉ mở được tab mới.
-//
-// Nhược điểm: meet.jit.si yêu cầu người đầu tiên (moderator) đăng nhập Google
-// một lần để bắt đầu phòng. Đã có hint hiển thị trong UI nhắc user.
-const JITSI_HOST = 'meet.jit.si';
-
-function callRealTeacher(){
-  ROOM_NAME = getRoomName(); // refresh in case parent đổi mã lớp
-  const overlay = document.getElementById('jitsiOverlay');
-  const frame   = document.getElementById('jitsiFrame');
-  const student = _getStudentInfo();
-
-  // Mở Jitsi ngay lập tức. prejoinPageEnabled=false để vào phòng luôn không hỏi tên.
-  frame.src = `https://${JITSI_HOST}/${ROOM_NAME}` +
-    `#userInfo.displayName=%22${encodeURIComponent(student.name)}%22` +
-    `&config.prejoinPageEnabled=false` +
-    `&config.startWithVideoMuted=false` +
-    `&config.startWithAudioMuted=false` +
-    `&config.disableModeratorIndicator=true`;
-  overlay.classList.add('open');
-
-  // Báo cho giáo viên qua Firestore (realtime)
-  const classCode = getClassRoomCode();
-  try{
-    if(firebase.firestore){
-      const ref = firebase.firestore()
-        .collection('classes').doc(classCode)
-        .collection('calls').doc();
-      _activeCallDocRef = ref;
-      _activeCallId     = ref.id;
-      ref.set({
-        studentName:  student.name,
-        studentEmail: student.email,
-        studentUid:   student.uid,
-        room:         ROOM_NAME,
-        status:       'ringing',
-        createdAt:    firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(function(err){
-        console.warn('[callRealTeacher] firestore write failed:', err);
-      });
-    }
-  }catch(e){ console.warn('[callRealTeacher]', e); }
-
-  // Lưu localStorage làm fallback (cho trường hợp cùng máy)
-  try{
-    const notif = JSON.parse(localStorage.getItem('teacher_notif')||'[]');
-    notif.push({ time: new Date().toISOString(), room: ROOM_NAME, msg:'Bé đang gọi video!' });
-    localStorage.setItem('teacher_notif', JSON.stringify(notif));
-  }catch(e){}
-}
-
-function endCall(){
-  const overlay = document.getElementById('jitsiOverlay');
-  const frame   = document.getElementById('jitsiFrame');
-  frame.src = '';
-  overlay.classList.remove('open');
-
-  // Đánh dấu cuộc gọi đã kết thúc trên Firestore
-  if(_activeCallDocRef){
-    try{
-      _activeCallDocRef.set({
-        status: 'ended',
-        endedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).catch(function(err){
-        console.warn('[endCall] firestore update failed:', err);
-      });
-    }catch(e){}
-    _activeCallDocRef = null;
-    _activeCallId = null;
-  }
 }
 
 /* ── Init greeting (chữ trên màn hình, không gọi Gemini) ── */
