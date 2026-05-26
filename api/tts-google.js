@@ -4,7 +4,7 @@
 // • Nếu không / Google fail (vd. thẻ bị khoá, 403) → tự động chuyển sang
 //   Microsoft Edge TTS (miễn phí, không cần key, neural vi-VN: HoaiMy / NamMinh).
 //
-// URL: POST /api/tts-google  body: { text, voice? }
+// URL: POST /api/tts-google  body: { text, voice?, speakingRate?, pitch? }
 // Trả về:    { audioContent: "<base64 MP3>", engine: "google" | "edge" }
 //
 // Tên endpoint giữ nguyên "tts-google" để khỏi đổi client; client không cần biết
@@ -25,7 +25,16 @@ const VOICE_MAP_GOOGLE_TO_EDGE = {
   "vi-VN-NamMinhNeural": "vi-VN-NamMinhNeural",
 };
 
-async function synthGoogle(apiKey, text, voice) {
+function clampNumber(value, min, max, fallback) {
+  return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+}
+
+function toEdgeSignedPercent(value) {
+  const rounded = Math.round(value);
+  return (rounded >= 0 ? "+" : "") + rounded + "%";
+}
+
+async function synthGoogle(apiKey, text, voice, speakingRate, pitch) {
   const r = await fetch(
     "https://texttospeech.googleapis.com/v1/text:synthesize?key=" + encodeURIComponent(apiKey),
     {
@@ -34,7 +43,7 @@ async function synthGoogle(apiKey, text, voice) {
       body: JSON.stringify({
         input: { text },
         voice: { languageCode: "vi-VN", name: voice },
-        audioConfig: { audioEncoding: "MP3", speakingRate: 0.95, pitch: 1.0 }
+        audioConfig: { audioEncoding: "MP3", speakingRate, pitch }
       })
     }
   );
@@ -47,12 +56,14 @@ async function synthGoogle(apiKey, text, voice) {
   return data.audioContent; // base64
 }
 
-function synthEdge(text, voice) {
+function synthEdge(text, voice, speakingRate, pitch) {
   return new Promise(async (resolve, reject) => {
     try {
       const tts = new MsEdgeTTS();
       await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-      const { audioStream } = tts.toStream(text, { rate: "-5%", pitch: "+2%" });
+      const ratePct = toEdgeSignedPercent((speakingRate - 1) * 100);
+      const pitchPct = toEdgeSignedPercent(pitch);
+      const { audioStream } = tts.toStream(text, { rate: ratePct, pitch: pitchPct });
       const chunks = [];
       audioStream.on("data",  (c) => chunks.push(c));
       audioStream.on("error", (e) => reject(e));
@@ -80,6 +91,8 @@ export default async function handler(req, res) {
   }
   const text  = (body && typeof body.text  === "string" ? body.text  : "").slice(0, 2000);
   const voice = (body && typeof body.voice === "string" ? body.voice : "vi-VN-Neural2-A");
+  const speakingRate = clampNumber(body && body.speakingRate, 0.25, 4, 1.08);
+  const pitch = clampNumber(body && body.pitch, -20, 20, 0);
 
   if (!text.trim()) {
     res.status(400).json({ error: "Thiếu text" });
@@ -91,7 +104,7 @@ export default async function handler(req, res) {
   // ─── Ưu tiên Google nếu có key (và không bị tắt rõ ràng) ───
   if (apiKey && process.env.TTS_FORCE_EDGE !== "1") {
     try {
-      const b64 = await synthGoogle(apiKey, text, voice);
+      const b64 = await synthGoogle(apiKey, text, voice, speakingRate, pitch);
       res.setHeader("Cache-Control", "public, max-age=0, s-maxage=86400");
       res.status(200).json({ audioContent: b64, engine: "google" });
       return;
@@ -104,7 +117,7 @@ export default async function handler(req, res) {
   // ─── Edge TTS (mặc định khi không có Google) ───
   const voiceEdge = VOICE_MAP_GOOGLE_TO_EDGE[voice] || "vi-VN-HoaiMyNeural";
   try {
-    const b64 = await synthEdge(text, voiceEdge);
+    const b64 = await synthEdge(text, voiceEdge, speakingRate, pitch);
     res.setHeader("Cache-Control", "public, max-age=0, s-maxage=86400");
     res.status(200).json({ audioContent: b64, engine: "edge" });
   } catch (err) {
