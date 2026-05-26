@@ -783,16 +783,25 @@
     var progressEl = document.getElementById("progress");
     var container = document.getElementById("answers");
     var status = document.getElementById("status");
+    var lessonCard = document.querySelector(".lesson-container");
 
     if(currentIndex >= lessons.length){
       clearPendingQuestionSpeech();
+      if(lessonCard) lessonCard.classList.add("lesson-complete");
       if(questionEl){ questionEl.innerText = "🎉 Bé học xong rồi!"; prettifyEmoji(questionEl); }
-      if(container) container.innerHTML = "";
+      if(container){
+        container.className = "answers answers-finish";
+        container.innerHTML = "";
+      }
       if(topicEl) topicEl.style.display = "none";
       if(progressEl) progressEl.innerText = "Hoàn thành " + lessons.length + "/" + lessons.length;
       var barEnd = document.getElementById("progressBar");
       if(barEnd) barEnd.style.width = "100%";
-      if(status){ status.innerText = "Con giỏi quá! 🏆"; prettifyEmoji(status); }
+      if(status){
+        status.className = "status-finish";
+        status.innerText = "Con giỏi quá! 🏆";
+        prettifyEmoji(status);
+      }
       var donePromise = reactDone();
       launchConfetti();
       saveProgress({ finished: true });
@@ -801,15 +810,20 @@
       if(currentTopic && container){
         var backUrl = window.location.pathname;
         container.innerHTML =
-          '<div class="finish-actions">' +
-            '<p class="finish-lead">Sao của bài này đã được ghi vào tiến độ!</p>' +
-            '<button class="btn-finish primary" type="button" onclick="window.location.href=\'' + backUrl + '\'">📚 Chọn bài tiếp theo</button>' +
-            '<button class="btn-finish ghost" type="button" onclick="window.location.href=\'../../index.html\'">🏠 Về trang chủ</button>' +
+          '<div class="finish-shell">' +
+            '<div class="finish-badge">⭐ ' + stars + ' sao trong bài này</div>' +
+            '<p class="finish-lead">Sao của bài này đã được ghi vào tiến độ. Con muốn học tiếp hay về trang chủ?</p>' +
+            '<div class="finish-actions">' +
+              '<button class="btn-finish primary" type="button" onclick="window.location.href=\'' + backUrl + '\'">📚 Chọn bài tiếp theo</button>' +
+              '<button class="btn-finish ghost" type="button" onclick="window.location.href=\'../../index.html\'">🏠 Về trang chủ</button>' +
+            '</div>' +
           '</div>';
         waitForSpeech(donePromise, 8000).catch(function(){});
       }
       return;
     }
+
+    if(lessonCard) lessonCard.classList.remove("lesson-complete");
 
     var lesson = lessons[currentIndex];
     if(questionEl){ questionEl.innerText = lesson.question; prettifyEmoji(questionEl); }
@@ -833,8 +847,14 @@
       bar.style.width = pct + "%";
     }
 
-    if(container) container.innerHTML = "";
-    if(status) status.innerText = "";
+    if(container){
+      container.className = "answers";
+      container.innerHTML = "";
+    }
+    if(status){
+      status.className = "";
+      status.innerText = "";
+    }
 
     lesson.answers.forEach(function(ans){
       var div = document.createElement("div");
