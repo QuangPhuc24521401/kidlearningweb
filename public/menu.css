@@ -27,6 +27,12 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   padding-bottom:40px;
 }
 
+.page-mentor.page-scroll #page-root,
+.page-mentor .mentor-page-wrap{
+  width:100%;
+  max-width:100%;
+}
+
 .app-topbar{
   position:fixed;
   top:0; left:0; right:0;
