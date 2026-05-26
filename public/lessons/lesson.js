@@ -756,6 +756,51 @@
     }
   }
 
+  function clearLessonFinishUI(){
+    var finish = document.getElementById("lessonFinish");
+    if(finish && finish.parentNode) finish.parentNode.removeChild(finish);
+    var answers = document.getElementById("answers");
+    if(answers){
+      answers.style.display = "";
+      answers.hidden = false;
+    }
+  }
+
+  function renderLessonFinishUI(starCount, backUrl){
+    var answers = document.getElementById("answers");
+    var status = document.getElementById("status");
+    var questionEl = document.getElementById("question");
+    if(answers){
+      answers.className = "answers";
+      answers.innerHTML = "";
+      answers.style.display = "none";
+      answers.hidden = true;
+    }
+    clearLessonFinishUI();
+    var finish = document.createElement("div");
+    finish.id = "lessonFinish";
+    finish.className = "lesson-finish-wrap";
+    finish.innerHTML =
+      '<div class="finish-shell">' +
+        '<div class="finish-badge">⭐ ' + starCount + ' sao trong bài này</div>' +
+        '<p class="finish-lead">Sao của bài này đã được ghi vào tiến độ. Con muốn học tiếp hay về trang chủ?</p>' +
+        '<div class="finish-actions">' +
+          '<button class="btn-finish primary" type="button" data-finish-next>📚 Chọn bài tiếp theo</button>' +
+          '<button class="btn-finish ghost" type="button" data-finish-home>🏠 Về trang chủ</button>' +
+        '</div>' +
+      '</div>';
+    var nextBtn = finish.querySelector("[data-finish-next]");
+    var homeBtn = finish.querySelector("[data-finish-home]");
+    if(nextBtn) nextBtn.addEventListener("click", function(){ window.location.href = backUrl; });
+    if(homeBtn) homeBtn.addEventListener("click", function(){ window.location.href = "../../index.html"; });
+    if(status && status.parentNode){
+      status.parentNode.insertBefore(finish, status);
+    } else if(questionEl && questionEl.parentNode){
+      if(status) questionEl.parentNode.insertBefore(finish, status);
+      else questionEl.parentNode.appendChild(finish);
+    }
+  }
+
   function launchConfetti(){
     var host = document.querySelector(".lesson-container");
     if(!host) return;
@@ -790,8 +835,10 @@
       if(lessonCard) lessonCard.classList.add("lesson-complete");
       if(questionEl){ questionEl.innerText = "🎉 Bé học xong rồi!"; prettifyEmoji(questionEl); }
       if(container){
-        container.className = "finish-panel";
+        container.className = "answers";
         container.innerHTML = "";
+        container.style.display = "none";
+        container.hidden = true;
       }
       if(topicEl) topicEl.style.display = "none";
       if(progressEl) progressEl.innerText = "Hoàn thành " + lessons.length + "/" + lessons.length;
@@ -807,23 +854,15 @@
       saveProgress({ finished: true });
 
       /* Không tự nhảy trang — để bé nhìn chúc mừng + confetti rồi bấm nút */
-      if(currentTopic && container){
-        var backUrl = window.location.pathname;
-        container.innerHTML =
-          '<div class="finish-shell">' +
-            '<div class="finish-badge">⭐ ' + stars + ' sao trong bài này</div>' +
-            '<p class="finish-lead">Sao của bài này đã được ghi vào tiến độ. Con muốn học tiếp hay về trang chủ?</p>' +
-            '<div class="finish-actions">' +
-              '<button class="btn-finish primary" type="button" onclick="window.location.href=\'' + backUrl + '\'">📚 Chọn bài tiếp theo</button>' +
-              '<button class="btn-finish ghost" type="button" onclick="window.location.href=\'../../index.html\'">🏠 Về trang chủ</button>' +
-            '</div>' +
-          '</div>';
+      if(currentTopic){
+        renderLessonFinishUI(stars, window.location.pathname);
         waitForSpeech(donePromise, 8000).catch(function(){});
       }
       return;
     }
 
     if(lessonCard) lessonCard.classList.remove("lesson-complete");
+    clearLessonFinishUI();
 
     var lesson = lessons[currentIndex];
     if(questionEl){ questionEl.innerText = lesson.question; prettifyEmoji(questionEl); }
@@ -850,6 +889,8 @@
     if(container){
       container.className = "answers";
       container.innerHTML = "";
+      container.style.display = "";
+      container.hidden = false;
     }
     if(status){
       status.className = "";

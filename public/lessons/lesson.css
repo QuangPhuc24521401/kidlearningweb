@@ -596,23 +596,28 @@ h2#question img.tw-emoji,
   width:100%;
   box-sizing:border-box;
 }
-/* Màn hoàn thành: không dùng grid .answers (tránh lệch trái trên desktop) */
-.lesson-complete .finish-panel{
+/* Màn hoàn thành: khối riêng #lessonFinish, không nằm trong grid #answers */
+.lesson-finish-wrap,
+#lessonFinish{
   display:flex !important;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  width:100%;
-  max-width:520px;
-  margin:28px auto 0;
+  width:min(420px, 92vw) !important;
+  max-width:420px;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  margin-top:24px;
+  margin-bottom:8px;
   padding:0;
-  gap:0;
-  grid-template-columns:none !important;
+  box-sizing:border-box;
+}
+.lesson-complete #answers{
+  display:none !important;
 }
 .finish-shell{
   width:100%;
-  max-width:420px;
-  margin:0 auto;
+  margin:0;
   display:flex;
   flex-direction:column;
   align-items:stretch;
@@ -663,9 +668,15 @@ h2#question img.tw-emoji,
 }
 .btn-finish.ghost:hover{ background:#f0f7ff }
 
+.lesson-container.lesson-complete{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
 .lesson-complete h2#question{
   margin-top:10px;
   font-size:clamp(30px,3vw,40px);
+  width:100%;
 }
 .lesson-complete #status{
   margin-top:26px;
@@ -687,16 +698,11 @@ h2#question img.tw-emoji,
 }
 
 @media (min-width:900px){
-  .lesson-complete .finish-panel{
-    max-width:480px;
-    margin-top:32px;
-  }
-  .lesson-complete .answers,
-  .lesson-complete #answers.answers{
-    display:flex !important;
-    grid-template-columns:none !important;
-    justify-items:center;
-    justify-content:center;
+  .lesson-finish-wrap,
+  #lessonFinish{
+    width:min(440px, 90vw) !important;
+    max-width:440px;
+    margin-top:28px;
   }
 }
 

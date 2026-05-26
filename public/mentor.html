@@ -555,6 +555,42 @@ function getMentorChatUrl(){
   return custom || '/api/mentor-chat';
 }
 let isAsking = false;
+let mentorCooldownUntil = 0;
+let mentorCooldownTimer = null;
+
+function loadMentorCooldown(){
+  try{
+    const n = parseInt(sessionStorage.getItem('mentorCooldownUntil') || '0', 10);
+    if(n > Date.now()) mentorCooldownUntil = n;
+  }catch(e){}
+}
+function saveMentorCooldown(untilMs){
+  mentorCooldownUntil = untilMs;
+  try{ sessionStorage.setItem('mentorCooldownUntil', String(untilMs)); }catch(e){}
+}
+function parseRetrySeconds(msg){
+  const m = String(msg || '').match(/retry in ([\d.]+)s/i);
+  if(m) return Math.min(300, Math.max(5, Math.ceil(parseFloat(m[1]))));
+  return 90;
+}
+function getMentorCooldownSec(){
+  return Math.max(0, Math.ceil((mentorCooldownUntil - Date.now()) / 1000));
+}
+function startMentorCooldown(sec){
+  saveMentorCooldown(Date.now() + sec * 1000);
+  clearInterval(mentorCooldownTimer);
+  mentorCooldownTimer = setInterval(function(){
+    const left = getMentorCooldownSec();
+    if(left <= 0){
+      clearInterval(mentorCooldownTimer);
+      setMentorApiHint('', true);
+      return;
+    }
+    setMentorApiHint('⏳ Cô Mai nghỉ ' + left + ' giây (hết lượt Gemini miễn phí). Cô vẫn trả lời câu mẫu tiếng Việt nhé!', false);
+  }, 1000);
+  setMentorApiHint('⏳ Cô Mai nghỉ ' + sec + ' giây (hết lượt Gemini miễn phí). Cô vẫn trả lời câu mẫu tiếng Việt nhé!', false);
+}
+loadMentorCooldown();
 
 function setMentorApiHint(msg, ok){
   const el = document.getElementById('mentorApiHint');
@@ -575,8 +611,9 @@ async function checkMentorApi(){
     }
     const data = await res.json().catch(()=>({}));
     if(res.ok && data.configured){
-      setMentorApiHint('✅ Cô Mai AI đã sẵn sàng.', true);
-      setTimeout(()=> setMentorApiHint('', true), 4000);
+      const modelHint = data.model ? (' Model: ' + data.model) : '';
+      setMentorApiHint('✅ Cô Mai sẵn sàng.' + modelHint, true);
+      setTimeout(()=> setMentorApiHint('', true), 5000);
       return;
     }
     if(res.ok && !data.configured){
@@ -636,7 +673,12 @@ async function askQuestion(text){
     const data = await res.json().catch(()=>({}));
     if(res.ok && data.reply){
       reply = data.reply;
-      setMentorApiHint('', true);
+      if(data.localMode || data.geminiUnavailable){
+        setMentorApiHint('💡 Gemini hết lượt miễn phí — Cô Mai vẫn trả lời bằng tiếng Việt (chế độ offline). Tạo key mới tại aistudio.google.com/apikey nếu muốn AI đầy đủ.', false);
+      } else {
+        setMentorApiHint('', true);
+        try{ sessionStorage.removeItem('mentorCooldownUntil'); mentorCooldownUntil = 0; }catch(e){}
+      }
     }else if(res.status === 404){
       apiNote = ' (API chưa deploy — cần Vercel)';
       setMentorApiHint('⚠️ 404 API — sửa Root Directory trên Vercel (không đặt public) hoặc gắn URL Vercel trong secrets/mentor.config.js.', false);
@@ -644,14 +686,10 @@ async function askQuestion(text){
       apiNote = ' (chưa gắn GEMINI_API_KEY)';
       setMentorApiHint('⚠️ Thêm GEMINI_API_KEY trên Vercel → Redeploy. Key miễn phí: aistudio.google.com/apikey', false);
     }else if(!res.ok){
-      apiNote = ' (AI: ' + (data.error || res.status) + ')';
-      console.warn('[mentor]', data.error || res.status);
+      apiNote = ' (dùng câu mẫu)';
       const errText = String(data.error || res.status || '');
-      if(data.rateLimited || /quota|rate|limit/i.test(errText)){
-        setMentorApiHint('⚠️ Cô Mai nghỉ chút (giới hạn miễn phí Gemini). Con thử lại sau 1–2 phút nhé! Hoặc xóa GEMINI_MODEL trên Vercel nếu đang đặt gemini-2.0-flash.', false);
-      }else{
-        setMentorApiHint('⚠️ Gemini: ' + errText.slice(0,120) + '. Kiểm tra key tại aistudio.google.com/apikey', false);
-      }
+      console.warn('[mentor]', errText.slice(0, 80));
+      setMentorApiHint('⚠️ Lỗi API — Cô dùng câu mẫu tiếng Việt. Kiểm tra Vercel + GEMINI_API_KEY.', false);
     }
   }catch(err){
     apiNote = ' (mất kết nối API)';
@@ -664,12 +702,26 @@ async function askQuestion(text){
 
   if(!reply){
     reply = getFallbackReply(text);
-    if(apiNote) showStatus('error', 'Đang dùng câu mẫu' + apiNote);
+    if(apiNote) showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt' + apiNote);
+  } else if(!isVietnameseText(reply)){
+    reply = getFallbackReply(text);
+    showStatus('error', 'Cô trả lời sai ngôn ngữ — đang dùng câu tiếng Việt mẫu');
   }
   setTeacherState('talking');
   showBubble(reply);
   speakTeacher(reply);
   saveHistory(text, reply);
+}
+
+function isVietnameseText(text){
+  const t = String(text || '').trim();
+  if(!t) return false;
+  if(/[\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF]/.test(t)) return false;
+  if(/[\uAC00-\uD7AF]/.test(t)) return false;
+  const letters = t.match(/\p{L}/gu) || [];
+  if(!letters.length) return true;
+  const vi = letters.filter(ch => /[A-Za-zÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯư]/.test(ch)).length;
+  return vi / letters.length >= 0.55;
 }
 
 /* ── Fallback replies khi không có internet ── */
@@ -712,8 +764,39 @@ function showBubble(html){
 
 /* ── TTS for teacher (Google Cloud → Web Speech fallback) ── */
 let teacherAudio = null;
+let mentorVoicesReady = false;
+
+function pickVietnameseVoice(){
+  const voices = speechSynthesis.getVoices() || [];
+  const vi = voices.filter(v => /^vi(-|_)/i.test(v.lang || ''));
+  if(!vi.length) return null;
+  const prefer = [/HoaiMy/i, /NamMinh/i, /Vietnamese/i, /vi-VN/i];
+  for(const rx of prefer){
+    const hit = vi.find(v => rx.test(v.name) || rx.test(v.lang));
+    if(hit) return hit;
+  }
+  return vi[0];
+}
+
+function ensureMentorVoices(cb){
+  const voices = speechSynthesis.getVoices();
+  if(voices && voices.length){ mentorVoicesReady = true; cb(); return; }
+  speechSynthesis.onvoiceschanged = function(){
+    mentorVoicesReady = true;
+    cb();
+  };
+  setTimeout(cb, 400);
+}
+if(typeof speechSynthesis !== 'undefined'){
+  ensureMentorVoices(function(){});
+}
+
 async function speakTeacher(text){
   const clean = text.replace(/[\u{1F000}-\u{1FFFF}]/gu,'').replace(/[⭐✨💫🌟🎀🌸]/g,'').trim();
+  if(!clean || !isVietnameseText(clean)){
+    setTeacherState('idle');
+    return;
+  }
   if(teacherAudio){ teacherAudio.pause(); teacherAudio=null; }
   speechSynthesis.cancel();
 
@@ -726,7 +809,7 @@ async function speakTeacher(text){
       let url, opts;
       if(useProxy){
         url = '/api/tts-google';
-        opts = { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: clean, voice }) };
+        opts = { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: clean, voice, speakingRate: 1.05 }) };
       } else {
         url = 'https://texttospeech.googleapis.com/v1/text:synthesize?key=' + encodeURIComponent(gKey);
         opts = {
@@ -734,7 +817,7 @@ async function speakTeacher(text){
           body: JSON.stringify({
             input:{ text: clean },
             voice:{ languageCode:'vi-VN', name: voice },
-            audioConfig:{ audioEncoding:'MP3', speakingRate:0.95, pitch:1.0 }
+            audioConfig:{ audioEncoding:'MP3', speakingRate:1.05, pitch:0 }
           })
         };
       }
@@ -749,19 +832,24 @@ async function speakTeacher(text){
     }catch(e){ /* fall through to Web Speech */ }
   }
 
-  // Fallback: Web Speech với giọng vi-VN tốt nhất có sẵn
-  const u = new SpeechSynthesisUtterance(clean);
-  u.lang='vi-VN'; u.rate=0.92; u.pitch=1.10;
-  try{
-    const voices = speechSynthesis.getVoices() || [];
-    const preferRx = [/HoaiMy.*Natural/i, /HoaiMy.*Online/i, /HoaiMy/i, /NamMinh/i, /Natural/i, /Online/i, /Microsoft.*vi/i, /Google.*Vietnamese/i, /^vi[-_]/i];
-    let pick = null;
-    for(const rx of preferRx){ pick = voices.find(v => rx.test(v.name) || rx.test(v.lang)); if(pick) break; }
-    if(!pick) pick = voices.find(v => (v.lang || '').toLowerCase().startsWith('vi')) || null;
-    if(pick) u.voice = pick;
-  }catch(e){}
-  u.onend = ()=> setTeacherState('idle');
-  speechSynthesis.speak(u);
+  const runWebSpeech = ()=>{
+    const pick = pickVietnameseVoice();
+    if(!pick){
+      setTeacherState('idle');
+      return;
+    }
+    const u = new SpeechSynthesisUtterance(clean);
+    u.lang = pick.lang || 'vi-VN';
+    u.voice = pick;
+    u.rate = 1.0;
+    u.pitch = 1.05;
+    u.onend = ()=> setTeacherState('idle');
+    u.onerror = ()=> setTeacherState('idle');
+    speechSynthesis.speak(u);
+  };
+
+  if(mentorVoicesReady) runWebSpeech();
+  else ensureMentorVoices(runWebSpeech);
 }
 
 /* ── Status pill ── */
@@ -880,13 +968,12 @@ function endCall(){
   }
 }
 
-/* ── Init greeting ── */
+/* ── Init greeting (chữ trên màn hình, không gọi Gemini) ── */
 window.addEventListener('load',()=>{
   setTimeout(()=>{
-    setTeacherState('talking');
-    speakTeacher('Xin chào! Cô là Cô Mai. Con muốn hỏi cô điều gì nào?');
-    setTimeout(()=>setTeacherState('idle'),4000);
-  },800);
+    showBubble('Xin chào! Cô là <strong>Cô Mai</strong>. Con gõ hoặc bấm 🎤 để hỏi cô nhé!');
+    setTeacherState('idle');
+  },500);
 });
 </script>
 </body>

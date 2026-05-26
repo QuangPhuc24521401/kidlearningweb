@@ -7,7 +7,7 @@ Dùng **Google Gemini** (miễn phí qua [Google AI Studio](https://aistudio.goo
 | Biến | Bắt buộc | Ghi chú |
 |------|----------|---------|
 | `GEMINI_API_KEY` | Có | Key `AIza...` từ AI Studio |
-| `GEMINI_MODEL` | Không | Mặc định `gemini-1.5-flash` (tự thử thêm model nếu hết quota). **Xóa** biến này nếu đang đặt `gemini-2.0-flash` và báo quota 0. |
+| `GEMINI_MODEL` | Không | Không bắt buộc. Server tự lấy model còn sống (`gemini-2.5-flash-lite`, …). **Không** dùng `gemini-1.5-flash` (đã tắt). Khi hết quota vẫn trả lời tiếng Việt offline. |
 
 **Root Directory:** để trống (không đặt `public`).
 
