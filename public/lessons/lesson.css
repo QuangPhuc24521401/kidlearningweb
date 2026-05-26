@@ -586,30 +586,44 @@ h2#question img.tw-emoji,
   font-size:15px;
   font-weight:800;
   color:#0f766e;
-  margin:0 0 16px;
+  margin:0;
   line-height:1.45;
   text-align:center;
   padding:12px 14px;
   background:rgba(16,185,129,.12);
   border-radius:14px;
   border:1px solid rgba(16,185,129,.25);
+  width:100%;
+  box-sizing:border-box;
 }
-.answers.answers-finish{
-  display:block;
-  margin-top:28px;
+/* Màn hoàn thành: không dùng grid .answers (tránh lệch trái trên desktop) */
+.lesson-complete .finish-panel{
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  max-width:520px;
+  margin:28px auto 0;
+  padding:0;
+  gap:0;
+  grid-template-columns:none !important;
 }
 .finish-shell{
-  width:min(100%, 420px);
+  width:100%;
+  max-width:420px;
   margin:0 auto;
   display:flex;
   flex-direction:column;
-  align-items:center;
+  align-items:stretch;
   gap:14px;
+  text-align:center;
 }
 .finish-badge{
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  align-self:center;
   gap:8px;
   padding:10px 18px;
   border-radius:999px;
@@ -664,11 +678,26 @@ h2#question img.tw-emoji,
   margin-top:12px;
   font-size:14px;
   font-weight:900;
+  text-align:center;
 }
 .lesson-complete .progress-bar{
-  margin-top:12px;
-  width:min(100%, 580px);
+  margin:12px auto 0;
+  width:min(82%, 580px);
   height:12px;
+}
+
+@media (min-width:900px){
+  .lesson-complete .finish-panel{
+    max-width:480px;
+    margin-top:32px;
+  }
+  .lesson-complete .answers,
+  .lesson-complete #answers.answers{
+    display:flex !important;
+    grid-template-columns:none !important;
+    justify-items:center;
+    justify-content:center;
+  }
 }
 
 :root[data-theme="dark"] .finish-lead{

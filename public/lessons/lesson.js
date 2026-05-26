@@ -790,7 +790,7 @@
       if(lessonCard) lessonCard.classList.add("lesson-complete");
       if(questionEl){ questionEl.innerText = "🎉 Bé học xong rồi!"; prettifyEmoji(questionEl); }
       if(container){
-        container.className = "answers answers-finish";
+        container.className = "finish-panel";
         container.innerHTML = "";
       }
       if(topicEl) topicEl.style.display = "none";
