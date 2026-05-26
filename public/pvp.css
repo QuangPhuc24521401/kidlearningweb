@@ -34,8 +34,13 @@
   font-size:14px;
   color:#64748b;
   text-align:center;
-  margin:0 0 18px;
+  margin:0 0 8px;
   line-height:1.5;
+}
+.pvp-lead-note{
+  margin:0 0 18px;
+  font-size:13px;
+  color:#94a3b8;
 }
 
 .pvp-wait-hint{
@@ -282,6 +287,7 @@
 }
 :root[data-theme="dark"] .pvp-card h1{ color:#f1f5f9 }
 :root[data-theme="dark"] .pvp-lead{ color:#94a3b8 }
+:root[data-theme="dark"] .pvp-lead-note{ color:#64748b }
 :root[data-theme="dark"] .pvp-chip{
   background:rgba(30,41,59,.9);
   border-color:rgba(255,255,255,.14);
