@@ -1,258 +1,166 @@
-# 🎓 Kid Learning Web
+# Kid Learning Web
 
-Ứng dụng học tập web dành cho **trẻ mầm non** — vui chơi qua các bài học tương tác, trợ giảng AI, thi đấu trực tuyến cùng bạn bè và hệ thống huy hiệu / sao thưởng.
+Website học tập dành cho trẻ mầm non: bài học tương tác, theo dõi tiến độ và huy hiệu, đấu trường nhiều người, đối kháng 1v1, trợ giảng AI (Cô Mai) và gọi video với giáo viên thật. Ứng dụng chạy trên trình duyệt (HTML, CSS, JavaScript thuần, không build), đồng bộ dữ liệu qua Firebase và triển khai tĩnh trên Vercel.
 
-> Đồ án — Single Page Application (no build) chạy hoàn toàn trên trình duyệt + Firebase backend.
+Repository: [github.com/QuangPhuc24521401/kidlearningweb](https://github.com/QuangPhuc24521401/kidlearningweb)
+
+Demo: [kidlearningweb.vercel.app](https://kidlearningweb.vercel.app)
 
 ---
 
-##  Tính năng chính
+## Tóm tắt
+
+Kid Learning Web là đồ án web giáo dục sớm, giao diện thân thiện với trẻ em và phụ huynh. Học sinh đăng nhập, chọn môn học, làm bài theo chủ đề mở khóa tuần tự, nhận sao thưởng và huy hiệu. Giọng đọc hỗ trợ đọc câu hỏi và phản hồi (Google Cloud TTS hoặc giọng trình duyệt). Trang Cô giáo AI cho phép hỏi đáp bằng tiếng Việt; khi hết quota Gemini, hệ thống vẫn trả lời bằng câu mẫu offline. Giáo viên có thể quản lý lớp và mở cuộc gọi Jitsi từ dashboard riêng.
+
+---
+
+## Tính năng chính
 
 | Trang | Đường dẫn | Mô tả |
 |-------|-----------|-------|
-|  Trang chủ | `index.html` | Menu các môn học, hiển thị tiến độ & badge gắn vào từng môn. |
-|  Bài học | `lessons/<môn>/index.html` → `lessons/lesson.html` | 6 môn: Nhận biết, Tư duy, Âm nhạc, Ghép hình, Mỹ thuật, Ngôn ngữ. Mỗi môn chia **chủ đề (topic)** mở khoá tuần tự, có sao thưởng và phát giọng đọc TTS. |
-|  Tiến độ & huy hiệu | `progress.html` | Tổng sao, streak ngày, các huy hiệu (study streak, top score, arena champion, …). |
-|  Đấu trường | `arena.html` | **Nhiều người** cùng một phiên có thời hạn → ai điểm cao nhất nhận điểm vinh dự + huy hiệu. |
-|  PvP 1v1 | `pvp.html` | Tạo phòng / nhập mã / quick match — đúng và nhanh hơn thắng. |
-|  Cô giáo AI | `mentor.html` | Hỏi đáp qua **Google Gemini** miễn phí (`/api/mentor-chat`), TTS + Web Speech, gọi video Jitsi với giáo viên thật. |
-|  Dashboard giáo viên | `mentor-teacher.html` | Quản lý lớp, mở cuộc gọi với học sinh. |
-|  Auth | `auth/login.html`, `auth/register.html`, `auth/forgot.html` | Đăng ký / đăng nhập / quên mật khẩu qua Firebase Auth. |
+| Trang chủ | `index.html` | Menu sáu môn học, tiến độ và huy hiệu theo từng môn |
+| Bài học | `lessons/<môn>/index.html`, `lessons/lesson.html` | Nhận biết, Tư duy, Âm nhạc, Ghép hình, Mỹ thuật, Ngôn ngữ; chủ đề mở dần, có sao và TTS |
+| Tiến độ | `progress.html` | Tổng sao, streak, danh sách huy hiệu |
+| Đấu trường | `arena.html` | Nhiều người trong một phiên có thời hạn, xếp hạng theo điểm |
+| PvP | `pvp.html` | Tạo phòng, nhập mã hoặc ghép nhanh; đúng và nhanh hơn thắng |
+| Cô giáo AI | `mentor.html` | Hỏi đáp qua API Gemini, mic và gõ chữ, TTS tiếng Việt |
+| Giáo viên | `mentor-teacher.html` | Quản lý lớp, mở video call với học sinh |
+| Đăng nhập | `auth/login.html`, `register.html`, `forgot.html` | Firebase Authentication (email/mật khẩu) |
 
 ---
 
-##  Tech stack
+## Công nghệ
 
-- **Frontend**: HTML/CSS/JS thuần (no bundler, no framework), thiết kế *liquid glass* + topbar điều hướng + dropdown avatar mobile.
-- **Backend**: [Firebase](https://firebase.google.com/) — Auth (Email/Password), Firestore (tiến độ, đấu trường, PvP), Hosting.
-- **TTS giọng Tiếng Việt**: [FPT.AI TTS v5](https://fpt.ai/tts) (fallback Web Speech API).
-- **Gọi video**: Jitsi Meet (iframe).
-- **Deploy serverless**: Vercel (rewrite `/secrets/tts.config.js` → `/api/tts-config` để giấu API key TTS).
+- **Frontend:** HTML, CSS, JavaScript; topbar điều hướng, giao diện sáng/tối, responsive mobile
+- **Backend:** Firebase Auth, Firestore (tiến độ, arena, PvP, người dùng)
+- **TTS:** Google Cloud Text-to-Speech (proxy `/api/tts-google`) hoặc Web Speech API
+- **AI mentor:** Google Gemini qua `/api/mentor-chat` (Vercel serverless)
+- **Video:** Jitsi Meet (iframe)
+- **Hosting:** Vercel (static từ `public/`, API trong `api/`)
 
 ---
 
-##  Cấu trúc thư mục
+## Cấu trúc thư mục
 
 ```
-kid-learning-git/
-├── README.md                       ← bạn đang ở đây
-└── kidlearningweb/
-    ├── package.json                ← firebase dependency
-    ├── firestore.rules             ← rules mẫu (users, learning_progress, arena_sessions, pvp_rooms)
-    ├── vercel.json                 ← rewrite cho TTS API key
-    ├── api/
-    │   ├── tts-config.js           ← Vercel: TTS key từ ENV
-    │   ├── tts-google.js           ← Vercel: TTS proxy
-    │   └── mentor-chat/index.js    ← Vercel: Cô giáo AI (Gemini)
-    └── public/                     ← static site root
-        ├── index.html              ← trang chủ
-        ├── arena.html              ← đấu trường nhiều người
-        ├── pvp.html                ← PvP 1v1
-        ├── progress.html           ← tiến độ + huy hiệu
-        ├── mentor.html             ← Cô giáo AI / Jitsi
-        ├── mentor-teacher.html     ← dashboard giáo viên
-        ├── firebase.js             ← khởi tạo Firebase
-        ├── shared.js               ← TTS, music, theme, settings modal
-        ├── shared.css              ← biến + base + dark mode
-        ├── menu.js / menu.css      ← topbar, user dropdown, progress badges
-        ├── achievements.js         ← huy hiệu + arena win + study streak
-        ├── arena.js / arena.css    ← logic đấu trường
-        ├── pvp.js   / pvp.css      ← logic PvP
-        ├── auth/                   ← login / register / forgot
-        ├── secrets/                ← tts.config.js (stub local, prod dùng /api)
-        └── lessons/
-            ├── lesson.html         ← khung câu hỏi
-            ├── lesson.js / .css
-            ├── data/lessons-data.js← bộ câu hỏi 6 môn
-            └── <môn>/index.html    ← menu chủ đề riêng từng môn
+kidlearningweb/
+├── README.md
+├── package.json
+├── firestore.rules
+├── vercel.json
+├── VERCEL_API.md          (hướng dẫn API Cô giáo AI)
+├── api/
+│   ├── tts-config.js
+│   ├── tts-google.js
+│   └── mentor-chat/index.js
+└── public/
+    ├── index.html
+    ├── progress.html, arena.html, pvp.html
+    ├── mentor.html, mentor-teacher.html
+    ├── firebase.js, shared.js, shared.css
+    ├── menu.js, menu.css, achievements.js
+    ├── auth/
+    ├── secrets/           (cấu hình local; production dùng biến môi trường)
+    └── lessons/
+        ├── lesson.html, lesson.js, lesson.css
+        ├── data/lessons-data.js
+        └── <môn>/index.html
 ```
 
 ---
 
-##  Chạy local
+## Chạy trên máy local
 
-> Project là static site, **không cần build**.
+Không cần bước build.
 
 ```bash
-# 1. Cài Firebase SDK nếu chỉnh code (tuỳ chọn — public dùng CDN)
 cd kidlearningweb
 npm install
-
-# 2. Chạy server tĩnh (chọn 1 cách)
 npx serve public
-# hoặc
-python -m http.server 8080 --directory public
-# hoặc dùng "Live Server" trong VS Code
 ```
 
-Mở trình duyệt `http://localhost:5173` (hoặc cổng tương ứng).
+Hoặc: `python -m http.server 8080 --directory public`, hoặc extension Live Server trong VS Code.
 
----
-
-##  Cấu hình Firebase
-
-### 1. Tạo project + bật Auth & Firestore
-
-1. Vào [Firebase Console](https://console.firebase.google.com) → tạo project (vd `kidlearningweb`).
-2. **Authentication** → bật **Email/Password**.
-3. **Firestore Database** → tạo database production hoặc test mode.
-
-### 2. Cập nhật `firebase.js`
-
-Mở `kidlearningweb/public/firebase.js`, dán **firebaseConfig** từ *Project settings → Your apps*.
-
-### 3. Deploy Firestore Rules
-
-Mở **Firestore → Rules**, dán nội dung từ `kidlearningweb/firestore.rules` (đã có sẵn cho `users`, `learning_progress`, `arena_sessions`, `pvp_rooms`) rồi **Publish**.
-
----
-
-##  Cấu hình TTS (giọng Tiếng Việt)
-
-App có **2 engine** — không cần nhập key trên UI:
-
-| Engine | Chất lượng | Free | Cách bật |
-|--------|------------|------|----------|
-| 🌐 **Google Cloud TTS** (Neural2/Wavenet) | ⭐⭐⭐⭐⭐ | 1.000.000 ký tự/tháng | Cấu hình qua **file** hoặc **Vercel ENV** (xem dưới) |
-| 🔈 **Trình duyệt** (Web Speech API) | ⭐⭐⭐ – ⭐⭐⭐⭐⭐ | Miễn phí | Có sẵn. Trên **Microsoft Edge** / **Windows 11** có giọng « HoaiMy / NamMinh (Natural) » miễn phí — chất lượng cực tốt |
-
-Trong app, mở ⚙️ → mục « 🎙️ Giọng đọc »:
-
-- Engine: **Tự động** (mặc định, ưu tiên Google nếu có key, ngược lại trình duyệt), **Google Cloud**, hoặc **Trình duyệt**.
-- Chips chọn **giọng** Google (Neural2-A nữ / Neural2-D nam / Wavenet-A / Wavenet-D).
-- Nút **🔊 Thử giọng** để nghe trước.
-
-### Cách 1 — Local (file)
-
-Mở `kidlearningweb/public/secrets/tts.config.js`, dán key vào dòng:
-
-```js
-window.__GOOGLE_TTS_API_KEY__ = 'AIza...your-key-here...';
-```
-
-> **Quan trọng**: vào Google Cloud Console → API key → **Restrict key**:
-> - **Application restrictions**: HTTP referrers → thêm `https://your-domain.com/*`, `http://localhost:*/*`.
-> - **API restrictions**: chỉ chọn **Cloud Text-to-Speech API**.
->
-> Cách này phơi key ra cho người xem source — referrer restriction giúp giới hạn lạm dụng.
-
-### Cách 2 — Production (Vercel ENV) — KHUYẾN NGHỊ
-
-Trong **Vercel Dashboard → Settings → Environment Variables**:
-
-| Biến | Ví dụ |
-|------|-------|
-| `GOOGLE_TTS_API_KEY` | `AIza...` |
-| `GOOGLE_TTS_VOICE` (tuỳ chọn) | `vi-VN-Neural2-A` |
-
-Redeploy → app sẽ tự gọi `/api/tts-google` proxy. **Key không bao giờ xuống browser**.
-
-### Lấy Google Cloud TTS key
-
-1. Vào [console.cloud.google.com](https://console.cloud.google.com) → tạo project.
-2. **APIs & Services → Library** → tìm **Cloud Text-to-Speech API** → **Enable**.
-3. **APIs & Services → Credentials → + Create credentials → API key**.
-4. Bấm key vừa tạo → **Restrict key** như hướng dẫn ở trên.
-
-### Không cần Google?
-
-Cứ để trống — app dùng **Web Speech API** của trình duyệt. Trên Edge / Win 11, giọng « HoaiMy Online (Natural) » là Azure Neural miễn phí, nghe rất tự nhiên.
-
----
-
-##  Cô giáo AI (Google Gemini — miễn phí)
-
-Trang `mentor.html` gọi **`POST /api/mentor-chat`** (Vercel serverless) → **Google Gemini** ([AI Studio](https://aistudio.google.com/apikey), có hạn mức miễn phí, **không** cần thẻ như OpenAI trả phí).
-
-### Bước 1 — Tạo key miễn phí
-
-1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) → đăng nhập Google.
-2. **Create API key** → copy key (`AIza...`).
-
-### Bước 2 — Vercel
-
-**Settings → Environment Variables**:
-
-| Biến | Ví dụ |
-|------|-------|
-| `GEMINI_API_KEY` | `AIza...` |
-| `GEMINI_MODEL` (tuỳ chọn) | `gemini-1.5-flash` — **không** dùng `gemini-2.0-flash` nếu báo quota 0 |
-
-Có thể **xóa** `OPENAI_API_KEY` cũ (không còn dùng).
-
-**Redeploy** project.
-
-### Bước 3 — Kiểm tra
-
-`GET https://your-app.vercel.app/api/mentor-chat` → `"configured":true`, `"provider":"gemini"`.
-
-Mở `mentor.html` → hỏi thử. Nếu chưa có key, app dùng **câu trả lời mẫu** (fallback).
-
-### Local có API
+Để test API mentor/TTS giống production:
 
 ```bash
-cd kidlearningweb
 npx vercel dev
 ```
 
-Đặt `GEMINI_API_KEY` trong Vercel env hoặc `.env` khi chạy `vercel dev`.
+---
+
+## Cấu hình Firebase
+
+1. Tạo project trên [Firebase Console](https://console.firebase.google.com).
+2. Bật **Authentication** (Email/Password) và **Firestore**.
+3. Dán `firebaseConfig` vào `public/firebase.js`.
+4. Publish rules từ `firestore.rules` (collections: `users`, `learning_progress`, `arena_sessions`, `pvp_rooms`).
+
+Đồng bộ tiến độ, đấu trường và PvP cần đăng nhập và rules đã publish.
 
 ---
 
-##  Đấu trường &  PvP
+## Giọng đọc (TTS)
 
-### Đấu trường (`arena.html`)
-- Một document Firestore cố định `arena_sessions/live`.
-- Phiên dài **4 phút**, vòng câu hỏi 16s, có cooldown 8s rồi tự sinh phiên mới.
-- Người **điểm cao nhất** (hoà thì ai gửi nhanh hơn) nhận **điểm vinh dự** + badge `arena_champion` (lần đầu) / `arena_legend` (≥5 lần).
+| Engine | Ghi chú |
+|--------|---------|
+| Google Cloud TTS | Chất lượng cao; key đặt trên Vercel (`GOOGLE_TTS_API_KEY`), gọi qua `/api/tts-google` |
+| Web Speech API | Miễn phí, dùng khi không có key Google; Edge/Windows có giọng tiếng Việt tự nhiên |
 
-### PvP 1v1 (`pvp.html`)
-- Tạo phòng → gửi **mã 6 ký tự**, hoặc « Vào phòng chờ (nhanh) » để tự match.
-- Đủ 2 người, **chủ phòng** bấm « Bắt đầu đấu » → trận chính thức.
-- Ai đạt **5 điểm** trước thắng.
+Local (không khuyến nghị production): `public/secrets/tts.config.js` với `window.__GOOGLE_TTS_API_KEY__`.
 
----
-
-##  Hệ thống huy hiệu
-
-Tự động unlock dựa trên dữ liệu trong `localStorage` (đồng bộ Firestore khi đăng nhập):
-
-- `first_star`, `ten_stars`, `fifty_stars` — sao tích lũy
-- `topic_complete`, `subject_complete` — học xong chủ đề / môn
-- `streak_3`, `streak_7` — học liên tục
-- `arena_champion`, `arena_legend` — đứng nhất đấu trường
-
-Xem `achievements.js` để xem định nghĩa và mở rộng thêm.
+Production: Vercel Environment Variables `GOOGLE_TTS_API_KEY`, tùy chọn `GOOGLE_TTS_VOICE` (ví dụ `vi-VN-Neural2-A`).
 
 ---
 
-##  Mobile
+## Cô giáo AI (Gemini)
 
-- Topbar trên màn nhỏ: logo + menu links (chip cuộn ngang) + avatar.
-- Các nút ** Nhạc /  Cài đặt /  Đăng xuất** được gộp vào **dropdown khi bấm avatar** để màn hình đỡ chật.
-- Đấu trường / PvP / bài học đều thu gọn padding, font dùng `clamp()` để vừa các màn 360–480px.
+- Endpoint: `POST /api/mentor-chat`
+- Biến Vercel: `GEMINI_API_KEY` (bắt buộc); `GEMINI_MODEL` (tùy chọn, server tự chọn model còn hỗ trợ nếu bỏ trống)
+- **Root Directory trên Vercel:** để trống (không đặt `public`), nếu không API trả 404
+- Hết quota: server và client vẫn trả lời tiếng Việt bằng câu mẫu
 
----
+Chi tiết: xem `VERCEL_API.md`.
 
-##  Phím tắt khi dev
+Nếu host Firebase tách domain, gắn URL API trong `public/secrets/mentor.config.js`:
 
-| Hành động | Cách làm |
-|-----------|----------|
-| Hard refresh khi đổi CSS/JS | `Ctrl + Shift + R` |
-| Xem permission error | DevTools (F12) → tab Console |
-| Đổi giọng TTS nhanh | ⚙️ → chọn chip giọng |
-| Reset toàn bộ tiến độ | Trang Tiến độ → nút « Xoá tiến độ » |
+```js
+window.__MENTOR_CHAT_URL__ = 'https://kidlearningweb.vercel.app/api/mentor-chat';
+```
 
 ---
 
-##  Lưu ý
+## Đấu trường và PvP (tóm tắt)
 
-- **Không commit** API key Firebase nhạy cảm hay FPT.AI key vào git (đã có `.gitignore` cho `secrets/`).
-- Một số tính năng (đồng bộ tiến độ, đấu trường, PvP) yêu cầu **đăng nhập** + **Firestore Rules đã publish**.
-- Project gắn nhãn cho **trẻ em**: hạn chế text dài, ưu tiên emoji + giọng đọc + hiệu ứng hoạt hình.
+**Đấu trường:** phiên live trên Firestore, thời gian giới hạn, người điểm cao nhất nhận điểm vinh dự và huy hiệu arena.
+
+**PvP:** phòng 6 ký tự hoặc ghép nhanh; chủ phòng bắt đầu; ai đạt 5 điểm trước thắng.
 
 ---
 
-##  Giấy phép
+## Huy hiệu
 
-ISC — dùng cho mục đích học tập / đồ án.
+Tự động mở theo sao, chủ đề/môn hoàn thành, streak học tập và thành tích đấu trường. Logic trong `achievements.js`.
+
+---
+
+## Triển khai Vercel
+
+1. Kết nối repository GitHub/GitLab.
+2. Root Directory: để trống (thư mục gốc là `kidlearningweb` nếu repo chỉ chứa thư mục này, hoặc trỏ đúng thư mục chứa `vercel.json`).
+3. Thêm biến môi trường: `GEMINI_API_KEY`, `GOOGLE_TTS_API_KEY` (nếu dùng TTS Google).
+4. Redeploy sau mỗi lần đổi biến hoặc code API.
+
+---
+
+## Lưu ý bảo mật
+
+- Không commit API key vào git; thư mục `secrets/` dùng cho phát triển local.
+- Hạn chế Google API key theo referrer và chỉ bật Cloud Text-to-Speech API.
+- Nội dung hướng tới trẻ em: câu ngắn, giọng đọc và phản hồi bằng tiếng Việt.
+
+---
+
+## Giấy phép
+
+ISC — dùng cho mục đích học tập và đồ án.
