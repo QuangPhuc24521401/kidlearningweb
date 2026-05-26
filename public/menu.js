@@ -249,72 +249,25 @@ function _safeDataUrlForAttr(u){
 }
 
 function fetchProgressFromCloud(uid){
-  try{
-    if(typeof firebase === 'undefined' || !firebase.firestore) return;
-    var db = firebase.firestore();
-    var profRef = db.collection('learning_progress').doc(uid);
-    var userRef = db.collection('users').doc(uid);
-    Promise.all([profRef.get(), userRef.get()])
-      .then(function(results){
-        var snap = results[0];
-        var userSnap = results[1];
-        if(userSnap && userSnap.exists){
-          var udata = userSnap.data() || {};
-          applyStudentAvatarFromUserDoc(udata);
-          try{
-            if(udata.displayName) localStorage.setItem('userDisplayName', udata.displayName);
-            if(udata.classRoom)   localStorage.setItem('classRoom', udata.classRoom);
-          }catch(err){}
-          mountUserBar();
-          if(typeof renderProfilePage === 'function') renderProfilePage();
-        }
-        function finish(){
-          if(typeof recomputeAchievementsAfterCloudMerge === 'function') recomputeAchievementsAfterCloudMerge();
-          renderProgressBadges();
-          if(typeof flushAchievementsToCloud === 'function') flushAchievementsToCloud();
-        }
-        if(!snap || !snap.exists){
-          finish();
-          return;
-        }
-        var d = snap.data() || {};
-        if(d.achievements && typeof mergeAchievementsFromCloud === 'function'){
-          mergeAchievementsFromCloud(d.achievements);
-        }
-        var cloud = d.progress;
-        if(!cloud || typeof cloud !== 'object'){
-          finish();
-          return;
-        }
-        var local = _readProgress();
-        // Merge cấp topic: lấy giá trị MAX của mỗi field
-        var merged = {};
-        var subjects = new Set(Object.keys(cloud).concat(Object.keys(local)));
-        subjects.forEach(function(sub){
-          var c = cloud[sub] || {};
-          var l = local[sub] || {};
-          var cTop = c.topics || {};
-          var lTop = l.topics || {};
-          var mTop = {};
-          var topicNames = new Set(Object.keys(cTop).concat(Object.keys(lTop)));
-          topicNames.forEach(function(tn){
-            var ct = cTop[tn] || {};
-            var lt = lTop[tn] || {};
-            mTop[tn] = {
-              total:         Math.max(ct.total         || 0, lt.total         || 0),
-              bestRun:       Math.max(ct.bestRun       || 0, lt.bestRun       || 0),
-              completedRuns: Math.max(ct.completedRuns || 0, lt.completedRuns || 0),
-              totalStars:    Math.max(ct.totalStars    || 0, lt.totalStars    || 0),
-              lastSessionAt: Math.max(ct.lastSessionAt || 0, lt.lastSessionAt || 0)
-            };
-          });
-          merged[sub] = { topics: mTop };
-        });
-        try{ localStorage.setItem('learning_progress', JSON.stringify(merged)); }catch(e){}
-        finish();
-      })
-      .catch(function(err){ console.warn('[fetchProgressFromCloud]', err); });
-  }catch(e){}
+  if(!uid || typeof KidProgressSync === 'undefined' || !KidProgressSync.pullFromCloud) return;
+  KidProgressSync.pullFromCloud(uid).then(function(result){
+    result = result || {};
+    if(result.userData){
+      applyStudentAvatarFromUserDoc(result.userData);
+      try{
+        if(result.userData.displayName) localStorage.setItem('userDisplayName', result.userData.displayName);
+        if(result.userData.classRoom)   localStorage.setItem('classRoom', result.userData.classRoom);
+      }catch(err){}
+      mountUserBar();
+      if(typeof renderProfilePage === 'function') renderProfilePage();
+    }
+    if(result.achievements && typeof mergeAchievementsFromCloud === 'function'){
+      mergeAchievementsFromCloud(result.achievements);
+    }
+    if(typeof recomputeAchievementsAfterCloudMerge === 'function') recomputeAchievementsAfterCloudMerge();
+    renderProgressBadges();
+    if(typeof flushAchievementsToCloud === 'function') flushAchievementsToCloud();
+  });
 }
 
 /* ───────────── User bar (góc phải trên) ───────────── */

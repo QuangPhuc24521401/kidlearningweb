@@ -1009,24 +1009,23 @@
     all[lessonType] = subj;
     try{ localStorage.setItem("learning_progress", JSON.stringify(all)); }catch(e){}
 
-    // Đồng bộ lên Firestore (best-effort) — dùng dot path để chỉ ghi field thay đổi
+    // Đồng bộ toàn bộ tiến độ lên Firestore (cùng tài khoản trên mọi thiết bị)
     try{
       if(typeof firebase !== "undefined" && firebase.apps && firebase.apps.length > 0){
         var user = firebase.auth && firebase.auth().currentUser;
         if(user && firebase.firestore){
-          var base = "progress." + lessonType + ".topics." + currentTopic + ".";
-          var update = {};
-          update[base + "total"]         = entry.total;
-          update[base + "bestRun"]       = entry.bestRun;
-          update[base + "completedRuns"] = entry.completedRuns;
-          update[base + "totalStars"]    = entry.totalStars;
-          update[base + "lastSessionAt"] = entry.lastSessionAt;
-          update["updatedAt"] = firebase.firestore.FieldValue.serverTimestamp();
-          firebase.firestore()
-            .collection("learning_progress")
-            .doc(user.uid)
-            .set(update, { merge: true })
-            .catch(function(err){ console.warn("[saveProgress] firestore", err); });
+          if(typeof KidProgressSync !== "undefined" && KidProgressSync.pushToCloud){
+            KidProgressSync.pushToCloud(user.uid, all);
+          } else {
+            firebase.firestore()
+              .collection("learning_progress")
+              .doc(user.uid)
+              .set({
+                progress: all,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              }, { merge: true })
+              .catch(function(err){ console.warn("[saveProgress] firestore", err); });
+          }
         }
       }
     }catch(e){}
@@ -1114,8 +1113,27 @@
   }
 
   function bootLesson(){
-    loadLessons();
-    mountUserBarLesson();
+    function start(){
+      loadLessons();
+      mountUserBarLesson();
+    }
+    try{
+      if(typeof firebase !== "undefined" && firebase.apps && firebase.apps.length > 0 && firebase.auth){
+        firebase.auth().onAuthStateChanged(function(user){
+          if(!user){
+            window.location.href = "../../auth/login.html";
+            return;
+          }
+          if(typeof KidProgressSync !== "undefined" && KidProgressSync.pullFromCloud){
+            KidProgressSync.pullFromCloud(user.uid).finally(start);
+          } else {
+            start();
+          }
+        });
+        return;
+      }
+    }catch(e){}
+    start();
   }
 
   if(document.readyState === "loading"){
