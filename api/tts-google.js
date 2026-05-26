@@ -91,7 +91,7 @@ export default async function handler(req, res) {
   }
   const text  = (body && typeof body.text  === "string" ? body.text  : "").slice(0, 2000);
   const voice = (body && typeof body.voice === "string" ? body.voice : "vi-VN-Neural2-A");
-  const speakingRate = clampNumber(body && body.speakingRate, 0.25, 4, 1.08);
+  const speakingRate = clampNumber(body && body.speakingRate, 0.25, 4, 1.14);
   const pitch = clampNumber(body && body.pitch, -20, 20, 0);
 
   if (!text.trim()) {

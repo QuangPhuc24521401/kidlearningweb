@@ -350,9 +350,9 @@
     }
   }
 
-  var QUESTION_TTS_OPTS = { speakingRate: 1.12, playbackRate: 1.08, rate: 1.04, pitch: 0 };
-  var FEEDBACK_TTS_OPTS = { speakingRate: 1.04, playbackRate: 1.02, rate: 1.00, pitch: 0 };
-  var COMPLETE_TTS_OPTS = { speakingRate: 1.00, playbackRate: 1.00, rate: 0.98, pitch: 0 };
+  var QUESTION_TTS_OPTS = { speakingRate: 1.24, playbackRate: 1.16, rate: 1.10, pitch: 0 };
+  var FEEDBACK_TTS_OPTS = { speakingRate: 1.14, playbackRate: 1.08, rate: 1.06, pitch: 0 };
+  var COMPLETE_TTS_OPTS = { speakingRate: 1.10, playbackRate: 1.05, rate: 1.02, pitch: 0 };
   var pendingQuestionSpeech = null;
   var questionSpeechToken = 0;
 
@@ -425,7 +425,7 @@
     try{
       var u = new SpeechSynthesisUtterance(text);
       u.lang = "vi-VN";
-      u.rate  = (opts && typeof opts.rate  === "number") ? opts.rate  : 1.02;
+      u.rate  = (opts && typeof opts.rate  === "number") ? opts.rate  : 1.08;
       u.pitch = (opts && typeof opts.pitch === "number") ? opts.pitch : 1.08;
       var v = pickBestViVoice();
       if(v) u.voice = v;
@@ -469,7 +469,7 @@
    * speak(text, opts)
    *   opts.playbackRate : số >0  (chỉ áp cho fallback/tái phát nhanh), 1 = bình thường.
    *   opts.rate/pitch   : cho Web Speech fallback.
-   *   opts.speakingRate : 0.25..4 (Google), 1 = bình thường. Mặc định 1.08.
+   *   opts.speakingRate : 0.25..4 (Google), 1 = bình thường. Mặc định 1.14.
    *   opts.pitch        : -20..20 (Google). Mặc định 0.
    */
   /**
@@ -503,7 +503,7 @@
       if(!useProxy && !key){ speakFallback(text, opts, fire); return; }
 
       var voice = opts.voice || getGoogleVoice();
-      var speakingRate = (typeof opts.speakingRate === "number") ? opts.speakingRate : 1.08;
+      var speakingRate = (typeof opts.speakingRate === "number") ? opts.speakingRate : 1.14;
       if(typeof opts.speed === "number" && typeof opts.speakingRate !== "number"){
         speakingRate = Math.max(0.5, Math.min(1.5, 1 + opts.speed * 0.08));
       }
