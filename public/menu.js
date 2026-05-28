@@ -20,8 +20,8 @@
 
 /** Mở trang danh sách chủ đề của một môn học. type = nhan_biet | tu_duy | … */
 function goLesson(type){
-  playPop();
-  // Vào trang chủ đề (danh sách bài học) thay vì đi thẳng vào câu hỏi.
+  try{ if(typeof playPop === 'function') playPop(); }catch(e){}
+  // Vào danh sách chủ đề (Màu sắc, Hình dạng, …) — mỗi chủ đề có tiến độ riêng.
   window.location.href = 'lessons/' + type + '/index.html';
 }
 /** Đăng xuất: xoá cache avatar/role local rồi redirect login. */

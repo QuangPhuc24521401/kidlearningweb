@@ -1106,23 +1106,21 @@
       loadLessons();
       mountUserBarLesson();
     }
+    /* Hiện danh sách chủ đề ngay — không chờ Firestore (giống menu.js). */
+    start();
     try{
       if(typeof firebase !== "undefined" && firebase.apps && firebase.apps.length > 0 && firebase.auth){
         firebase.auth().onAuthStateChanged(function(user){
-          if(!user){
-            window.location.href = "../../auth/login.html";
-            return;
-          }
+          if(!user) return;
           if(typeof KidProgressSync !== "undefined" && KidProgressSync.pullFromCloud){
-            KidProgressSync.pullFromCloud(user.uid).finally(start);
-          } else {
-            start();
+            KidProgressSync.pullFromCloud(user.uid).then(function(){
+              loadLessons();
+              mountUserBarLesson();
+            });
           }
         });
-        return;
       }
     }catch(e){}
-    start();
   }
 
   if(document.readyState === "loading"){
