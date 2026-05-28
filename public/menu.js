@@ -44,66 +44,62 @@ function handleLogout(){
    Ẩn trang (visibility:hidden) cho đến khi auth xong; timeout 4s fallback. */
 (function(){
   var revealed = false;
-  function reveal(){ if(!revealed){ revealed = true; document.documentElement.style.visibility=''; } }
+  var shellPainted = false;
+
+  function reveal(){
+    if(!revealed){
+      revealed = true;
+      document.documentElement.style.visibility='';
+    }
+  }
+
+  /** Vẽ tiến độ + user bar — gọi ngay, không chờ Firestore (tránh treo UI). */
+  function paintShellUI(){
+    if(shellPainted) return;
+    shellPainted = true;
+    reveal();
+    renderProgressBadges();
+    mountUserBar();
+    if(typeof renderProfilePage === 'function') renderProfilePage();
+  }
+
+  function maybeGuardParentOnboarding(user){
+    if(!user || !firebase.firestore) return;
+    var pathname = '';
+    try{
+      pathname = String(window.location.pathname || '').replace(/\\/g,'/').toLowerCase();
+    }catch(e){}
+    if(pathname.indexOf('student-setup') !== -1) return;
+
+    firebase.firestore().collection('users').doc(user.uid).get()
+      .then(function(snap){
+        var data = snap && snap.exists ? snap.data() : null;
+        var role = (data && data.role) ? data.role : 'parent';
+        if(role === 'parent' && data && data.studentProfileComplete === false){
+          window.location.href = 'auth/student-setup.html';
+        }
+      })
+      .catch(function(err){ console.warn('[menu auth guard]', err); });
+  }
 
   try{
     if(firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_')){
       firebase.auth().onAuthStateChanged(function(user){
-        // Không ép chuyển sang trang login: app vẫn chạy offline bằng localStorage.
-        // Khi user đăng nhập, mới bật sync Firestore + guard onboarding.
-        if(!user){
-          reveal();
-          renderProgressBadges();
-          mountUserBar();
-          if(typeof renderProfilePage === 'function') renderProfilePage();
-          return;
-        } else {
-          function runAppShell(){
-            reveal();
-            renderProgressBadges();
-            mountUserBar();
-            if(typeof renderProfilePage === 'function') renderProfilePage();
-            fetchProgressFromCloud(user.uid);
-          }
-          function maybeGuardParentOnboarding(cb){
-            var pathname = '';
-            try{
-              pathname = String(window.location.pathname || '').replace(/\\/g,'/').toLowerCase();
-            }catch(e){}
-            if(pathname.indexOf('student-setup') !== -1){
-              cb();
-              return;
-            }
-            firebase.firestore().collection('users').doc(user.uid).get()
-              .then(function(snap){
-                var data = snap && snap.exists ? snap.data() : null;
-                var role = (data && data.role) ? data.role : 'parent';
-                if(role === 'parent' && data && data.studentProfileComplete === false){
-                  window.location.href = 'auth/student-setup.html';
-                  return;
-                }
-                cb();
-              })
-              .catch(function(err){
-                console.warn('[menu auth guard]', err);
-                cb();
-              });
-          }
-          maybeGuardParentOnboarding(runAppShell);
+        paintShellUI();
+        if(user){
+          maybeGuardParentOnboarding(user);
+          fetchProgressFromCloud(user.uid);
         }
       });
     } else {
-      reveal();
-      renderProgressBadges();
-      mountUserBar();
-      if(typeof renderProfilePage === 'function') renderProfilePage();
+      paintShellUI();
     }
   }catch(e){
-    reveal(); renderProgressBadges(); mountUserBar();
-    if(typeof renderProfilePage === 'function') renderProfilePage();
+    paintShellUI();
   }
 
-  setTimeout(reveal, 4000);
+  /* Fallback: nếu Firebase/auth chậm, vẫn phải vẽ UI (không chỉ reveal trống). */
+  setTimeout(paintShellUI, 4000);
 })();
 
 /* ───────────── Progress badges ───────────── */
