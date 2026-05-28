@@ -1,3 +1,9 @@
+/* ═══════════════════════════════════════════════════
+   MENU.CSS — Top bar, menu grid môn học, user bar, profile
+
+   Dùng trên: index, progress, pvp, profile (+ mentor nếu có topbar).
+   Class trang: .page-home, .page-progress, .page-pvp, .page-profile
+═══════════════════════════════════════════════════ */
 /* ═══════════ PROFESSIONAL TOP BAR (trang chủ) ═══════════ */
 :root{
   --font-ui:'Nunito',system-ui,-apple-system,sans-serif;

@@ -1,9 +1,30 @@
-// menu.js
+/* ═══════════════════════════════════════════════════
+   MENU.JS — Điều hướng, auth guard, tiến độ, hồ sơ
+
+   Load trên các trang shell: index, progress, pvp, profile.
+   Không load trên trang bài học (lessons/*/index.html).
+
+   Chức năng chính:
+   • goLesson(type)     — chuyển sang lessons/<type>/index.html
+   • handleLogout()     — xoá cache local + Firebase signOut
+   • Auth guard (IIFE) — chưa đăng nhập → auth/login.html;
+                         phụ huynh chưa setup học sinh → student-setup.html
+   • renderProgressBadges() — badge trạng thái trên thẻ môn học (menu grid)
+   • mountUserBar()     — avatar + tên + tổng sao (góc phải, link profile)
+   • renderProfilePage() — render nội dung trang profile.html (SPA hoặc direct)
+   • resetProgress()    — xoá tiến độ local + Firestore (có confirm)
+   • fetchProgressFromCloud(uid) — gọi KidProgressSync.pullFromCloud
+
+   Phụ thuộc: firebase.js, progress-sync.js, achievements.js, shared.js
+═══════════════════════════════════════════════════ */
+
+/** Mở trang danh sách chủ đề của một môn học. type = nhan_biet | tu_duy | … */
 function goLesson(type){
   playPop();
   // Vào trang chủ đề (danh sách bài học) thay vì đi thẳng vào câu hỏi.
   window.location.href = 'lessons/' + type + '/index.html';
 }
+/** Đăng xuất: xoá cache avatar/role local rồi redirect login. */
 function handleLogout(){
   playPop();
   try{ localStorage.removeItem('userRole'); }catch(e){}
@@ -19,6 +40,8 @@ function handleLogout(){
   catch(e){ window.location.href='auth/login.html'; }
 }
 
+/* Auth guard + hiển thị shell sau khi xác thực Firebase.
+   Ẩn trang (visibility:hidden) cho đến khi auth xong; timeout 4s fallback. */
 (function(){
   var revealed = false;
   function reveal(){ if(!revealed){ revealed = true; document.documentElement.style.visibility=''; } }

@@ -1,3 +1,15 @@
+/* ═══════════════════════════════════════════════════
+   AUTH.JS — Đăng nhập, đăng ký, quên MK, setup học sinh
+
+   ES module — import firebase.module.js (auth, db).
+   Load trên: auth/login.html, register.html, forgot.html, student-setup.html
+
+   Luồng:
+   • parent  → index.html (sau login; nếu chưa avatar → student-setup.html)
+   • teacher → mentor-teacher.html
+   • Ghi users/{uid}: role, displayName, studentAvatar*, studentProfileComplete
+═══════════════════════════════════════════════════ */
+
 import { auth, db } from "../firebase.module.js";
 import {
   createUserWithEmailAndPassword,

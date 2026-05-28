@@ -1,6 +1,18 @@
 /**
- * Đồng bộ tiến độ học (learning_progress) giữa localStorage và Firestore.
- * Dùng chung cho trang menu và trang bài học.
+ * PROGRESS-SYNC.JS — Đồng bộ tiến độ học localStorage ↔ Firestore
+ *
+ * Collection: learning_progress/{uid}
+ *   • progress     — object theo môn → topics → { total, bestRun, completedRuns, totalStars, … }
+ *   • achievements — map id → timestamp (do achievements.js ghi)
+ *
+ * Chiến lược merge: lấy MAX từng chỉ số giữa cloud và local (không ghi đè thấp hơn).
+ *
+ * API (window.KidProgressSync):
+ *   readLocal / writeLocal / mergeTopicProgress
+ *   pullFromCloud(uid) → Promise<{ progress, achievements, userData }>
+ *   pushToCloud(uid, progress)
+ *
+ * Lưu ý: menu.js tự gọi KidProgressSync.pullFromCloud(uid) sau khi đăng nhập.
  */
 (function(global){
   'use strict';
@@ -116,13 +128,5 @@
     mergeTopicProgress: mergeTopicProgress,
     pullFromCloud: pullFromCloud,
     pushToCloud: pushToCloud
-  };
-
-  /** Alias cho menu.js */
-  global.fetchProgressFromCloud = function(uid, onDone){
-    return pullFromCloud(uid).then(function(result){
-      if(typeof onDone === 'function') onDone(result);
-      return result;
-    });
   };
 })(window);

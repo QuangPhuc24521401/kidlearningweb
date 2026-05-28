@@ -301,33 +301,6 @@ function syncTtsVoiceUI(){
   });
 }
 
-function ensureThemeControls(){
-  const card = document.querySelector('#settingsModal .settings-card');
-  if(!card) return;
-  if(card.querySelector('.theme-row')) return;
-
-  const row = document.createElement('div');
-  row.className = 'theme-row';
-  row.innerHTML = `
-    <div class="theme-label">🌗 Giao diện</div>
-    <div class="theme-choices">
-      <button type="button" class="theme-btn" data-theme="auto" title="Sáng 6h–18h, tối ban đêm">Theo giờ</button>
-      <button type="button" class="theme-btn" data-theme="light">Sáng</button>
-      <button type="button" class="theme-btn" data-theme="dark">Tối</button>
-    </div>
-    <div class="settings-hint theme-auto-hint">Theo giờ: sáng 6:00–18:00, tối các giờ còn lại.</div>
-  `;
-  card.appendChild(row);
-
-  row.querySelectorAll('.theme-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      playPop();
-      setThemePref(btn.getAttribute('data-theme'));
-    });
-  });
-  syncThemeUI();
-}
-
 function syncThemeUI(){
   const pref = getThemePref();
   document.querySelectorAll('.theme-btn').forEach(b=>{
@@ -364,8 +337,6 @@ let ttsStatusTimer = null;
         và resume() Web Audio context.
      3) Dùng Blob URL (audio/mpeg) thay vì data:URL khổng lồ — mobile
         parse nhanh hơn rất nhiều, không bị nghẽn UI thread. */
-const _isMobileUA = (typeof navigator !== 'undefined') &&
-  /Mobi|Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i.test(navigator.userAgent || '');
 const _isIOS = (typeof navigator !== 'undefined') &&
   (/iPhone|iPad|iPod/.test(navigator.userAgent || '') ||
    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));

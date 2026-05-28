@@ -1,5 +1,14 @@
-// lessons-data.js - dữ liệu toàn bộ bài học, nhúng sẵn để chạy được
-// kể cả khi mở bằng file:// (không cần web server).
+/* ═══════════════════════════════════════════════════
+   LESSONS-DATA.JS — Ngân hàng câu hỏi (6 môn học)
+
+   Gán global window.LESSON_DATA — dùng bởi lesson.js, pvp.js, arena.js.
+   Nhúng sẵn (không fetch JSON) để chạy offline / file://.
+
+   Cấu trúc mỗi câu:
+   { topic, question, voiceText?, answers[], correctAnswer }
+
+   Key môn: nhan_biet | tu_duy | am_nhac | ghep_hinh | my_thuat | ngon_ngu
+═══════════════════════════════════════════════════ */
 
 window.LESSON_DATA = {
   nhan_biet: [

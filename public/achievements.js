@@ -1,10 +1,23 @@
-/**
- * Huy hiệu thành tích — lưu localStorage (learning_achievements), đồng bộ Firestore qua learning_progress.
- */
+/* ═══════════════════════════════════════════════════
+   ACHIEVEMENTS.JS — Huy hiệu & chuỗi ngày học
+
+   Lưu local: localStorage key "learning_achievements"
+   Đồng bộ cloud: field achievements.* trong learning_progress/{uid}
+
+   API công khai (window.*):
+   • readAchievements()              — đọc state hiện tại
+   • renderAchievementsPanel()       — vẽ lưới huy hiệu (progress.html)
+   • syncAchievementsAfterLessonSave() — gọi sau mỗi câu trả lời đúng (lesson.js)
+   • mergeAchievementsFromCloud()    — gộp sau khi pull Firestore
+   • flushAchievementsToCloud()      — đẩy unlocked lên Firestore
+   • recordArenaWin(honorPoints)     — cập nhật huy hiệu đấu trường
+   • resetAchievementStorage()       — xoá local (khi resetProgress)
+═══════════════════════════════════════════════════ */
 (function(){
   var STORAGE_KEY = "learning_achievements";
   var SUBJECTS = ["nhan_biet","tu_duy","am_nhac","ghep_hinh","my_thuat","ngon_ngu"];
 
+  /** Danh sách huy hiệu — id dùng trong isEligible() và Firestore. */
   window.ACHIEVEMENT_DEFS = [
     { id: "first_step",     icon: "🎯", title: "Bước đầu",       desc: "Hoàn thành một bài học đầu tiên" },
     { id: "master_nhan_biet", icon: "👀", title: "Bậc thầy nhận biết", desc: "Xong tất cả bài trong môn Nhận biết" },
@@ -103,6 +116,7 @@
     return n;
   }
 
+  /** Kiểm tra đủ điều kiện mở khoá huy hiệu theo id. */
   function isEligible(id, progress, achState){
     var stars = computeTotalStars(progress);
     var doneN = subjectsDoneCount(progress);
@@ -124,6 +138,7 @@
     }
   }
 
+  /** Cập nhật chuỗi ngày học (gọi sau mỗi lần trả lời đúng). */
   function recordStudyDay(){
     var today = _todayKey();
     var state = readAchievements();
@@ -141,6 +156,7 @@
     return state;
   }
 
+  /** Quét ACHIEVEMENT_DEFS, mở khoá badge mới, hiện toast nếu !opts.silent. */
   function unlockEligibleBadges(progress, opts){
     opts = opts || {};
     var state = readAchievements();

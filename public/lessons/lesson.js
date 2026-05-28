@@ -1,5 +1,18 @@
-// lesson.js - script thường (không dùng ES module / fetch)
-// Chạy được kể cả khi mở trực tiếp bằng file:// (nháy đúp file HTML).
+/* ═══════════════════════════════════════════════════
+   LESSON.JS — Giao diện & logic trang bài học
+
+   Load trên: public/lessons/<môn>/index.html (+ lessons-data.js, firebase.js…)
+
+   Luồng hoạt động:
+   1. Không có ?topic= → renderTopicList(): danh sách bài, khoá tuần tự
+   2. Có ?topic=Tên   → showLesson(): quiz câu hỏi, TTS, sao, lưu tiến độ
+   3. lessonType lấy từ URL path (lessons/nhan_biet/) hoặc ?type=
+
+   Dữ liệu: window.LESSON_DATA (lessons-data.js)
+   Tiến độ: localStorage learning_progress → KidProgressSync → Firestore
+
+   Script thường (IIFE), không ES module — chạy được cả file://
+═══════════════════════════════════════════════════ */
 
 (function(){
   /** Theme đồng bộ shared.js: auto = theo giờ thực (6h–18h sáng). */
@@ -203,7 +216,6 @@
   var currentAudio = null;
   var audioUnlocked = false;
 
-  var isMobileUA = /Mobi|Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i.test(navigator.userAgent || "");
   var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent || "") ||
               (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
@@ -466,17 +478,13 @@
   }
 
   /**
-   * speak(text, opts)
-   *   opts.playbackRate : số >0  (chỉ áp cho fallback/tái phát nhanh), 1 = bình thường.
-   *   opts.rate/pitch   : cho Web Speech fallback.
-   *   opts.speakingRate : 0.25..4 (Google), 1 = bình thường. Mặc định 1.14.
-   *   opts.pitch        : -20..20 (Google). Mặc định 0.
-   */
-  /**
    * speak(text, opts) → Promise<void>
-   * Promise resolves khi audio kết thúc TỰ NHIÊN (audio.onended / utterance.onend).
-   * Promise KHÔNG resolve nếu speech bị huỷ bởi lần speak() kế tiếp — caller cần
-   * Promise.race với timeout để tránh treo.
+   * Đọc văn bản qua Google TTS (proxy hoặc key trực tiếp), fallback Web Speech.
+   * opts.playbackRate : số >0 (chỉ áp cho audio fallback), 1 = bình thường.
+   * opts.rate/pitch   : cho Web Speech fallback.
+   * opts.speakingRate : 0.25..4 (Google), mặc định 1.14.
+   * Promise resolve khi audio kết thúc tự nhiên; KHÔNG resolve nếu bị speak() mới huỷ
+   * — caller nên dùng waitForSpeech() để tránh treo.
    */
   function speak(rawText, opts){
     var text = String(rawText || "").replace(/[\u{1F000}-\u{1FFFF}]/gu, "").replace(/[⭐✨💫🌟]/g,"").trim();
@@ -945,25 +953,6 @@
     prettifyEmoji(container);
   }
 
-  /**
-   * Lưu tiến độ TÍCH LUỸ vào localStorage (key learning_progress) + Firestore.
-   *
-   * Cấu trúc localStorage learning_progress:
-   *   {
-   *     nhan_biet: {
-   *       total: 20,            // tổng câu hỏi của môn
-   *       bestRun: 18,          // số câu xa nhất từng làm trong 1 phiên
-   *       completedRuns: 2,     // số lần hoàn thành toàn bộ
-   *       totalStars: 36,       // tổng sao tích luỹ
-   *       lastSessionAt: 17xx   // ms từ epoch
-   *     },
-   *     ...
-   *   }
-   *
-   * @param {{finished?: boolean, sessionStars?: number}} opts
-   *   finished: true khi user vừa hoàn thành toàn bộ bài (currentIndex >= total)
-   *   sessionStars: số sao kiếm được trong PHIÊN này (chỉ dùng khi finished=true)
-   */
   /**
    * Lưu tiến độ TÍCH LUỸ theo TOPIC vào localStorage + Firestore.
    *

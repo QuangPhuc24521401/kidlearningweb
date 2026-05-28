@@ -1,8 +1,18 @@
+/* ═══════════════════════════════════════════════════
+   FIREBASE.MODULE.JS — Firebase cho trang auth (ES modules)
+
+   Chỉ import từ auth/auth.js (login, register, forgot, student-setup).
+   Các trang khác dùng firebase.js (compat SDK global).
+
+   Export:
+   • auth — Firebase Authentication
+   • db   — Firestore (users/{uid}, …)
+═══════════════════════════════════════════════════ */
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
-// Same config as `firebase.js` (global SDK). This one is for ES modules.
 const firebaseConfig = {
   apiKey:            "AIzaSyBC77BDLMwL6igf2pkLynsYjcsetfILIsQ",
   authDomain:        "kidlearningweb.firebaseapp.com",
@@ -16,4 +26,3 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-

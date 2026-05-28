@@ -1,4 +1,16 @@
-/* ═══════════ Lesson page - đồng bộ giao diện vui nhộn ═══════════ */
+/* ═══════════════════════════════════════════════════
+   LESSON.CSS — Giao diện trang bài học
+
+   Dùng bởi: public/lessons/<môn>/index.html
+
+   Các khối chính:
+   • .lesson-container     — card quiz / danh sách topic
+   • .topic-list / .topic-card — chọn bài (khoá tuần tự)
+   • .answers / .box       — lưới đáp án (đúng/sai animation)
+   • .lesson-finish-wrap   — màn hoàn thành bài
+   • .user-bar             — tên + sao góc phải
+   • :root[data-theme="dark"] — dark mode đồng bộ shared.js
+═══════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap');
 
 *{box-sizing:border-box;margin:0;padding:0}

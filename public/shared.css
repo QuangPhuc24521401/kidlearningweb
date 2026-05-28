@@ -1,3 +1,10 @@
+/* ═══════════════════════════════════════════════════
+   SHARED.CSS — Layout & theme dùng chung mọi trang shell
+
+   Bao gồm: nền sky/ground, settings modal, TTS pill, confetti,
+   theme light/dark/auto, responsive cơ bản.
+   Trang bài học dùng thêm lesson.css.
+═══════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap');
 
 /* ═══════════ BASE ═══════════ */
