@@ -49,8 +49,15 @@ function handleLogout(){
   try{
     if(firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_')){
       firebase.auth().onAuthStateChanged(function(user){
-        if(!user) window.location.href='auth/login.html';
-        else {
+        // Không ép chuyển sang trang login: app vẫn chạy offline bằng localStorage.
+        // Khi user đăng nhập, mới bật sync Firestore + guard onboarding.
+        if(!user){
+          reveal();
+          renderProgressBadges();
+          mountUserBar();
+          if(typeof renderProfilePage === 'function') renderProfilePage();
+          return;
+        } else {
           function runAppShell(){
             reveal();
             renderProgressBadges();
