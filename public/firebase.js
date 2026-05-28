@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════
    FIREBASE.JS — Khởi tạo Firebase (compat SDK, global)
 
-   Dùng trên hầu hết trang ngoài auth/* (load qua <script> thường).
-   Trang auth/* dùng firebase.module.js (ES modules) thay thế.
+   Dùng trên hầu hết trang ngoài thư mục auth (load qua script thường).
+   Trang đăng nhập dùng firebase.module.js (ES modules) thay thế.
 
    Sau khi load, toàn cục `firebase` sẵn sàng cho:
    • firebase.auth()      — đăng nhập, onAuthStateChanged

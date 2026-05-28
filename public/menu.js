@@ -2,7 +2,7 @@
    MENU.JS — Điều hướng, auth guard, tiến độ, hồ sơ
 
    Load trên các trang shell: index, progress, pvp, profile.
-   Không load trên trang bài học (lessons/*/index.html).
+   Không load trên trang bài học (lessons/ten-mon/index.html).
 
    Chức năng chính:
    • goLesson(type)     — chuyển sang lessons/<type>/index.html
