@@ -204,6 +204,28 @@
       });
   }
 
+  /** Quét mọi user cùng classRoom (kể cả doc thiếu field role). */
+  function findStudentUidsByClassRoom(classRoom){
+    var cr = normalizeClassroom(classRoom);
+    if(cr.length < 3) return Promise.resolve([]);
+    return firebase.firestore().collection('users')
+      .where('classRoom', '==', cr)
+      .get()
+      .then(function(snap){
+        var uids = [];
+        snap.forEach(function(doc){
+          var d = doc.data() || {};
+          if(d.role === 'teacher') return;
+          uids.push(doc.id);
+        });
+        return uids;
+      })
+      .catch(function(err){
+        console.warn('[class-sync] findStudentUidsByClassRoom', err);
+        return [];
+      });
+  }
+
   /** Giáo viên: quét users cùng lớp → ghi vào classrooms.studentUids (backfill + đồng bộ). */
   function syncClassroomStudentListFromUsers(classRoom){
     var cr = normalizeClassroom(classRoom);
@@ -214,27 +236,23 @@
       function addUid(uid){
         if(uid && merged.indexOf(uid) === -1) merged.push(uid);
       }
-      return db.collection('users')
-        .where('role', '==', 'parent')
-        .where('classRoom', '==', cr)
-        .get()
-        .then(function(snap){
-          snap.forEach(function(doc){ addUid(doc.id); });
-          if(!merged.length) return [];
-          var patch = {
-            classRoom: cr,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            studentUids: firebase.firestore.FieldValue.arrayUnion.apply(
-              firebase.firestore.FieldValue, merged
-            )
-          };
-          return db.collection('classrooms').doc(cr).set(patch, { merge: true })
-            .then(function(){ return merged; });
-        })
-        .catch(function(err){
-          console.warn('[class-sync] syncClassroomStudentListFromUsers query', err);
-          return merged;
-        });
+      return findStudentUidsByClassRoom(cr).then(function(fromClass){
+        fromClass.forEach(addUid);
+        if(!merged.length) return [];
+        var patch = {
+          classRoom: cr,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          studentUids: firebase.firestore.FieldValue.arrayUnion.apply(
+            firebase.firestore.FieldValue, merged
+          )
+        };
+        return db.collection('classrooms').doc(cr).set(patch, { merge: true })
+          .then(function(){ return merged; })
+          .catch(function(err){
+            console.warn('[class-sync] syncClassroomStudentListFromUsers write', err);
+            return merged;
+          });
+      });
     });
   }
 
@@ -262,10 +280,21 @@
       if(!check.ok) return check;
       if(!uid) return { ok: false, error: 'Cần đăng nhập để lưu mã lớp.' };
       try{
-        return firebase.firestore().collection('users').doc(uid).set({
-          classRoom: check.classRoom,
-          classRoomUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true })
+        return firebase.firestore().collection('users').doc(uid).get()
+          .then(function(userSnap){
+            var prev = userSnap && userSnap.exists ? (userSnap.data() || {}) : {};
+            var patch = {
+              classRoom: check.classRoom,
+              classRoomUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            if(prev.role !== 'teacher'){
+              patch.role = 'parent';
+            }
+            if(!prev.email && firebase.auth().currentUser && firebase.auth().currentUser.email){
+              patch.email = firebase.auth().currentUser.email;
+            }
+            return firebase.firestore().collection('users').doc(uid).set(patch, { merge: true });
+          })
           .then(function(){
             return registerStudentInClassroom(check.classRoom, uid);
           })
@@ -424,6 +453,7 @@
     registerStudentInClassroom: registerStudentInClassroom,
     getClassroomStudentUids: getClassroomStudentUids,
     syncClassroomStudentListFromUsers: syncClassroomStudentListFromUsers,
+    findStudentUidsByClassRoom: findStudentUidsByClassRoom,
     resolveTeacherClassRoom: resolveTeacherClassRoom,
     mountClassRoomBanner: mountClassRoomBanner,
     wireProfileClassRoomEditor: wireProfileClassRoomEditor,

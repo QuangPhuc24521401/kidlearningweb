@@ -21,8 +21,11 @@ service cloud.firestore {
 
     function studentInTeacherClass(userId) {
       return isTeacher()
-        && get(/databases/$(database)/documents/users/$(userId)).data.role == 'parent'
-        && get(/databases/$(database)/documents/users/$(userId)).data.classRoom == teacherClassRoom();
+        && get(/databases/$(database)/documents/users/$(userId)).data.classRoom == teacherClassRoom()
+        && (
+          get(/databases/$(database)/documents/users/$(userId)).data.role == 'parent'
+          || !get(/databases/$(database)/documents/users/$(userId)).data.keys().hasAll(['role'])
+        );
     }
 
     // Hồ sơ user: chỉ chính chủ; giáo viên đọc phụ huynh cùng lớp;
@@ -30,8 +33,11 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       allow read: if isTeacher()
-        && resource.data.role == 'parent'
-        && resource.data.classRoom == teacherClassRoom();
+        && resource.data.classRoom == teacherClassRoom()
+        && (
+          resource.data.role == 'parent'
+          || !resource.data.keys().hasAll(['role'])
+        );
       allow read: if isSignedIn()
         && resource.data.role == 'teacher'
         && resource.data.keys().hasAll(['classRoom'])

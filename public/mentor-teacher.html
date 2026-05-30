@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
-<script src="class-sync.js?v=20260528f"></script>
+<script src="class-sync.js?v=20260528g"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:20px;display:flex;justify-content:center}
@@ -356,7 +356,7 @@ function loadStudentRow(uid, classRoom){
     var progSnap = results[1];
     if(!userSnap || !userSnap.exists) return null;
     var u = userSnap.data() || {};
-    if(u.role && u.role !== 'parent') return null;
+    if(u.role === 'teacher') return null;
     var uClass = String(u.classRoom || '').trim().toUpperCase().replace(/\s+/g, '');
     var cr = String(classRoom || '').trim().toUpperCase().replace(/\s+/g, '');
     if(uClass && cr && uClass !== cr) return null;
@@ -416,15 +416,20 @@ function loadStudentsForClass(classRoom, uids){
   var chain = loadByUids(uidList);
 
   if(!uidList.length){
-    chain = firebase.firestore().collection('users')
-      .where('role', '==', 'parent')
-      .where('classRoom', '==', classRoom)
-      .get()
-      .then(function(snap){
-        var ids = [];
-        snap.forEach(function(doc){ ids.push(doc.id); });
-        return loadByUids(ids);
-      });
+    var findFn = (typeof KidClassSync !== 'undefined' && KidClassSync.findStudentUidsByClassRoom)
+      ? KidClassSync.findStudentUidsByClassRoom(classRoom)
+      : firebase.firestore().collection('users')
+          .where('classRoom', '==', classRoom)
+          .get()
+          .then(function(snap){
+            var ids = [];
+            snap.forEach(function(doc){
+              var d = doc.data() || {};
+              if(d.role !== 'teacher') ids.push(doc.id);
+            });
+            return ids;
+          });
+    chain = findFn.then(function(ids){ return loadByUids(ids); });
   }
 
   return chain.then(function(rows){
