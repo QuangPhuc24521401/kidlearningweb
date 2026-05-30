@@ -149,6 +149,18 @@
     </div>
   </div>
 
+  <div class="profile-class-box" id="profClassBox">
+    <h2 class="profile-class-title">🏫 Mã lớp học</h2>
+    <p class="profile-class-desc">Nhập mã lớp giáo viên cung cấp. Bé sẽ được đồng bộ tiến độ và lịch sử hỏi Cô AI với lớp.</p>
+    <div class="profile-class-row">
+      <input type="text" id="profClassInput" class="profile-class-input" maxlength="32"
+             autocomplete="off" placeholder="VD: LOPA2024" aria-label="Mã lớp">
+      <button type="button" id="profClassSaveBtn" class="profile-class-save">Lưu mã lớp</button>
+    </div>
+    <p id="profClassTeacher" class="profile-class-teacher" hidden></p>
+    <p id="profClassMsg" class="profile-class-msg" hidden></p>
+  </div>
+
   <div class="profile-actions">
     <a href="progress.html" class="profile-btn profile-btn-primary">
       <span class="profile-btn-ico" aria-hidden="true">📊</span>
@@ -168,6 +180,7 @@
 
 <script src="firebase.js"></script>
 <script src="progress-sync.js"></script>
+<script src="class-sync.js"></script>
 <script src="lessons/data/lessons-data.js"></script>
 <script src="achievements.js"></script>
 <script src="arena.js"></script>
@@ -183,7 +196,11 @@
           var data = snap && snap.exists ? snap.data() : null;
           var role = data?.role || 'parent';
           localStorage.setItem('userRole', role);
-          if(data?.classRoom)   localStorage.setItem('classRoom', data.classRoom);
+          if(typeof KidClassSync !== 'undefined' && KidClassSync.applyClassRoomFromUserDoc){
+            KidClassSync.applyClassRoomFromUserDoc(data);
+          } else if(data?.classRoom){
+            localStorage.setItem('classRoom', data.classRoom);
+          }
           if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
           if(role === 'teacher') window.location.replace('mentor-teacher.html');
         })

@@ -25,12 +25,18 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(userId)).data.classRoom == teacherClassRoom();
     }
 
-    // Hồ sơ user: chỉ chính chủ; giáo viên đọc phụ huynh cùng lớp
+    // Hồ sơ user: chỉ chính chủ; giáo viên đọc phụ huynh cùng lớp;
+    // mọi user đăng nhập có thể đọc hồ sơ giáo viên (để xác minh mã lớp).
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       allow read: if isTeacher()
         && resource.data.role == 'parent'
         && resource.data.classRoom == teacherClassRoom();
+      allow read: if isSignedIn()
+        && resource.data.role == 'teacher'
+        && resource.data.keys().hasAll(['classRoom'])
+        && resource.data.classRoom is string
+        && resource.data.classRoom.size() >= 3;
     }
 
     // Tiến độ học + huy hiệu + lịch sử Cô AI (doc id = uid)

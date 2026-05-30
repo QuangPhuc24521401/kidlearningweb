@@ -28,7 +28,12 @@ import {
   getDoc,
   setDoc,
   serverTimestamp,
-  deleteField
+  deleteField,
+  collection,
+  query,
+  where,
+  limit,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const HOME_PARENT_URL  = "../index.html";
@@ -149,6 +154,38 @@ function isValidEmail(email) {
 
 function normalizeClassroom(raw) {
   return String(raw || "").trim().toUpperCase().replace(/\s+/g, "");
+}
+
+/** Kiểm tra mã lớp có giáo viên quản lý trên Firestore không. */
+async function verifyTeacherClassExists(classRoom) {
+  const cr = normalizeClassroom(classRoom);
+  if (!cr || cr.length < 3) {
+    return { ok: false, error: "Mã lớp phải dài ít nhất 3 ký tự (vd: LOPA2024)." };
+  }
+  try {
+    const q = query(
+      collection(db, "users"),
+      where("role", "==", "teacher"),
+      where("classRoom", "==", cr),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      return {
+        ok: false,
+        error: `Không tìm thấy lớp "${cr}". Hãy kiểm tra lại mã với giáo viên.`
+      };
+    }
+    const teacher = snap.docs[0].data() || {};
+    return {
+      ok: true,
+      classRoom: cr,
+      teacherName: (teacher.displayName && String(teacher.displayName).trim()) || "Giáo viên"
+    };
+  } catch (e) {
+    console.warn("[auth] verifyTeacherClassExists", e);
+    return { ok: false, error: "Không kiểm tra được mã lớp. Thử lại sau." };
+  }
 }
 
 /* ───────────────────────── Role helpers ───────────────────────── */
@@ -352,6 +389,10 @@ async function finalizeStudentOnboarding() {
     }
   }
 
+  const classCheck = await verifyTeacherClassExists(classRoom);
+  if (!classCheck.ok) return showNotice("error", classCheck.error);
+  classRoom = classCheck.classRoom;
+
   const ringBt = document.querySelector("#studentRingPicker button.is-selected");
   let ring = ringBt?.dataset?.ring || "#FF9800";
   if (!isSafeRingHex(ring)) ring = "#FF9800";
@@ -540,6 +581,9 @@ async function handleParentRegister(e) {
   if (password.length < 6)  return showNotice("error", "Mật khẩu phải có ít nhất 6 ký tự.");
   if (password !== confirm) return showNotice("error", "Xác nhận mật khẩu không khớp.");
 
+  const classCheck = await verifyTeacherClassExists(classRoom);
+  if (!classCheck.ok) return showNotice("error", classCheck.error);
+
   setLoading("parentRegisterBtn", true, "Đang tạo tài khoản...");
   await applyPersistence();
   try {
@@ -548,7 +592,7 @@ async function handleParentRegister(e) {
     await writeUserMeta(cred.user.uid, {
       role: "parent",
       email,
-      classRoom,
+      classRoom: classCheck.classRoom,
       childName: childName || "",
       displayName: "",
       studentProfileComplete: false

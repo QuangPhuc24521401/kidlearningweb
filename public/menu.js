@@ -15,7 +15,7 @@
    • resetProgress()    — xoá tiến độ local + Firestore (có confirm)
    • fetchProgressFromCloud(uid) — gọi KidProgressSync.pullFromCloud
 
-   Phụ thuộc: firebase.js, progress-sync.js, achievements.js, shared.js
+   Phụ thuộc: firebase.js, progress-sync.js, class-sync.js, achievements.js, shared.js
 ═══════════════════════════════════════════════════ */
 
 /** Mở trang danh sách chủ đề của một môn học. type = nhan_biet | tu_duy | … */
@@ -60,6 +60,9 @@ function handleLogout(){
     reveal();
     renderProgressBadges();
     mountUserBar();
+    if(typeof KidClassSync !== 'undefined' && KidClassSync.mountClassRoomBanner){
+      KidClassSync.mountClassRoomBanner();
+    }
     if(typeof renderProfilePage === 'function') renderProfilePage();
   }
 
@@ -75,6 +78,12 @@ function handleLogout(){
       .then(function(snap){
         var data = snap && snap.exists ? snap.data() : null;
         var role = (data && data.role) ? data.role : 'parent';
+        if(typeof KidClassSync !== 'undefined' && KidClassSync.applyClassRoomFromUserDoc){
+          KidClassSync.applyClassRoomFromUserDoc(data);
+          if(typeof KidClassSync.mountClassRoomBanner === 'function'){
+            KidClassSync.mountClassRoomBanner();
+          }
+        }
         if(role === 'parent' && data && data.studentProfileComplete === false){
           window.location.href = 'auth/student-setup.html';
         }
@@ -88,6 +97,9 @@ function handleLogout(){
         paintShellUI();
         if(user){
           maybeGuardParentOnboarding(user);
+          if(typeof KidClassSync !== 'undefined' && KidClassSync.initClassRoomForUser){
+            KidClassSync.initClassRoomForUser(user.uid);
+          }
           fetchProgressFromCloud(user.uid);
         }
       });
@@ -282,9 +294,16 @@ function fetchProgressFromCloud(uid){
       applyStudentAvatarFromUserDoc(result.userData);
       try{
         if(result.userData.displayName) localStorage.setItem('userDisplayName', result.userData.displayName);
-        if(result.userData.classRoom)   localStorage.setItem('classRoom', result.userData.classRoom);
+        if(typeof KidClassSync !== 'undefined' && KidClassSync.applyClassRoomFromUserDoc){
+          KidClassSync.applyClassRoomFromUserDoc(result.userData);
+        } else if(result.userData.classRoom){
+          localStorage.setItem('classRoom', result.userData.classRoom);
+        }
       }catch(err){}
       mountUserBar();
+      if(typeof KidClassSync !== 'undefined' && KidClassSync.mountClassRoomBanner){
+        KidClassSync.mountClassRoomBanner();
+      }
       if(typeof renderProfilePage === 'function') renderProfilePage();
     }
     if(result.achievements && typeof mergeAchievementsFromCloud === 'function'){
@@ -497,8 +516,46 @@ function renderProfilePage(){
   if(info.isTeacher && info.classRoom){
     setHtml('profClass', _escapeHtml(info.classRoom));
     show('profClassRow', true);
+    show('profClassBox', false);
+  } else if(!info.isTeacher){
+    show('profClassBox', true);
+    var cr = info.classRoom;
+    if(typeof KidClassSync !== 'undefined' && KidClassSync.getLocalClassRoom){
+      cr = KidClassSync.getLocalClassRoom() || cr;
+    }
+    if(cr){
+      setHtml('profClass', _escapeHtml(cr));
+      show('profClassRow', true);
+    } else {
+      show('profClassRow', false);
+    }
+    var classInput = document.getElementById('profClassInput');
+    if(classInput && classInput.dataset.userEditing !== '1'){
+      classInput.value = cr || '';
+    }
+    if(typeof KidClassSync !== 'undefined'){
+      if(typeof KidClassSync.wireProfileClassRoomEditor === 'function'){
+        KidClassSync.wireProfileClassRoomEditor();
+      }
+      if(cr && typeof KidClassSync.verifyTeacherClassExists === 'function'){
+        KidClassSync.verifyTeacherClassExists(cr).then(function(r){
+          var teacherEl = document.getElementById('profClassTeacher');
+          if(!teacherEl) return;
+          if(r.ok){
+            teacherEl.hidden = false;
+            teacherEl.textContent = '✓ Lớp ' + r.classRoom + ' — Giáo viên: ' + r.teacherName;
+            teacherEl.className = 'profile-class-teacher profile-class-teacher--ok';
+          } else {
+            teacherEl.hidden = false;
+            teacherEl.textContent = r.error || 'Mã lớp chưa được xác minh';
+            teacherEl.className = 'profile-class-teacher profile-class-teacher--err';
+          }
+        });
+      }
+    }
   } else {
     show('profClassRow', false);
+    show('profClassBox', false);
   }
 
   // UID hiển thị (rút gọn 6 ký tự đầu… 4 ký tự cuối)

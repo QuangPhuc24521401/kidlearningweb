@@ -55,12 +55,18 @@
     index: function(){
       if(typeof window.renderProgressBadges === 'function') window.renderProgressBadges();
       if(typeof window.mountUserBar === 'function') window.mountUserBar();
+      if(typeof window.KidClassSync !== 'undefined' && KidClassSync.mountClassRoomBanner){
+        KidClassSync.mountClassRoomBanner();
+      }
       if(typeof window.renderAchievementsPanel === 'function') window.renderAchievementsPanel();
     },
     progress: function(){
       if(typeof window.renderProgressBadges  === 'function') window.renderProgressBadges();
       if(typeof window.renderAchievementsPanel === 'function') window.renderAchievementsPanel();
       if(typeof window.mountUserBar          === 'function') window.mountUserBar();
+      if(typeof window.KidClassSync !== 'undefined' && KidClassSync.mountClassRoomBanner){
+        KidClassSync.mountClassRoomBanner();
+      }
     },
     pvp: function(){
       if(typeof window.mountUserBar === 'function') window.mountUserBar();
