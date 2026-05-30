@@ -33,7 +33,8 @@ import {
   query,
   where,
   limit,
-  getDocs
+  getDocs,
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const HOME_PARENT_URL  = "../index.html";
@@ -214,6 +215,20 @@ async function registerClassroomToRegistry(uid, classRoom, teacherName) {
     }, { merge: true });
   } catch (e) {
     console.warn("[auth] registerClassroomToRegistry", e);
+  }
+}
+
+/** Phụ huynh vào lớp → thêm uid vào classrooms.studentUids */
+async function registerStudentInClassroomRegistry(classRoom, studentUid) {
+  const cr = normalizeClassroom(classRoom);
+  if (!cr || cr.length < 3 || !studentUid) return;
+  try {
+    await setDoc(doc(db, "classrooms", cr), {
+      studentUids: arrayUnion(studentUid),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.warn("[auth] registerStudentInClassroomRegistry", e);
   }
 }
 
@@ -464,6 +479,7 @@ async function finalizeStudentOnboarding() {
       studentAvatarPhoto: mode === "photo" ? photoDataUrl : deleteField(),
       studentProfileComplete: true
     });
+    await registerStudentInClassroomRegistry(classRoom, user.uid);
 
     const meta = await fetchUserMeta(user.uid);
     routeAfterVerifiedFirestoreSession(meta || { role: "parent", studentProfileComplete: true });
@@ -626,6 +642,7 @@ async function handleParentRegister(e) {
       displayName: "",
       studentProfileComplete: false
     });
+    await registerStudentInClassroomRegistry(classCheck.classRoom, cred.user.uid);
 
     await storeBrowserCredential(email, password);
 

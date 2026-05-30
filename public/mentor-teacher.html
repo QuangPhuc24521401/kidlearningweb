@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
-<script src="class-sync.js?v=20260528e"></script>
+<script src="class-sync.js?v=20260528f"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:20px;display:flex;justify-content:center}
@@ -268,6 +268,7 @@ function refreshClassData(){
       if(typeof firebase === 'undefined' || !firebase.firestore || !firebase.auth){
         classData.error = 'Firebase chưa sẵn sàng';
         classData.loading = false;
+        loadAll();
         resolve();
         return;
       }
@@ -275,142 +276,187 @@ function refreshClassData(){
       if(!user){
         classData.error = 'Cần đăng nhập';
         classData.loading = false;
+        loadAll();
         resolve();
         return;
       }
 
-      var classRoom = localStorage.getItem('classRoom') || '';
-      if(!classRoom){
-        firebase.firestore().collection('users').doc(user.uid).get()
-          .then(function(snap){
-            var data = snap && snap.exists ? snap.data() : null;
-            if(data && data.classRoom){
-              classRoom = data.classRoom;
-              localStorage.setItem('classRoom', classRoom);
-            }
-          })
-          .finally(function(){ doFetch(classRoom, resolve); });
-        return;
-      }
-      doFetch(classRoom, resolve);
-    }catch(e){
-      classData.error = e.message || 'Lỗi tải dữ liệu';
-      classData.loading = false;
-      resolve();
-    }
-  });
+      var resolveCr = (typeof KidClassSync !== 'undefined' && KidClassSync.resolveTeacherClassRoom)
+        ? KidClassSync.resolveTeacherClassRoom(user.uid)
+        : Promise.resolve(String(localStorage.getItem('classRoom') || '').trim().toUpperCase());
 
-  function doFetch(classRoom, resolve){
-    classData.classRoom = classRoom || '';
-    setTeacherInfo('Lớp: ' + (classRoom || '—'));
-
-    if(!classRoom){
-      classData.students = [];
-      classData.history = [];
-      classData.error = 'Chưa có mã lớp trên tài khoản giáo viên';
-      classData.loading = false;
-      loadAll();
-      resolve();
-      return;
-    }
-
-    firebase.firestore().collection('users')
-      .where('role', '==', 'parent')
-      .where('classRoom', '==', classRoom)
-      .get()
-      .then(function(usersSnap){
-        if(!usersSnap.size){
-          classData.students = [];
-          classData.history = [];
-          classData.loading = false;
-          loadAll();
-          if(document.getElementById('panel1').classList.contains('active')) renderProgress();
-          if(document.getElementById('panel2').classList.contains('active')) loadHistory();
-          resolve();
-          return;
-        }
-
-        var jobs = [];
-        usersSnap.forEach(function(doc){
-          jobs.push(
-            firebase.firestore().collection('learning_progress').doc(doc.id).get()
-              .then(function(progSnap){
-                var u = doc.data() || {};
-                var progDoc = progSnap && progSnap.exists ? (progSnap.data() || {}) : {};
-                var progress = progDoc.progress || {};
-                var mentorHistory = Array.isArray(progDoc.mentorHistory) ? progDoc.mentorHistory : [];
-                var name = studentDisplayName(u);
-                var stats = computeStudentStats(progress);
-                var avatar = (u.studentAvatarEmoji && String(u.studentAvatarEmoji).trim()) || '🧒';
-                var ring = (u.studentAvatarRing && /^#[0-9A-Fa-f]{6}$/.test(u.studentAvatarRing))
-                  ? u.studentAvatarRing : '#f0e8ff';
-                var historyItems = mentorHistory.map(function(h){
-                  return {
-                    time: h.time || '',
-                    q: h.q || '',
-                    a: h.a || '',
-                    student: h.student || name,
-                    uid: doc.id,
-                    classRoom: h.classRoom || classRoom
-                  };
-                });
-                return {
-                  uid: doc.id,
-                  name: name,
-                  avatar: avatar,
-                  ring: ring,
-                  profileComplete: u.studentProfileComplete !== false,
-                  mentorCount: mentorHistory.length,
-                  historyItems: historyItems,
-                  stats: stats
-                };
-              })
-          );
+      resolveCr.then(function(classRoom){
+        return ensureTeacherRegistry(user.uid).then(function(){
+          return syncTeacherStudentList(classRoom);
+        }).then(function(uids){
+          return loadStudentsForClass(classRoom, uids);
         });
-
-        return Promise.all(jobs).then(function(rows){
-          classData.students = rows.map(function(row){
-            return {
-              uid: row.uid,
-              name: row.name,
-              avatar: row.avatar,
-              ring: row.ring,
-              profileComplete: row.profileComplete,
-              mentorCount: row.mentorCount,
-              nb: row.stats.nb,
-              nbTotal: row.stats.nbTotal,
-              td: row.stats.td,
-              tdTotal: row.stats.tdTotal,
-              stars: row.stats.stars,
-              sessions: row.stats.sessions,
-              hasActivity: row.stats.hasActivity,
-              lastActive: row.stats.lastActive
-            };
-          }).sort(function(a, b){ return a.name.localeCompare(b.name, 'vi'); });
-
-          classData.history = [];
-          rows.forEach(function(row){
-            (row.historyItems || []).forEach(function(h){ classData.history.push(h); });
-          });
-          classData.history.sort(function(a, b){
-            return new Date(b.time || 0) - new Date(a.time || 0);
-          });
-
-          classData.loading = false;
-          loadAll();
-          if(document.getElementById('panel1').classList.contains('active')) renderProgress();
-          if(document.getElementById('panel2').classList.contains('active')) loadHistory();
-          resolve();
-        });
-      })
-      .catch(function(err){
-        console.warn('[mentor-teacher] fetch', err);
-        classData.error = err.message || 'Không tải được dữ liệu lớp';
+      }).then(function(result){
+        classData.classRoom = result.classRoom || '';
+        classData.students = result.students || [];
+        classData.history = result.history || [];
+        classData.error = result.error || '';
+        classData.loading = false;
+        setTeacherInfo('Lớp: ' + (classData.classRoom || '—'));
+        loadAll();
+        if(document.getElementById('panel1').classList.contains('active')) renderProgress();
+        if(document.getElementById('panel2').classList.contains('active')) loadHistory();
+        resolve();
+      }).catch(function(err){
+        console.warn('[mentor-teacher] refresh', err);
+        classData.error = formatTeacherFetchError(err);
         classData.loading = false;
         loadAll();
         resolve();
       });
+    }catch(e){
+      classData.error = e.message || 'Lỗi tải dữ liệu';
+      classData.loading = false;
+      loadAll();
+      resolve();
+    }
+  });
+}
+
+function formatTeacherFetchError(err){
+  var code = err && err.code ? String(err.code) : '';
+  if(code === 'permission-denied'){
+    return 'Firebase từ chối quyền đọc lớp. Publish file firestore.rules mới trên Firebase Console.';
   }
+  if(code === 'failed-precondition'){
+    return 'Firestore đang tạo index — bấm 🔄 sau 1–2 phút.';
+  }
+  return (err && err.message) || 'Không tải được dữ liệu lớp';
+}
+
+function ensureTeacherRegistry(teacherUid){
+  if(typeof KidClassSync !== 'undefined' && KidClassSync.ensureClassroomRegistry){
+    return KidClassSync.ensureClassroomRegistry(teacherUid);
+  }
+  return Promise.resolve(false);
+}
+
+function syncTeacherStudentList(classRoom){
+  if(!classRoom){
+    return Promise.resolve([]);
+  }
+  if(typeof KidClassSync !== 'undefined' && KidClassSync.syncClassroomStudentListFromUsers){
+    return KidClassSync.syncClassroomStudentListFromUsers(classRoom);
+  }
+  return Promise.resolve([]);
+}
+
+function loadStudentRow(uid, classRoom){
+  var db = firebase.firestore();
+  return Promise.all([
+    db.collection('users').doc(uid).get(),
+    db.collection('learning_progress').doc(uid).get()
+  ]).then(function(results){
+    var userSnap = results[0];
+    var progSnap = results[1];
+    if(!userSnap || !userSnap.exists) return null;
+    var u = userSnap.data() || {};
+    if(u.role && u.role !== 'parent') return null;
+    var uClass = String(u.classRoom || '').trim().toUpperCase().replace(/\s+/g, '');
+    var cr = String(classRoom || '').trim().toUpperCase().replace(/\s+/g, '');
+    if(uClass && cr && uClass !== cr) return null;
+
+    var progDoc = progSnap && progSnap.exists ? (progSnap.data() || {}) : {};
+    var progress = progDoc.progress || {};
+    var mentorHistory = Array.isArray(progDoc.mentorHistory) ? progDoc.mentorHistory : [];
+    var name = studentDisplayName(u);
+    var stats = computeStudentStats(progress);
+    var avatar = (u.studentAvatarEmoji && String(u.studentAvatarEmoji).trim()) || '🧒';
+    var ring = (u.studentAvatarRing && /^#[0-9A-Fa-f]{6}$/.test(u.studentAvatarRing))
+      ? u.studentAvatarRing : '#f0e8ff';
+    var historyItems = mentorHistory.map(function(h){
+      return {
+        time: h.time || '',
+        q: h.q || '',
+        a: h.a || '',
+        student: h.student || name,
+        uid: uid,
+        classRoom: h.classRoom || cr
+      };
+    });
+    return {
+      uid: uid,
+      name: name,
+      avatar: avatar,
+      ring: ring,
+      profileComplete: u.studentProfileComplete !== false,
+      mentorCount: mentorHistory.length,
+      historyItems: historyItems,
+      stats: stats
+    };
+  }).catch(function(err){
+    console.warn('[mentor-teacher] loadStudentRow', uid, err);
+    return null;
+  });
+}
+
+function loadStudentsForClass(classRoom, uids){
+  classRoom = String(classRoom || '').trim().toUpperCase().replace(/\s+/g, '');
+  if(!classRoom){
+    return Promise.resolve({ classRoom: '', students: [], history: [], error: 'Chưa có mã lớp trên tài khoản giáo viên' });
+  }
+
+  var uidList = Array.isArray(uids) ? uids.slice() : [];
+  var loadByUids = function(list){
+    if(!list.length){
+      return Promise.resolve([]);
+    }
+    return Promise.all(list.map(function(uid){
+      return loadStudentRow(uid, classRoom);
+    })).then(function(rows){
+      return rows.filter(Boolean);
+    });
+  };
+
+  var chain = loadByUids(uidList);
+
+  if(!uidList.length){
+    chain = firebase.firestore().collection('users')
+      .where('role', '==', 'parent')
+      .where('classRoom', '==', classRoom)
+      .get()
+      .then(function(snap){
+        var ids = [];
+        snap.forEach(function(doc){ ids.push(doc.id); });
+        return loadByUids(ids);
+      });
+  }
+
+  return chain.then(function(rows){
+    var students = rows.map(function(row){
+      return {
+        uid: row.uid,
+        name: row.name,
+        avatar: row.avatar,
+        ring: row.ring,
+        profileComplete: row.profileComplete,
+        mentorCount: row.mentorCount,
+        nb: row.stats.nb,
+        nbTotal: row.stats.nbTotal,
+        td: row.stats.td,
+        tdTotal: row.stats.tdTotal,
+        stars: row.stats.stars,
+        sessions: row.stats.sessions,
+        hasActivity: row.stats.hasActivity,
+        lastActive: row.stats.lastActive
+      };
+    }).sort(function(a, b){ return a.name.localeCompare(b.name, 'vi'); });
+
+    var history = [];
+    rows.forEach(function(row){
+      (row.historyItems || []).forEach(function(h){ history.push(h); });
+    });
+    history.sort(function(a, b){
+      return new Date(b.time || 0) - new Date(a.time || 0);
+    });
+
+    return { classRoom: classRoom, students: students, history: history, error: '' };
+  });
 }
 
 function switchTab(idx){
@@ -450,7 +496,7 @@ function loadAll(){
     return;
   }
   if(!students.length){
-    sl.innerHTML = '<div class="empty">Chưa có học sinh đăng ký lớp <strong>' + escapeHtml(classData.classRoom) + '</strong>.<br>Phụ huynh cần nhập đúng mã lớp khi đăng ký.</div>';
+    sl.innerHTML = '<div class="empty">Chưa có học sinh trong lớp <strong>' + escapeHtml(classData.classRoom) + '</strong>.<br>Phụ huynh lưu mã lớp ở trang Hồ sơ, rồi bấm 🔄 cập nhật.</div>';
     return;
   }
 
@@ -598,10 +644,13 @@ function startTeacherDashboard(){
       window.location.replace('auth/login.html');
       return;
     }
+    var boot = Promise.resolve();
     if(typeof KidClassSync !== 'undefined' && KidClassSync.ensureClassroomRegistry){
-      KidClassSync.ensureClassroomRegistry(user.uid);
+      boot = KidClassSync.ensureClassroomRegistry(user.uid);
     }
-    refreshClassData();
+    boot.finally(function(){
+      refreshClassData();
+    });
   });
 }
 

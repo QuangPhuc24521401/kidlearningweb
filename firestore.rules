@@ -45,6 +45,14 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.teacherUid
         && code == request.resource.data.classRoom
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+      allow update: if isSignedIn()
+        && request.auth.uid == resource.data.teacherUid
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+      allow update: if isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.classRoom == code
+        && request.resource.data.classRoom == resource.data.classRoom
+        && request.resource.data.teacherUid == resource.data.teacherUid;
     }
 
     // Tiến độ học + huy hiệu + lịch sử Cô AI (doc id = uid)

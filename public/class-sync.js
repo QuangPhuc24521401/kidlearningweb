@@ -169,6 +169,94 @@
     });
   }
 
+  function registerStudentInClassroom(classRoom, studentUid){
+    var cr = normalizeClassroom(classRoom);
+    if(!cr || cr.length < 3 || !studentUid) return Promise.resolve();
+    try{
+      return firebase.firestore().collection('classrooms').doc(cr).set({
+        studentUids: firebase.firestore.FieldValue.arrayUnion(studentUid),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(function(err){
+        console.warn('[class-sync] registerStudentInClassroom', err);
+      });
+    }catch(e){
+      return Promise.resolve();
+    }
+  }
+
+  function getClassroomStudentUids(classRoom){
+    var cr = normalizeClassroom(classRoom);
+    if(cr.length < 3) return Promise.resolve([]);
+    return firebase.firestore().collection('classrooms').doc(cr).get()
+      .then(function(snap){
+        var d = snap && snap.exists ? (snap.data() || {}) : {};
+        var list = Array.isArray(d.studentUids) ? d.studentUids : [];
+        var seen = {};
+        return list.filter(function(uid){
+          if(!uid || seen[uid]) return false;
+          seen[uid] = true;
+          return true;
+        });
+      })
+      .catch(function(err){
+        console.warn('[class-sync] getClassroomStudentUids', err);
+        return [];
+      });
+  }
+
+  /** Giáo viên: quét users cùng lớp → ghi vào classrooms.studentUids (backfill + đồng bộ). */
+  function syncClassroomStudentListFromUsers(classRoom){
+    var cr = normalizeClassroom(classRoom);
+    if(cr.length < 3) return Promise.resolve([]);
+    var db = firebase.firestore();
+    return getClassroomStudentUids(cr).then(function(existing){
+      var merged = existing.slice();
+      function addUid(uid){
+        if(uid && merged.indexOf(uid) === -1) merged.push(uid);
+      }
+      return db.collection('users')
+        .where('role', '==', 'parent')
+        .where('classRoom', '==', cr)
+        .get()
+        .then(function(snap){
+          snap.forEach(function(doc){ addUid(doc.id); });
+          if(!merged.length) return [];
+          var patch = {
+            classRoom: cr,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            studentUids: firebase.firestore.FieldValue.arrayUnion.apply(
+              firebase.firestore.FieldValue, merged
+            )
+          };
+          return db.collection('classrooms').doc(cr).set(patch, { merge: true })
+            .then(function(){ return merged; });
+        })
+        .catch(function(err){
+          console.warn('[class-sync] syncClassroomStudentListFromUsers query', err);
+          return merged;
+        });
+    });
+  }
+
+  function resolveTeacherClassRoom(teacherUid){
+    return new Promise(function(resolve){
+      if(!teacherUid || typeof firebase === 'undefined' || !firebase.firestore){
+        resolve(normalizeClassroom(localStorage.getItem('classRoom') || ''));
+        return;
+      }
+      firebase.firestore().collection('users').doc(teacherUid).get()
+        .then(function(snap){
+          var data = snap && snap.exists ? (snap.data() || {}) : {};
+          var cr = normalizeClassroom(data.classRoom || localStorage.getItem('classRoom') || '');
+          if(cr.length >= 3) setLocalClassRoom(cr);
+          resolve(cr);
+        })
+        .catch(function(){
+          resolve(normalizeClassroom(localStorage.getItem('classRoom') || ''));
+        });
+    });
+  }
+
   function saveStudentClassRoom(uid, classRoom){
     return verifyTeacherClassExists(classRoom).then(function(check){
       if(!check.ok) return check;
@@ -178,6 +266,9 @@
           classRoom: check.classRoom,
           classRoomUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true })
+          .then(function(){
+            return registerStudentInClassroom(check.classRoom, uid);
+          })
           .then(function(){
             setLocalClassRoom(check.classRoom);
             mountClassRoomBanner();
@@ -330,6 +421,10 @@
     verifyTeacherClassExists: verifyTeacherClassExists,
     saveStudentClassRoom: saveStudentClassRoom,
     ensureClassroomRegistry: ensureClassroomRegistry,
+    registerStudentInClassroom: registerStudentInClassroom,
+    getClassroomStudentUids: getClassroomStudentUids,
+    syncClassroomStudentListFromUsers: syncClassroomStudentListFromUsers,
+    resolveTeacherClassRoom: resolveTeacherClassRoom,
     mountClassRoomBanner: mountClassRoomBanner,
     wireProfileClassRoomEditor: wireProfileClassRoomEditor,
     refreshProfileClassHint: refreshProfileClassHint,
