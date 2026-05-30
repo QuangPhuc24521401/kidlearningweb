@@ -513,8 +513,15 @@ function renderProfilePage(){
   set('profJoin',   _formatJoinDate(info.createdAt));
   set('profAge',    info.createdAt ? '(' + _formatAccountAge(info.createdAt) + ')' : '');
 
+  var nameInput = document.getElementById('profNameInput');
+  if(nameInput && nameInput.dataset.userEditing !== '1'){
+    var savedName = (localStorage.getItem('userDisplayName') || '').trim();
+    nameInput.value = savedName || (info.name === 'Bé học sinh' ? '' : info.name);
+  }
+  show('profNameSection', !info.isTeacher);
+
   if(info.isTeacher && info.classRoom){
-    setHtml('profClass', _escapeHtml(info.classRoom));
+    set('profClass', info.classRoom);
     show('profClassRow', true);
     show('profClassBox', false);
   } else if(!info.isTeacher){
@@ -524,7 +531,7 @@ function renderProfilePage(){
       cr = KidClassSync.getLocalClassRoom() || cr;
     }
     if(cr){
-      setHtml('profClass', _escapeHtml(cr));
+      set('profClass', cr);
       show('profClassRow', true);
     } else {
       show('profClassRow', false);
@@ -574,7 +581,7 @@ function renderProfilePage(){
   // Học sinh: giữ tất cả.
   var grid = document.getElementById('profStatsGrid');
   if(grid){
-    grid.querySelectorAll('.profile-stat-card').forEach(function(c){ c.style.display = ''; });
+    grid.querySelectorAll('.profile-stat-item').forEach(function(c){ c.style.display = ''; });
     if(info.isTeacher){
       var hideClasses = ['.profile-stat-stars','.profile-stat-badges','.profile-stat-streak','.profile-stat-honor'];
       hideClasses.forEach(function(sel){
@@ -582,7 +589,6 @@ function renderProfilePage(){
         if(el) el.style.display = 'none';
       });
     } else if((info.honor || 0) === 0){
-      // Ẩn ô vinh dự khi chưa đạt
       var el = grid.querySelector('.profile-stat-honor');
       if(el) el.style.display = 'none';
     }
@@ -599,6 +605,50 @@ function renderProfilePage(){
   _wireProfileActions(card);
 }
 
+function saveStudentDisplayName(rawName){
+  return new Promise(function(resolve){
+    var name = String(rawName || '').trim().replace(/\s+/g, ' ');
+    if(name.length < 2){
+      resolve({ ok: false, error: 'Tên cần ít nhất 2 ký tự.' });
+      return;
+    }
+    if(name.length > 32){
+      resolve({ ok: false, error: 'Tên tối đa 32 ký tự.' });
+      return;
+    }
+    if(typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore){
+      resolve({ ok: false, error: 'Firebase chưa sẵn sàng.' });
+      return;
+    }
+    var user = firebase.auth().currentUser;
+    if(!user){
+      resolve({ ok: false, error: 'Cần đăng nhập để lưu tên.' });
+      return;
+    }
+    var patch = {
+      displayName: name,
+      nickname: name,
+      childName: name,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    var authUpdate = user.updateProfile ? user.updateProfile({ displayName: name }) : Promise.resolve();
+    authUpdate
+      .then(function(){
+        return firebase.firestore().collection('users').doc(user.uid).set(patch, { merge: true });
+      })
+      .then(function(){
+        try{ localStorage.setItem('userDisplayName', name); }catch(e){}
+        if(typeof mountUserBar === 'function') mountUserBar();
+        if(typeof renderProfilePage === 'function') renderProfilePage();
+        resolve({ ok: true, message: 'Đã lưu tên: ' + name });
+      })
+      .catch(function(err){
+        console.warn('[profile] saveStudentDisplayName', err);
+        resolve({ ok: false, error: (err && err.message) || 'Không lưu được tên.' });
+      });
+  });
+}
+
 function _wireProfileActions(card){
   if(card.getAttribute('data-wired') === '1') return;
   card.setAttribute('data-wired', '1');
@@ -610,6 +660,40 @@ function _wireProfileActions(card){
   if(bL) bL.addEventListener('click', function(){
     if(typeof handleLogout === 'function') handleLogout();
   });
+
+  var nameInput = document.getElementById('profNameInput');
+  if(nameInput && !nameInput.dataset.focusWired){
+    nameInput.dataset.focusWired = '1';
+    nameInput.addEventListener('focus', function(){ nameInput.dataset.userEditing = '1'; });
+    nameInput.addEventListener('blur', function(){
+      setTimeout(function(){ nameInput.dataset.userEditing = '0'; }, 120);
+    });
+    nameInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && nameBtn) nameBtn.click();
+    });
+  }
+  var nameBtn = document.getElementById('profNameSaveBtn');
+  if(nameBtn && !nameBtn.dataset.wired){
+    nameBtn.dataset.wired = '1';
+    nameBtn.addEventListener('click', function(){
+      var input = document.getElementById('profNameInput');
+      var msg = document.getElementById('profNameMsg');
+      var val = input ? input.value : '';
+      nameBtn.disabled = true;
+      var orig = nameBtn.textContent;
+      nameBtn.textContent = 'Đang lưu…';
+      saveStudentDisplayName(val).then(function(r){
+        nameBtn.disabled = false;
+        nameBtn.textContent = orig;
+        if(msg){
+          msg.hidden = false;
+          msg.className = 'profile-field-msg profile-field-msg--' + (r.ok ? 'ok' : 'err');
+          msg.textContent = r.ok ? (r.message || 'Đã lưu tên.') : (r.error || 'Không lưu được.');
+        }
+        if(r.ok && input) input.value = val.trim().replace(/\s+/g, ' ');
+      });
+    });
+  }
 }
 
 /* Mount profile khi page load trực tiếp /profile.html (không qua SPA navigation). */

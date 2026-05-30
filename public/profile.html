@@ -99,66 +99,81 @@
 
 <main id="page-root" data-page="profile">
 <div class="card menu-card profile-page-card">
-  <div class="profile-hero">
+  <header class="profile-head">
     <div class="profile-avatar-big" id="profAvatar">🧒</div>
-    <div class="profile-hero-text">
-      <h1 class="profile-name" id="profName">Bé học sinh</h1>
-      <p class="profile-email" id="profEmail"></p>
-      <span class="profile-role-pill" id="profRole">Tài khoản phụ huynh</span>
-    </div>
-  </div>
+    <h1 class="profile-name" id="profName">Bé học sinh</h1>
+    <p class="profile-email" id="profEmail"></p>
+    <span class="profile-role-pill" id="profRole">Tài khoản phụ huynh</span>
+  </header>
 
-  <div class="profile-stats" id="profStatsGrid">
-    <div class="profile-stat-card profile-stat-stars">
-      <div class="profile-stat-icon" aria-hidden="true">🌟</div>
-      <div class="profile-stat-value" id="profStars">0</div>
-      <div class="profile-stat-label">Sao tích lũy</div>
-    </div>
-    <div class="profile-stat-card profile-stat-badges">
-      <div class="profile-stat-icon" aria-hidden="true">🏅</div>
-      <div class="profile-stat-value" id="profBadges">0/0</div>
-      <div class="profile-stat-label">Huy hiệu đã mở</div>
-    </div>
-    <div class="profile-stat-card profile-stat-streak">
-      <div class="profile-stat-icon" aria-hidden="true">🔥</div>
-      <div class="profile-stat-value" id="profStreak">0</div>
-      <div class="profile-stat-label">Chuỗi ngày học</div>
-    </div>
-    <div class="profile-stat-card profile-stat-honor">
-      <div class="profile-stat-icon" aria-hidden="true">🛡️</div>
-      <div class="profile-stat-value" id="profHonor">0</div>
-      <div class="profile-stat-label">Vinh dự đấu trường</div>
-    </div>
-  </div>
+  <ul class="profile-stat-list" id="profStatsGrid" aria-label="Thống kê học tập">
+    <li class="profile-stat-item profile-stat-stars">
+      <span class="profile-stat-icon" aria-hidden="true">🌟</span>
+      <span class="profile-stat-body">
+        <span class="profile-stat-label">Sao tích lũy</span>
+        <strong class="profile-stat-value" id="profStars">0</strong>
+      </span>
+    </li>
+    <li class="profile-stat-item profile-stat-badges">
+      <span class="profile-stat-icon" aria-hidden="true">🏅</span>
+      <span class="profile-stat-body">
+        <span class="profile-stat-label">Huy hiệu đã mở</span>
+        <strong class="profile-stat-value" id="profBadges">0/0</strong>
+      </span>
+    </li>
+    <li class="profile-stat-item profile-stat-streak">
+      <span class="profile-stat-icon" aria-hidden="true">🔥</span>
+      <span class="profile-stat-body">
+        <span class="profile-stat-label">Chuỗi ngày học</span>
+        <strong class="profile-stat-value" id="profStreak">0</strong>
+      </span>
+    </li>
+    <li class="profile-stat-item profile-stat-honor">
+      <span class="profile-stat-icon" aria-hidden="true">🛡️</span>
+      <span class="profile-stat-body">
+        <span class="profile-stat-label">Vinh dự đấu trường</span>
+        <strong class="profile-stat-value" id="profHonor">0</strong>
+      </span>
+    </li>
+  </ul>
 
-  <div class="profile-meta">
-    <div class="profile-meta-row">
-      <span class="profile-meta-icon" aria-hidden="true">📅</span>
-      <span class="profile-meta-label">Ngày tham gia:</span>
-      <span class="profile-meta-value"><strong id="profJoin">—</strong> <span class="profile-meta-sub" id="profAge"></span></span>
-    </div>
-    <div class="profile-meta-row" id="profClassRow" hidden>
-      <span class="profile-meta-icon" aria-hidden="true">🏫</span>
-      <span class="profile-meta-label">Mã lớp:</span>
-      <span class="profile-meta-value"><strong id="profClass">—</strong></span>
-    </div>
-    <div class="profile-meta-row" id="profUidRow" hidden>
-      <span class="profile-meta-icon" aria-hidden="true">🆔</span>
-      <span class="profile-meta-label">Mã tài khoản:</span>
-      <span class="profile-meta-value"><code id="profUid">—</code></span>
-    </div>
-  </div>
+  <div class="profile-sections">
+    <section class="profile-section" id="profNameSection">
+      <h2 class="profile-section-title">✏️ Tên hiển thị</h2>
+      <p class="profile-section-hint">Tên bé hiện trên lớp, PvP và Cô giáo AI.</p>
+      <input type="text" id="profNameInput" class="profile-field-input" maxlength="32"
+             autocomplete="nickname" placeholder="VD: Bé Minh" aria-label="Tên hiển thị">
+      <button type="button" id="profNameSaveBtn" class="profile-field-save">Lưu tên</button>
+      <p id="profNameMsg" class="profile-field-msg" hidden></p>
+    </section>
 
-  <div class="profile-class-box" id="profClassBox">
-    <h2 class="profile-class-title">🏫 Mã lớp học</h2>
-    <p class="profile-class-desc">Nhập mã lớp giáo viên cung cấp. Bé sẽ được đồng bộ tiến độ và lịch sử hỏi Cô AI với lớp.</p>
-    <div class="profile-class-row">
-      <input type="text" id="profClassInput" class="profile-class-input" maxlength="32"
+    <section class="profile-section profile-section--class" id="profClassBox">
+      <h2 class="profile-section-title">🏫 Mã lớp học</h2>
+      <p class="profile-section-hint">Nhập mã lớp giáo viên cung cấp để đồng bộ tiến độ.</p>
+      <input type="text" id="profClassInput" class="profile-field-input" maxlength="32"
              autocomplete="off" placeholder="VD: LOPA2024" aria-label="Mã lớp">
-      <button type="button" id="profClassSaveBtn" class="profile-class-save">Lưu mã lớp</button>
-    </div>
-    <p id="profClassTeacher" class="profile-class-teacher" hidden></p>
-    <p id="profClassMsg" class="profile-class-msg" hidden></p>
+      <button type="button" id="profClassSaveBtn" class="profile-field-save">Lưu mã lớp</button>
+      <p id="profClassTeacher" class="profile-class-teacher" hidden></p>
+      <p id="profClassMsg" class="profile-field-msg" hidden></p>
+    </section>
+
+    <section class="profile-section profile-section--meta">
+      <h2 class="profile-section-title">📋 Thông tin</h2>
+      <dl class="profile-dl">
+        <div class="profile-dl-row">
+          <dt>Ngày tham gia</dt>
+          <dd><span id="profJoin">—</span> <span class="profile-meta-sub" id="profAge"></span></dd>
+        </div>
+        <div class="profile-dl-row" id="profClassRow" hidden>
+          <dt>Mã lớp</dt>
+          <dd id="profClass">—</dd>
+        </div>
+        <div class="profile-dl-row" id="profUidRow" hidden>
+          <dt>Mã tài khoản</dt>
+          <dd><code id="profUid">—</code></dd>
+        </div>
+      </dl>
+    </section>
   </div>
 
   <div class="profile-actions">
