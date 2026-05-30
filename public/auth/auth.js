@@ -163,6 +163,15 @@ async function verifyTeacherClassExists(classRoom) {
     return { ok: false, error: "Mã lớp phải dài ít nhất 3 ký tự (vd: LOPA2024)." };
   }
   try {
+    const regSnap = await getDoc(doc(db, "classrooms", cr));
+    if (regSnap.exists()) {
+      const d = regSnap.data() || {};
+      return {
+        ok: true,
+        classRoom: cr,
+        teacherName: (d.teacherName && String(d.teacherName).trim()) || "Giáo viên"
+      };
+    }
     const q = query(
       collection(db, "users"),
       where("role", "==", "teacher"),
@@ -173,7 +182,7 @@ async function verifyTeacherClassExists(classRoom) {
     if (snap.empty) {
       return {
         ok: false,
-        error: `Không tìm thấy lớp "${cr}". Hãy kiểm tra lại mã với giáo viên.`
+        error: `Không tìm thấy lớp "${cr}". Giáo viên cần đăng nhập trang quản lý ít nhất một lần.`
       };
     }
     const teacher = snap.docs[0].data() || {};
@@ -184,7 +193,27 @@ async function verifyTeacherClassExists(classRoom) {
     };
   } catch (e) {
     console.warn("[auth] verifyTeacherClassExists", e);
+    const code = e?.code || "";
+    if (code === "permission-denied") {
+      return { ok: false, error: "Firebase từ chối quyền — Publish file firestore.rules (có classrooms) trên Console." };
+    }
     return { ok: false, error: "Không kiểm tra được mã lớp. Thử lại sau." };
+  }
+}
+
+/** Đăng ký mã lớp vào classrooms/{mã} để phụ huynh tra cứu. */
+async function registerClassroomToRegistry(uid, classRoom, teacherName) {
+  const cr = normalizeClassroom(classRoom);
+  if (!cr || cr.length < 3) return;
+  try {
+    await setDoc(doc(db, "classrooms", cr), {
+      classRoom: cr,
+      teacherUid: uid,
+      teacherName: (teacherName && String(teacherName).trim()) || "Giáo viên",
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.warn("[auth] registerClassroomToRegistry", e);
   }
 }
 
@@ -654,6 +683,7 @@ async function handleTeacherRegister(e) {
       displayName: name,
       classRoom
     });
+    await registerClassroomToRegistry(cred.user.uid, classRoom, name);
     await storeBrowserCredential(email, password);
 
     try {
@@ -721,6 +751,9 @@ async function handleLogin(e) {
     }
 
     await storeBrowserCredential(email, password);
+    if (realRole === "teacher" && meta?.classRoom) {
+      await registerClassroomToRegistry(cred.user.uid, meta.classRoom, meta.displayName);
+    }
     const delayMs = roleHint !== realRole ? 900 : 0;
     setTimeout(() => routeAfterVerifiedFirestoreSession(meta), delayMs);
   } catch (error) {

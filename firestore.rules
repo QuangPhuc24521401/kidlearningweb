@@ -39,6 +39,14 @@ service cloud.firestore {
         && resource.data.classRoom.size() >= 3;
     }
 
+    match /classrooms/{code} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.auth.uid == request.resource.data.teacherUid
+        && code == request.resource.data.classRoom
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
     // Tiến độ học + huy hiệu + lịch sử Cô AI (doc id = uid)
     match /learning_progress/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;

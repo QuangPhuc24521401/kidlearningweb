@@ -588,6 +588,13 @@ function renderProfilePage(){
     }
   }
 
+  // Wire editor mã lớp (một lần, dùng event delegation — hoạt động cả SPA)
+  if(typeof KidClassSync !== 'undefined'){
+    if(typeof KidClassSync.wireProfileClassRoomEditor === 'function'){
+      KidClassSync.wireProfileClassRoomEditor();
+    }
+  }
+
   // Wire action buttons (idempotent)
   _wireProfileActions(card);
 }
@@ -607,5 +614,8 @@ function _wireProfileActions(card){
 
 /* Mount profile khi page load trực tiếp /profile.html (không qua SPA navigation). */
 document.addEventListener('DOMContentLoaded', function(){
+  if(typeof KidClassSync !== 'undefined' && KidClassSync.wireProfileClassRoomEditor){
+    KidClassSync.wireProfileClassRoomEditor();
+  }
   if(document.querySelector('.profile-page-card')) renderProfilePage();
 });

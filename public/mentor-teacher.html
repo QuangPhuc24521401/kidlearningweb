@@ -11,6 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
+<script src="class-sync.js?v=20260528e"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:20px;display:flex;justify-content:center}
@@ -596,6 +597,9 @@ function startTeacherDashboard(){
     if(!user){
       window.location.replace('auth/login.html');
       return;
+    }
+    if(typeof KidClassSync !== 'undefined' && KidClassSync.ensureClassroomRegistry){
+      KidClassSync.ensureClassroomRegistry(user.uid);
     }
     refreshClassData();
   });
