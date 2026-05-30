@@ -513,12 +513,7 @@ function renderProfilePage(){
   set('profJoin',   _formatJoinDate(info.createdAt));
   set('profAge',    info.createdAt ? '(' + _formatAccountAge(info.createdAt) + ')' : '');
 
-  var nameInput = document.getElementById('profNameInput');
-  if(nameInput && nameInput.dataset.userEditing !== '1'){
-    var savedName = (localStorage.getItem('userDisplayName') || '').trim();
-    nameInput.value = savedName || (info.name === 'Bé học sinh' ? '' : info.name);
-  }
-  show('profNameSection', !info.isTeacher);
+  show('profNameEditBtn', !info.isTeacher);
 
   if(info.isTeacher && info.classRoom){
     set('profClass', info.classRoom);
@@ -581,7 +576,7 @@ function renderProfilePage(){
   // Học sinh: giữ tất cả.
   var grid = document.getElementById('profStatsGrid');
   if(grid){
-    grid.querySelectorAll('.profile-stat-item').forEach(function(c){ c.style.display = ''; });
+    grid.querySelectorAll('.profile-stat-chip').forEach(function(c){ c.style.display = ''; });
     if(info.isTeacher){
       var hideClasses = ['.profile-stat-stars','.profile-stat-badges','.profile-stat-streak','.profile-stat-honor'];
       hideClasses.forEach(function(sel){
@@ -603,6 +598,30 @@ function renderProfilePage(){
 
   // Wire action buttons (idempotent)
   _wireProfileActions(card);
+}
+
+function openProfNameModal(){
+  var modal = document.getElementById('profNameModal');
+  var input = document.getElementById('profNameInput');
+  var msg = document.getElementById('profNameMsg');
+  if(!modal) return;
+  var savedName = (localStorage.getItem('userDisplayName') || '').trim();
+  var nameEl = document.getElementById('profName');
+  var current = savedName || (nameEl ? nameEl.textContent.trim() : '');
+  if(input) input.value = (current === 'Bé học sinh' ? '' : current);
+  if(msg){ msg.hidden = true; msg.textContent = ''; }
+  modal.hidden = false;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ if(input){ input.focus(); input.select(); } }, 60);
+}
+
+function closeProfNameModal(){
+  var modal = document.getElementById('profNameModal');
+  if(!modal) return;
+  modal.classList.remove('open');
+  modal.hidden = true;
+  document.body.style.overflow = '';
 }
 
 function saveStudentDisplayName(rawName){
@@ -640,6 +659,7 @@ function saveStudentDisplayName(rawName){
         try{ localStorage.setItem('userDisplayName', name); }catch(e){}
         if(typeof mountUserBar === 'function') mountUserBar();
         if(typeof renderProfilePage === 'function') renderProfilePage();
+        closeProfNameModal();
         resolve({ ok: true, message: 'Đã lưu tên: ' + name });
       })
       .catch(function(err){
@@ -661,17 +681,38 @@ function _wireProfileActions(card){
     if(typeof handleLogout === 'function') handleLogout();
   });
 
-  var nameInput = document.getElementById('profNameInput');
-  if(nameInput && !nameInput.dataset.focusWired){
-    nameInput.dataset.focusWired = '1';
-    nameInput.addEventListener('focus', function(){ nameInput.dataset.userEditing = '1'; });
-    nameInput.addEventListener('blur', function(){
-      setTimeout(function(){ nameInput.dataset.userEditing = '0'; }, 120);
+  var editBtn = document.getElementById('profNameEditBtn');
+  if(editBtn && !editBtn.dataset.wired){
+    editBtn.dataset.wired = '1';
+    editBtn.addEventListener('click', openProfNameModal);
+  }
+
+  if(!window.__profNameModalWired){
+    window.__profNameModalWired = true;
+    document.getElementById('profNameModalClose')?.addEventListener('click', closeProfNameModal);
+    document.getElementById('profNameCancelBtn')?.addEventListener('click', closeProfNameModal);
+    document.querySelectorAll('[data-prof-modal-close]').forEach(function(el){
+      el.addEventListener('click', closeProfNameModal);
     });
-    nameInput.addEventListener('keydown', function(e){
-      if(e.key === 'Enter' && nameBtn) nameBtn.click();
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){
+        var modal = document.getElementById('profNameModal');
+        if(modal && !modal.hidden) closeProfNameModal();
+      }
     });
   }
+
+  var nameInput = document.getElementById('profNameInput');
+  if(nameInput && !nameInput.dataset.keyWired){
+    nameInput.dataset.keyWired = '1';
+    nameInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        var saveBtn = document.getElementById('profNameSaveBtn');
+        if(saveBtn) saveBtn.click();
+      }
+    });
+  }
+
   var nameBtn = document.getElementById('profNameSaveBtn');
   if(nameBtn && !nameBtn.dataset.wired){
     nameBtn.dataset.wired = '1';
