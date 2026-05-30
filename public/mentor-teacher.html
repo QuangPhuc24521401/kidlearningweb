@@ -134,7 +134,7 @@ body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(1
     <div class="card">
       <div class="card-title">
         <span>👦 Danh sách bé <span class="badge-pill" id="studentCount">0</span></span>
-        <button class="refresh-btn" onclick="loadAll()">🔄</button>
+        <button class="refresh-btn" onclick="refreshClassData()">🔄</button>
       </div>
       <div class="student-list" id="studentList">
         <div class="empty">Chưa có dữ liệu bé nào</div>
@@ -172,7 +172,7 @@ body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(1
     <div class="card">
       <div class="card-title">
         <span>💬 Lịch sử hỏi Cô AI</span>
-        <button class="refresh-btn" onclick="loadHistory()">🔄 Cập nhật</button>
+        <button class="refresh-btn" onclick="refreshClassData()">🔄 Cập nhật</button>
       </div>
       <div class="history-list" id="historyList"><div class="empty">Chưa có lịch sử</div></div>
     </div>
@@ -182,87 +182,298 @@ body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(1
 
 <script>
 /* ════════════════════════════════════════
-   DATA HELPERS — đọc từ localStorage
-   (trong thực tế sẽ đọc từ Firestore)
+   TRANG GIÁO VIÊN — dữ liệu từ Firestore
+   Học sinh: users (role=parent, classRoom)
+   Tiến độ + lịch sử AI: learning_progress/{uid}
 ════════════════════════════════════════ */
-function getHistory(){ try{ return JSON.parse(localStorage.getItem('mentor_history')||'[]'); }catch(e){ return []; } }
-function getProgress(){ try{ return JSON.parse(localStorage.getItem('lesson_progress')||'{}'); }catch(e){ return {}; } }
 
-// Demo: seed dữ liệu mẫu nếu chưa có
-function seedDemo(){
-  if(localStorage.getItem('demo_seeded')) return;
-  const students = [
-    {name:'Bé An',    avatar:'🐻', stars:12, nb:8, td:4, sessions:3},
-    {name:'Bé Bình',  avatar:'🐱', stars:8,  nb:5, td:3, sessions:2},
-    {name:'Bé Chi',   avatar:'🐰', stars:15, nb:9, td:6, sessions:4},
-    {name:'Bé Dung',  avatar:'🐼', stars:6,  nb:4, td:2, sessions:2},
-    {name:'Bé Em',    avatar:'🦊', stars:10, nb:6, td:4, sessions:3},
-  ];
-  localStorage.setItem('demo_students', JSON.stringify(students));
+var classData = { students: [], history: [], classRoom: '', loading: false, error: '' };
 
-  const history = [
-    {time:new Date(Date.now()-300000).toISOString(), student:'Bé An', q:'Cô ơi, hình tròn là gì?', a:'Hình tròn giống như mặt trời đó con! Tròn xoe, không có góc nào cả 🔵'},
-    {time:new Date(Date.now()-600000).toISOString(), student:'Bé Chi', q:'Con đếm đến 10 được không cô?', a:'Con giỏi lắm! Cùng đếm nào: 1,2,3...10 🔢'},
-    {time:new Date(Date.now()-900000).toISOString(), student:'Bé Bình', q:'Màu đỏ và màu xanh khác nhau thế nào?', a:'Màu đỏ như quả táo, màu xanh như bầu trời nhé con! 🍎🌤️'},
-  ];
-  localStorage.setItem('mentor_history', JSON.stringify(history));
-  localStorage.setItem('demo_seeded', '1');
+function escapeHtml(str){
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function getStudents(){
-  try{ return JSON.parse(localStorage.getItem('demo_students')||'[]'); }catch(e){ return []; }
+function studentDisplayName(u){
+  return (u && (u.displayName || u.nickname || u.childName)) || 'Bé học sinh';
 }
 
-/* ════════════════════════════════════════
-   TABS
-════════════════════════════════════════ */
-function switchTab(idx){
-  for(let i=0;i<3;i++){
-    document.getElementById('tab'+i).classList.toggle('active', i===idx);
-    document.getElementById('panel'+i).classList.toggle('active', i===idx);
+function aggregateSubject(entry){
+  if(!entry || !entry.topics || typeof entry.topics !== 'object'){
+    return { topicsDone: 0, topicsTotal: 0, stars: 0, lastSessionAt: 0 };
   }
-  if(idx===0) loadAll();
-  if(idx===1) loadProgress();
-  if(idx===2) loadHistory();
+  var topics = Object.values(entry.topics);
+  var topicsTotal = topics.length;
+  var topicsDone = topics.filter(function(t){ return (t.completedRuns || 0) >= 1; }).length;
+  var stars = topics.reduce(function(s, t){ return s + (t.totalStars || 0); }, 0);
+  var lastSessionAt = topics.reduce(function(m, t){ return Math.max(m, t.lastSessionAt || 0); }, 0);
+  return { topicsDone: topicsDone, topicsTotal: topicsTotal, stars: stars, lastSessionAt: lastSessionAt };
 }
 
-/* ════════════════════════════════════════
-   PANEL 0 — TỔNG QUAN
-════════════════════════════════════════ */
-function loadAll(){
-  const students = getStudents();
-  const history  = getHistory();
+function computeStudentStats(progress){
+  progress = progress || {};
+  var nb = aggregateSubject(progress.nhan_biet);
+  var td = aggregateSubject(progress.tu_duy);
+  var subjects = ['nhan_biet','tu_duy','am_nhac','ghep_hinh','my_thuat','ngon_ngu'];
+  var totalStars = 0;
+  var sessions = 0;
+  var lastActive = 0;
+  subjects.forEach(function(sub){
+    var agg = aggregateSubject(progress[sub]);
+    totalStars += agg.stars;
+    if(agg.topicsDone > 0 || agg.lastSessionAt > 0) sessions += 1;
+    lastActive = Math.max(lastActive, agg.lastSessionAt);
+  });
+  return {
+    nb: nb.topicsDone,
+    nbTotal: nb.topicsTotal,
+    td: td.topicsDone,
+    tdTotal: td.topicsTotal,
+    stars: totalStars,
+    sessions: sessions,
+    lastActive: lastActive,
+    hasActivity: nb.topicsDone + td.topicsDone + totalStars > 0
+  };
+}
 
-  // Stats
-  document.getElementById('statStudents').textContent  = students.length;
-  document.getElementById('statStars').textContent     = students.reduce((s,x)=>s+x.stars,0);
-  document.getElementById('statQuestions').textContent = history.length;
+function isToday(iso){
+  if(!iso) return false;
+  var d = new Date(iso);
+  var now = new Date();
+  return d.getFullYear() === now.getFullYear()
+    && d.getMonth() === now.getMonth()
+    && d.getDate() === now.getDate();
+}
+
+function isTodayMs(ms){
+  if(!ms) return false;
+  return isToday(new Date(ms).toISOString());
+}
+
+function setTeacherInfo(text){
+  var info = document.getElementById('teacherInfo');
+  if(info) info.textContent = text;
+}
+
+function refreshClassData(){
+  if(classData.loading) return Promise.resolve();
+  classData.loading = true;
+  classData.error = '';
+
+  var sl = document.getElementById('studentList');
+  if(sl) sl.innerHTML = '<div class="empty">Đang tải danh sách bé…</div>';
+
+  return new Promise(function(resolve){
+    try{
+      if(typeof firebase === 'undefined' || !firebase.firestore || !firebase.auth){
+        classData.error = 'Firebase chưa sẵn sàng';
+        classData.loading = false;
+        resolve();
+        return;
+      }
+      var user = firebase.auth().currentUser;
+      if(!user){
+        classData.error = 'Cần đăng nhập';
+        classData.loading = false;
+        resolve();
+        return;
+      }
+
+      var classRoom = localStorage.getItem('classRoom') || '';
+      if(!classRoom){
+        firebase.firestore().collection('users').doc(user.uid).get()
+          .then(function(snap){
+            var data = snap && snap.exists ? snap.data() : null;
+            if(data && data.classRoom){
+              classRoom = data.classRoom;
+              localStorage.setItem('classRoom', classRoom);
+            }
+          })
+          .finally(function(){ doFetch(classRoom, resolve); });
+        return;
+      }
+      doFetch(classRoom, resolve);
+    }catch(e){
+      classData.error = e.message || 'Lỗi tải dữ liệu';
+      classData.loading = false;
+      resolve();
+    }
+  });
+
+  function doFetch(classRoom, resolve){
+    classData.classRoom = classRoom || '';
+    setTeacherInfo('Lớp: ' + (classRoom || '—'));
+
+    if(!classRoom){
+      classData.students = [];
+      classData.history = [];
+      classData.error = 'Chưa có mã lớp trên tài khoản giáo viên';
+      classData.loading = false;
+      loadAll();
+      resolve();
+      return;
+    }
+
+    firebase.firestore().collection('users')
+      .where('role', '==', 'parent')
+      .where('classRoom', '==', classRoom)
+      .get()
+      .then(function(usersSnap){
+        if(!usersSnap.size){
+          classData.students = [];
+          classData.history = [];
+          classData.loading = false;
+          loadAll();
+          if(document.getElementById('panel1').classList.contains('active')) renderProgress();
+          if(document.getElementById('panel2').classList.contains('active')) loadHistory();
+          resolve();
+          return;
+        }
+
+        var jobs = [];
+        usersSnap.forEach(function(doc){
+          jobs.push(
+            firebase.firestore().collection('learning_progress').doc(doc.id).get()
+              .then(function(progSnap){
+                var u = doc.data() || {};
+                var progDoc = progSnap && progSnap.exists ? (progSnap.data() || {}) : {};
+                var progress = progDoc.progress || {};
+                var mentorHistory = Array.isArray(progDoc.mentorHistory) ? progDoc.mentorHistory : [];
+                var name = studentDisplayName(u);
+                var stats = computeStudentStats(progress);
+                var avatar = (u.studentAvatarEmoji && String(u.studentAvatarEmoji).trim()) || '🧒';
+                var ring = (u.studentAvatarRing && /^#[0-9A-Fa-f]{6}$/.test(u.studentAvatarRing))
+                  ? u.studentAvatarRing : '#f0e8ff';
+                var historyItems = mentorHistory.map(function(h){
+                  return {
+                    time: h.time || '',
+                    q: h.q || '',
+                    a: h.a || '',
+                    student: h.student || name,
+                    uid: doc.id,
+                    classRoom: h.classRoom || classRoom
+                  };
+                });
+                return {
+                  uid: doc.id,
+                  name: name,
+                  avatar: avatar,
+                  ring: ring,
+                  profileComplete: u.studentProfileComplete !== false,
+                  mentorCount: mentorHistory.length,
+                  historyItems: historyItems,
+                  stats: stats
+                };
+              })
+          );
+        });
+
+        return Promise.all(jobs).then(function(rows){
+          classData.students = rows.map(function(row){
+            return {
+              uid: row.uid,
+              name: row.name,
+              avatar: row.avatar,
+              ring: row.ring,
+              profileComplete: row.profileComplete,
+              mentorCount: row.mentorCount,
+              nb: row.stats.nb,
+              nbTotal: row.stats.nbTotal,
+              td: row.stats.td,
+              tdTotal: row.stats.tdTotal,
+              stars: row.stats.stars,
+              sessions: row.stats.sessions,
+              hasActivity: row.stats.hasActivity,
+              lastActive: row.stats.lastActive
+            };
+          }).sort(function(a, b){ return a.name.localeCompare(b.name, 'vi'); });
+
+          classData.history = [];
+          rows.forEach(function(row){
+            (row.historyItems || []).forEach(function(h){ classData.history.push(h); });
+          });
+          classData.history.sort(function(a, b){
+            return new Date(b.time || 0) - new Date(a.time || 0);
+          });
+
+          classData.loading = false;
+          loadAll();
+          if(document.getElementById('panel1').classList.contains('active')) renderProgress();
+          if(document.getElementById('panel2').classList.contains('active')) loadHistory();
+          resolve();
+        });
+      })
+      .catch(function(err){
+        console.warn('[mentor-teacher] fetch', err);
+        classData.error = err.message || 'Không tải được dữ liệu lớp';
+        classData.loading = false;
+        loadAll();
+        resolve();
+      });
+  }
+}
+
+function switchTab(idx){
+  for(var i = 0; i < 3; i++){
+    document.getElementById('tab'+i).classList.toggle('active', i === idx);
+    document.getElementById('panel'+i).classList.toggle('active', i === idx);
+  }
+  if(idx === 0) loadAll();
+  if(idx === 1) loadProgress();
+  if(idx === 2) loadHistory();
+}
+
+function loadAll(){
+  var students = classData.students || [];
+  var history  = classData.history || [];
+  var activeToday = students.filter(function(s){
+    return isTodayMs(s.lastActive) || history.some(function(h){
+      return h.uid === s.uid && isToday(h.time);
+    });
+  }).length;
+  var questionsToday = history.filter(function(h){ return isToday(h.time); }).length;
+  var starsToday = students.filter(function(s){ return isTodayMs(s.lastActive); })
+    .reduce(function(sum, s){ return sum + (s.stars || 0); }, 0);
+
+  document.getElementById('statStudents').textContent  = activeToday || students.filter(function(s){ return s.hasActivity; }).length;
+  document.getElementById('statStars').textContent     = starsToday || students.reduce(function(sum, s){ return sum + (s.stars || 0); }, 0);
+  document.getElementById('statQuestions').textContent = questionsToday || history.length;
   document.getElementById('studentCount').textContent  = students.length;
 
-  // Student list
-  const sl = document.getElementById('studentList');
-  if(!students.length){ sl.innerHTML='<div class="empty">Chưa có bé nào trong lớp</div>'; }
-  else sl.innerHTML = students.map(s=>{
-    const pct = Math.round((s.nb+s.td)/20*100);
-    return `<div class="student-row">
-      <div class="student-avatar" style="background:#f0e8ff">${s.avatar}</div>
-      <div class="student-info">
-        <div class="student-name">${s.name}</div>
-        <div class="student-meta">${s.sessions} buổi học • ${s.nb} bài Nhận biết • ${s.td} bài Tư duy</div>
-        <div class="progress-mini"><div class="progress-mini-bar" style="width:${pct}%"></div></div>
-      </div>
-      <div class="student-stars">⭐ ${s.stars}</div>
-    </div>`;
+  var sl = document.getElementById('studentList');
+  if(classData.loading){
+    sl.innerHTML = '<div class="empty">Đang tải danh sách bé…</div>';
+    return;
+  }
+  if(classData.error){
+    sl.innerHTML = '<div class="empty">' + escapeHtml(classData.error) + '</div>';
+    return;
+  }
+  if(!students.length){
+    sl.innerHTML = '<div class="empty">Chưa có học sinh đăng ký lớp <strong>' + escapeHtml(classData.classRoom) + '</strong>.<br>Phụ huynh cần nhập đúng mã lớp khi đăng ký.</div>';
+    return;
+  }
+
+  sl.innerHTML = students.map(function(s){
+    var maxTopics = Math.max((s.nbTotal || 0) + (s.tdTotal || 0), 1);
+    var pct = Math.min(Math.round(((s.nb || 0) + (s.td || 0)) / maxTopics * 100), 100);
+    var status = s.hasActivity ? '' : ' • chưa học';
+    var setup = s.profileComplete ? '' : ' • chưa tạo avatar';
+    return '<div class="student-row">' +
+      '<div class="student-avatar" style="background:' + escapeHtml(s.ring) + '">' + escapeHtml(s.avatar) + '</div>' +
+      '<div class="student-info">' +
+        '<div class="student-name">' + escapeHtml(s.name) + '</div>' +
+        '<div class="student-meta">' + (s.sessions || 0) + ' môn có tiến độ • ' + (s.nb || 0) + ' bài Nhận biết • ' + (s.td || 0) + ' bài Tư duy' + status + setup + '</div>' +
+        '<div class="progress-mini"><div class="progress-mini-bar" style="width:' + pct + '%"></div></div>' +
+      '</div>' +
+      '<div class="student-stars">⭐ ' + (s.stars || 0) + '</div>' +
+    '</div>';
   }).join('');
 }
 
-/* ════════════════════════════════════════
-   PANEL 1 — TIẾN ĐỘ HỌC
-════════════════════════════════════════ */
-let currentFilter = 'all';
+var currentFilter = 'all';
 function setFilter(f, el){
   currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
   el.classList.add('active');
   renderProgress();
 }
@@ -270,86 +481,99 @@ function setFilter(f, el){
 function loadProgress(){ renderProgress(); }
 
 function renderProgress(){
-  const students = getStudents();
-  const history  = getHistory();
+  var students = classData.students || [];
+  var history  = classData.history || [];
 
-  // Chart bars
-  const totalNB = students.reduce((s,x)=>s+x.nb,0);
-  const totalTD = students.reduce((s,x)=>s+x.td,0);
-  const totalAI = history.length;
-  const maxVal  = Math.max(totalNB, totalTD, totalAI, 1);
+  var totalNB = students.reduce(function(s, x){ return s + (x.nb || 0); }, 0);
+  var totalTD = students.reduce(function(s, x){ return s + (x.td || 0); }, 0);
+  var totalAI = history.length;
+  var maxVal  = Math.max(totalNB, totalTD, totalAI, 1);
 
   function setBar(id, val, max){
-    const el = document.getElementById(id);
-    const pct = Math.round(val/max*100);
-    el.style.width = pct+'%';
+    var el = document.getElementById(id);
+    if(!el) return;
+    var pct = Math.round(val / max * 100);
+    el.style.width = pct + '%';
     el.setAttribute('data-val', val);
   }
   setBar('barNB', totalNB, maxVal);
   setBar('barTD', totalTD, maxVal);
   setBar('barAI', totalAI, maxVal);
 
-  // Per-student progress
-  const pl = document.getElementById('progressList');
-  if(!students.length){ pl.innerHTML='<div class="empty">Chưa có dữ liệu</div>'; return; }
+  var pl = document.getElementById('progressList');
+  if(classData.loading){
+    pl.innerHTML = '<div class="empty">Đang tải tiến độ…</div>';
+    return;
+  }
+  if(!students.length){
+    pl.innerHTML = '<div class="empty">Chưa có học sinh trong lớp</div>';
+    return;
+  }
 
-  pl.innerHTML = students.map(s=>{
-    let score, label, color;
-    if(currentFilter==='nhan_biet' || currentFilter==='all'){
-      score = s.nb; label = '👀 '+s.nb+' bài Nhận biết';
+  pl.innerHTML = students.map(function(s){
+    var score, label, color, max;
+    if(currentFilter === 'nhan_biet'){
+      score = s.nb || 0;
+      label = '👀 ' + score + ' bài Nhận biết';
       color = '#3b82f6';
-    }
-    if(currentFilter==='tu_duy'){
-      score = s.td; label = '🧠 '+s.td+' bài Tư duy';
+      max = Math.max(s.nbTotal || 1, 1);
+    } else if(currentFilter === 'tu_duy'){
+      score = s.td || 0;
+      label = '🧠 ' + score + ' bài Tư duy';
       color = '#f97316';
-    }
-    if(currentFilter==='mentor'){
-      const cnt = history.filter(h=>h.student===s.name).length;
-      score = cnt; label = '💬 '+cnt+' câu hỏi AI';
+      max = Math.max(s.tdTotal || 1, 1);
+    } else if(currentFilter === 'mentor'){
+      score = s.mentorCount || 0;
+      label = '💬 ' + score + ' câu hỏi AI';
       color = '#a855f7';
+      max = Math.max(score, 10);
+    } else {
+      score = (s.nb || 0) + (s.td || 0);
+      label = '👀 ' + (s.nb || 0) + ' + 🧠 ' + (s.td || 0) + ' bài';
+      color = '#7c3aed';
+      max = Math.max((s.nbTotal || 0) + (s.tdTotal || 0), 1);
     }
-    const total = currentFilter==='all' ? s.nb+s.td : score;
-    const max   = currentFilter==='all' ? 20 : 10;
-    const pct   = Math.min(Math.round(total/max*100), 100);
+    var pct = Math.min(Math.round(score / max * 100), 100);
 
-    return `<div class="student-row">
-      <div class="student-avatar" style="background:#f0e8ff">${s.avatar}</div>
-      <div class="student-info">
-        <div class="student-name">${s.name} <span style="font-weight:400;font-size:13px;color:#9ca3af">— ${label}</span></div>
-        <div class="progress-mini" style="margin-top:8px">
-          <div class="progress-mini-bar" style="width:${pct}%;background:${color}"></div>
-        </div>
-        <div style="font-family:'Nunito',sans-serif;font-size:11px;color:#9ca3af;margin-top:3px">${pct}% hoàn thành</div>
-      </div>
-      <div class="student-stars">⭐ ${s.stars}</div>
-    </div>`;
+    return '<div class="student-row">' +
+      '<div class="student-avatar" style="background:' + escapeHtml(s.ring) + '">' + escapeHtml(s.avatar) + '</div>' +
+      '<div class="student-info">' +
+        '<div class="student-name">' + escapeHtml(s.name) + ' <span style="font-weight:400;font-size:13px;color:#9ca3af">— ' + label + '</span></div>' +
+        '<div class="progress-mini" style="margin-top:8px">' +
+          '<div class="progress-mini-bar" style="width:' + pct + '%;background:' + color + '"></div>' +
+        '</div>' +
+        '<div style="font-family:\'Nunito\',sans-serif;font-size:11px;color:#9ca3af;margin-top:3px">' + pct + '% hoàn thành</div>' +
+      '</div>' +
+      '<div class="student-stars">⭐ ' + (s.stars || 0) + '</div>' +
+    '</div>';
   }).join('');
 }
 
-/* ════════════════════════════════════════
-   PANEL 2 — LỊCH SỬ AI
-════════════════════════════════════════ */
 function loadHistory(){
-  const list = document.getElementById('historyList');
-  const h = getHistory().reverse();
-  if(!h.length){ list.innerHTML='<div class="empty">Bé chưa hỏi AI lần nào</div>'; return; }
-  list.innerHTML = h.slice(0,30).map(item=>{
-    const t = new Date(item.time).toLocaleString('vi-VN');
-    const student = item.student || 'Bé học sinh';
-    return `<div class="history-item">
-      <div class="h-header">
-        <div class="h-student">👦 ${student}</div>
-        <div class="h-time">${t}</div>
-      </div>
-      <div class="h-q">${item.q}</div>
-      <div class="h-a">${item.a}</div>
-    </div>`;
+  var list = document.getElementById('historyList');
+  var h = (classData.history || []).slice();
+  if(classData.loading){
+    list.innerHTML = '<div class="empty">Đang tải lịch sử…</div>';
+    return;
+  }
+  if(!h.length){
+    list.innerHTML = '<div class="empty">Bé trong lớp chưa hỏi Cô AI lần nào</div>';
+    return;
+  }
+  list.innerHTML = h.slice(0, 30).map(function(item){
+    var t = item.time ? new Date(item.time).toLocaleString('vi-VN') : '';
+    var student = item.student || 'Bé học sinh';
+    return '<div class="history-item">' +
+      '<div class="h-header">' +
+        '<div class="h-student">👦 ' + escapeHtml(student) + '</div>' +
+        '<div class="h-time">' + escapeHtml(t) + '</div>' +
+      '</div>' +
+      '<div class="h-q">' + escapeHtml(item.q) + '</div>' +
+      '<div class="h-a">' + escapeHtml(item.a) + '</div>' +
+    '</div>';
   }).join('');
 }
 
-/* ════════════════════════════════════════
-   LOGOUT
-════════════════════════════════════════ */
 function handleLogout(){
   localStorage.removeItem('userRole');
   localStorage.removeItem('classRoom');
@@ -360,35 +584,41 @@ function handleLogout(){
   localStorage.removeItem('studentAvatarPhoto');
   try{
     if(typeof firebase !== 'undefined' && firebase.auth){
-      firebase.auth().signOut().finally(()=>{ window.location.href = 'auth/login.html'; });
+      firebase.auth().signOut().finally(function(){ window.location.href = 'auth/login.html'; });
       return;
     }
   }catch(e){}
   window.location.href = 'auth/login.html';
 }
 
-/* ════════════════════════════════════════
-   INIT
-════════════════════════════════════════ */
-// Role guard: chỉ giáo viên mới được vào trang này.
-// Nếu chưa có role trong localStorage, đợi Firebase auth load để check Firestore.
+function startTeacherDashboard(){
+  firebase.auth().onAuthStateChanged(function(user){
+    if(!user){
+      window.location.replace('auth/login.html');
+      return;
+    }
+    refreshClassData();
+  });
+}
+
 (function teacherGuard(){
   var role = localStorage.getItem('userRole');
-  if(role === 'teacher'){
-    return; // OK, đã xác nhận giáo viên
-  }
   if(role && role !== 'teacher'){
     window.location.replace('index.html');
     return;
   }
-  // Chưa có role → chuyển về login để xác thực lại.
   if(typeof firebase === 'undefined' || !firebase.auth){
     window.location.replace('auth/login.html');
     return;
   }
+
+  if(role === 'teacher'){
+    startTeacherDashboard();
+    return;
+  }
+
   firebase.auth().onAuthStateChanged(function(user){
     if(!user){ window.location.replace('auth/login.html'); return; }
-    // Đọc role từ Firestore
     if(!firebase.firestore){
       window.location.replace('auth/login.html');
       return;
@@ -396,14 +626,13 @@ function handleLogout(){
     firebase.firestore().collection('users').doc(user.uid).get()
       .then(function(snap){
         var data = snap && snap.exists ? snap.data() : null;
-        var r = data?.role || 'parent';
+        var r = data && data.role ? data.role : 'parent';
         if(r === 'teacher'){
           localStorage.setItem('userRole', 'teacher');
-          if(data?.classRoom)   localStorage.setItem('classRoom', data.classRoom);
-          if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
-          // Cập nhật UI sau khi load xong
-          var info = document.getElementById('teacherInfo');
-          if(info) info.textContent = 'Lớp: ' + (data?.classRoom || 'LOPA2024');
+          if(data.classRoom) localStorage.setItem('classRoom', data.classRoom);
+          if(data.displayName) localStorage.setItem('userDisplayName', data.displayName);
+          setTeacherInfo('Lớp: ' + (data.classRoom || '—'));
+          startTeacherDashboard();
         } else {
           window.location.replace('index.html');
         }
@@ -414,12 +643,6 @@ function handleLogout(){
       });
   });
 })();
-
-const classRoom = localStorage.getItem('classRoom') || 'LOPA2024';
-document.getElementById('teacherInfo').textContent = 'Lớp: ' + classRoom;
-
-seedDemo();
-loadAll();
 </script>
 </body>
 </html>

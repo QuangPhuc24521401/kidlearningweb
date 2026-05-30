@@ -30,7 +30,7 @@ body.page-mentor.page-scroll{
   justify-content:flex-start;
 }
 
-/* Khung căn giữa — tránh card kẹt trái trên màn rộng */
+/* Khung căn giữa */
 .mentor-page-wrap{
   width:100%;
   max-width:820px;
@@ -774,13 +774,30 @@ function showStatus(type, msg){
 }
 function hideStatus(){ document.getElementById('aiStatus').classList.remove('show'); }
 
-/* ── Lưu lịch sử hỏi đáp (localStorage) ── */
+/* ── Lưu lịch sử hỏi đáp (localStorage + Firestore) ── */
 function saveHistory(q, a){
+  var student = '';
+  try{ student = localStorage.getItem('userDisplayName') || ''; }catch(e){}
+  if(!student){
+    try{
+      var u = firebase.auth && firebase.auth().currentUser;
+      if(u && u.displayName) student = u.displayName;
+    }catch(e){}
+  }
+  var classRoom = '';
+  try{ classRoom = localStorage.getItem('classRoom') || ''; }catch(e){}
+  var entry = { time: new Date().toISOString(), q: q, a: a, student: student, classRoom: classRoom };
   try{
-    const h = JSON.parse(localStorage.getItem('mentor_history')||'[]');
-    h.push({ time: new Date().toISOString(), q, a });
+    var h = JSON.parse(localStorage.getItem('mentor_history')||'[]');
+    h.push({ time: entry.time, q: q, a: a, student: student });
     if(h.length>50) h.shift();
     localStorage.setItem('mentor_history', JSON.stringify(h));
+  }catch(e){}
+  try{
+    var uid = firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid;
+    if(uid && window.KidProgressSync && typeof KidProgressSync.appendMentorHistory === 'function'){
+      KidProgressSync.appendMentorHistory(uid, entry);
+    }
   }catch(e){}
 }
 

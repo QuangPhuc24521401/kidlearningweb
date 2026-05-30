@@ -11,6 +11,7 @@
  *   readLocal / writeLocal / mergeTopicProgress
  *   pullFromCloud(uid) → Promise<{ progress, achievements, userData }>
  *   pushToCloud(uid, progress)
+ *   appendMentorHistory(uid, entry) — lưu câu hỏi Cô AI (giáo viên đọc qua learning_progress)
  *
  * Lưu ý: menu.js tự gọi KidProgressSync.pullFromCloud(uid) sau khi đăng nhập.
  */
@@ -77,6 +78,37 @@
     });
   }
 
+  /** Ghi thêm một mục lịch sử hỏi Cô AI vào learning_progress/{uid}.mentorHistory (tối đa 50). */
+  function appendMentorHistory(uid, entry){
+    return new Promise(function(resolve){
+      try{
+        if(!uid || !entry || typeof firebase === 'undefined' || !firebase.firestore){
+          resolve();
+          return;
+        }
+        var ref = firebase.firestore().collection('learning_progress').doc(uid);
+        ref.get()
+          .then(function(snap){
+            var data = (snap && snap.exists) ? (snap.data() || {}) : {};
+            var list = Array.isArray(data.mentorHistory) ? data.mentorHistory.slice() : [];
+            list.push(entry);
+            if(list.length > 50) list = list.slice(-50);
+            return ref.set({
+              mentorHistory: list,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+          })
+          .then(function(){ resolve(); })
+          .catch(function(err){
+            console.warn('[progress-sync] mentorHistory', err);
+            resolve();
+          });
+      }catch(e){
+        resolve();
+      }
+    });
+  }
+
   /**
    * Tải Firestore, gộp với local (MAX từng chỉ số), lưu local và đẩy lại cloud.
    * @returns {Promise<{progress: object, achievements: object|null, userData: object|null}>}
@@ -127,6 +159,7 @@
     writeLocal: writeLocal,
     mergeTopicProgress: mergeTopicProgress,
     pullFromCloud: pullFromCloud,
-    pushToCloud: pushToCloud
+    pushToCloud: pushToCloud,
+    appendMentorHistory: appendMentorHistory
   };
 })(window);

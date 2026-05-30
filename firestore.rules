@@ -6,32 +6,53 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Hồ sơ user: chỉ chính chủ
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Tiến độ học + huy hiệu (doc id = uid)
+    function isTeacher() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
+    function teacherClassRoom() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.classRoom;
+    }
+
+    function studentInTeacherClass(userId) {
+      return isTeacher()
+        && get(/databases/$(database)/documents/users/$(userId)).data.role == 'parent'
+        && get(/databases/$(database)/documents/users/$(userId)).data.classRoom == teacherClassRoom();
+    }
+
+    // Hồ sơ user: chỉ chính chủ; giáo viên đọc phụ huynh cùng lớp
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isTeacher()
+        && resource.data.role == 'parent'
+        && resource.data.classRoom == teacherClassRoom();
+    }
+
+    // Tiến độ học + huy hiệu + lịch sử Cô AI (doc id = uid)
     match /learning_progress/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read: if studentInTeacherClass(userId);
     }
 
     // Đấu trường nhiều người (doc cố định live, hoặc mở rộng sau)
     match /arena_sessions/{docId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null;
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
 
     // PvP — phòng 1v1
     match /pvp_rooms/{roomId} {
-      // get + listen + query .where(...) đều cần read
-      allow read: if request.auth != null;
+      allow read: if isSignedIn();
 
-      allow create: if request.auth != null
+      allow create: if isSignedIn()
         && request.resource.data.hostId == request.auth.uid;
 
-      // Khách vào lần đầu: doc cũ guestId còn null, user chưa phải guest → cần nhánh riêng
-      allow update: if request.auth != null && (
+      allow update: if isSignedIn() && (
         request.auth.uid == resource.data.hostId
         || request.auth.uid == resource.data.guestId
         || (
@@ -46,13 +67,12 @@ service cloud.firestore {
         )
       );
 
-      allow delete: if request.auth != null && (
+      allow delete: if isSignedIn() && (
         request.auth.uid == resource.data.hostId
         || request.auth.uid == resource.data.guestId
       );
     }
 
-    // Mặc định chặn hết (thêm rule /classes/... nếu dùng mentor gọi video)
     match /{document=**} {
       allow read, write: if false;
     }

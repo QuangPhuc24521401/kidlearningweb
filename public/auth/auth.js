@@ -280,6 +280,20 @@ function prepareStudentSetupForm(meta, _emailIgnored) {
     nicknameEl.dataset.prefilledNick = "1";
   }
 
+  const classEl = document.getElementById("studentClassroom");
+  const classWrap = document.getElementById("studentClassroomWrap");
+  const classLabel = document.getElementById("studentClassroomLabel");
+  const classHint = document.getElementById("classHint");
+  const hasClass = typeof meta?.classRoom === "string" && meta.classRoom.trim().length >= 3;
+  if (hasClass) {
+    if (classWrap) classWrap.hidden = true;
+    if (classLabel) classLabel.hidden = true;
+    if (classHint) classHint.hidden = true;
+  } else if (classEl && classEl.dataset.prefilledClass !== "1") {
+    classEl.dataset.prefilledClass = "1";
+    classEl.required = true;
+  }
+
   const grid = document.getElementById("studentEmojiPicker");
   if (grid && !grid.dataset.built) {
     grid.dataset.built = "1";
@@ -329,6 +343,15 @@ async function finalizeStudentOnboarding() {
     );
   }
 
+  const metaBefore = await fetchUserMeta(user.uid);
+  let classRoom = normalizeClassroom(metaBefore?.classRoom || "");
+  if (!classRoom || classRoom.length < 3) {
+    classRoom = normalizeClassroom(document.getElementById("studentClassroom")?.value);
+    if (!classRoom || classRoom.length < 3) {
+      return showNotice("error", "Mã lớp phải dài ít nhất 3 ký tự (vd: LOPA2024).");
+    }
+  }
+
   const ringBt = document.querySelector("#studentRingPicker button.is-selected");
   let ring = ringBt?.dataset?.ring || "#FF9800";
   if (!isSafeRingHex(ring)) ring = "#FF9800";
@@ -361,6 +384,7 @@ async function finalizeStudentOnboarding() {
     } catch (e) { console.warn("[auth] updateProfile", e); }
 
     await writeUserMeta(user.uid, {
+      classRoom,
       childName: nickname,
       nickname,
       displayName: nickname,
@@ -505,10 +529,12 @@ async function handleParentRegister(e) {
   clearNotice();
 
   const childName = document.getElementById("parentChildName")?.value?.trim();
+  const classRoom = normalizeClassroom(document.getElementById("parentClassroom")?.value);
   const email     = document.getElementById("parentEmail")?.value?.trim();
   const password  = document.getElementById("parentPassword")?.value;
   const confirm   = document.getElementById("parentConfirm")?.value;
 
+  if (!classRoom || classRoom.length < 3) return showNotice("error", "Mã lớp phải dài ít nhất 3 ký tự (vd: LOPA2024).");
   if (!email || !password) return showNotice("error", "Vui lòng nhập email và mật khẩu.");
   if (!isValidEmail(email)) return showNotice("error", "Email không hợp lệ.");
   if (password.length < 6)  return showNotice("error", "Mật khẩu phải có ít nhất 6 ký tự.");
@@ -522,6 +548,7 @@ async function handleParentRegister(e) {
     await writeUserMeta(cred.user.uid, {
       role: "parent",
       email,
+      classRoom,
       childName: childName || "",
       displayName: "",
       studentProfileComplete: false
