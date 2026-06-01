@@ -1,6 +1,6 @@
 # Kid Learning Web
 
-Website học tập dành cho trẻ mầm non: bài học tương tác, theo dõi tiến độ và huy hiệu, đấu trường nhiều người, đối kháng 1v1 và trợ giảng AI (Cô Mai). Ứng dụng chạy trên trình duyệt (HTML, CSS, JavaScript thuần, không build), đồng bộ dữ liệu qua Firebase và triển khai tĩnh trên Vercel.
+Website học tập dành cho trẻ mầm non: bài học tương tác, theo dõi tiến độ và huy hiệu, đấu trường nhiều người, đối kháng 1v1 và trợ giảng AI (Cô Mai). Ứng dụng chạy trên trình duyệt (HTML, CSS, JavaScript thuần, không build), đồng bộ dữ liệu qua Firebase (Auth + Firestore) và triển khai tĩnh trên Vercel.
 
 Repository: [github.com/QuangPhuc24521401/kidlearningweb](https://github.com/QuangPhuc24521401/kidlearningweb)
 
@@ -10,7 +10,9 @@ Demo: [kidlearningweb.vercel.app](https://kidlearningweb.vercel.app)
 
 ## Tóm tắt
 
-Kid Learning Web là đồ án web giáo dục sớm, giao diện thân thiện với trẻ em và phụ huynh. Học sinh đăng nhập, chọn môn học, làm bài theo chủ đề mở khóa tuần tự, nhận sao thưởng và huy hiệu. Giọng đọc hỗ trợ đọc câu hỏi và phản hồi (Google Cloud TTS hoặc giọng trình duyệt). Trang Cô giáo AI cho phép hỏi đáp bằng tiếng Việt; khi hết quota Gemini, hệ thống vẫn trả lời bằng câu mẫu offline. Giáo viên có dashboard xem thống kê, tiến độ học và lịch sử hỏi Cô AI.
+Kid Learning Web là đồ án web giáo dục sớm, giao diện thân thiện với trẻ em và phụ huynh. Phụ huynh/ học sinh đăng nhập, chọn môn học, làm bài theo chủ đề, nhận sao thưởng và huy hiệu. Giọng đọc hỗ trợ đọc câu hỏi và phản hồi (Google Cloud TTS hoặc giọng trình duyệt). Trang Cô giáo AI cho phép hỏi đáp bằng tiếng Việt; khi hết quota Gemini, hệ thống vẫn trả lời bằng câu mẫu offline.
+
+Hệ thống có **dashboard giáo viên** (`mentor-teacher.html`) để xem danh sách học sinh theo **mã lớp** (`classRoom`), tiến độ học (`learning_progress/{uid}`) và lịch sử hỏi Cô AI (mentor history).
 
 ---
 
@@ -19,20 +21,23 @@ Kid Learning Web là đồ án web giáo dục sớm, giao diện thân thiện 
 | Trang | Đường dẫn | Mô tả |
 |-------|-----------|-------|
 | Trang chủ | `index.html` | Menu sáu môn học, tiến độ và huy hiệu theo từng môn |
-| Bài học | `lessons/<môn>/index.html`, `lessons/lesson.html` | Nhận biết, Tư duy, Âm nhạc, Ghép hình, Mỹ thuật, Ngôn ngữ; chủ đề mở dần, có sao và TTS |
+| Bài học | `lessons/<môn>/index.html` | 6 môn: Nhận biết, Tư duy, Âm nhạc, Ghép hình, Mỹ thuật, Ngôn ngữ; quiz + TTS; dữ liệu lấy từ `lessons/data/lessons-data.js` |
 | Tiến độ | `progress.html` | Tổng sao, streak, danh sách huy hiệu |
 | Đấu trường | `arena.html` | Nhiều người trong một phiên có thời hạn, xếp hạng theo điểm |
 | PvP | `pvp.html` | Tạo phòng, nhập mã hoặc ghép nhanh; đúng và nhanh hơn thắng |
 | Cô giáo AI | `mentor.html` | Hỏi đáp qua API Gemini, mic và gõ chữ, TTS tiếng Việt |
 | Giáo viên | `mentor-teacher.html` | Thống kê lớp, tiến độ học, lịch sử hỏi Cô AI |
-| Đăng nhập | `auth/login.html`, `register.html`, `forgot.html` | Firebase Authentication (email/mật khẩu) |
+| Hồ sơ học sinh | `profile.html` | Hộp thoại hồ sơ nhỏ gọn; sửa tên bằng popup; đổi/nhập mã lớp để đồng bộ với giáo viên |
+| Đăng nhập/Đăng ký/Quên MK | `auth/login.html`, `auth/register.html`, `auth/forgot.html` | Firebase Auth (email/mật khẩu) + **bắt buộc xác thực email** |
+| Setup học sinh | `auth/student-setup.html` | Onboarding sau lần đăng nhập đầu: nickname + avatar + (nếu cần) mã lớp |
 
 ---
 
 ## Công nghệ
 
 - **Frontend:** HTML, CSS, JavaScript; topbar điều hướng, giao diện sáng/tối, responsive mobile
-- **Backend:** Firebase Auth, Firestore (tiến độ, arena, PvP, người dùng)
+- **Router:** mini SPA (`spa.js` + `spa.css`) chuyển tab index/progress/pvp/profile không reload
+- **Backend:** Firebase Auth, Firestore (người dùng, mã lớp, tiến độ, arena, PvP)
 - **TTS:** Google Cloud Text-to-Speech (proxy `/api/tts-google`) hoặc Web Speech API
 - **AI mentor:** Google Gemini qua `/api/mentor-chat` (Vercel serverless)
 - **Hosting:** Vercel (static từ `public/`, API trong `api/`)
@@ -46,11 +51,13 @@ kidlearningweb/
 ├── README.md
 ├── package.json
 ├── firestore.rules
+├── firestore.indexes.json
 ├── vercel.json
 ├── VERCEL_API.md          (hướng dẫn API Cô giáo AI)
 ├── api/
 │   ├── tts-config.js
 │   ├── tts-google.js
+│   ├── mentor-config.js
 │   └── mentor-chat/index.js
 └── public/
     ├── index.html
@@ -58,10 +65,12 @@ kidlearningweb/
     ├── mentor.html, mentor-teacher.html
     ├── firebase.js, shared.js, shared.css
     ├── menu.js, menu.css, achievements.js
+    ├── spa.js, spa.css
+    ├── class-sync.js, progress-sync.js
     ├── auth/
     ├── secrets/           (cấu hình local; production dùng biến môi trường)
     └── lessons/
-        ├── lesson.html, lesson.js, lesson.css
+        ├── lesson.js, lesson.css
         ├── data/lessons-data.js
         └── <môn>/index.html
 ```
@@ -80,7 +89,7 @@ npx serve public
 
 Hoặc: `python -m http.server 8080 --directory public`, hoặc extension Live Server trong VS Code.
 
-Để test API mentor/TTS giống production:
+Để test API mentor/TTS giống production (serverless functions):
 
 ```bash
 npx vercel dev
@@ -93,9 +102,18 @@ npx vercel dev
 1. Tạo project trên [Firebase Console](https://console.firebase.google.com).
 2. Bật **Authentication** (Email/Password) và **Firestore**.
 3. Dán `firebaseConfig` vào `public/firebase.js`.
-4. Publish rules từ `firestore.rules` (collections: `users`, `learning_progress`, `arena_sessions`, `pvp_rooms`).
+4. Publish rules từ `firestore.rules`.
+5. (Tuỳ chọn) Deploy indexes từ `firestore.indexes.json` nếu bạn dùng Firebase CLI.
 
-Đồng bộ tiến độ, đấu trường và PvP cần đăng nhập và rules đã publish.
+### Collections Firestore đang dùng
+
+- `users/{uid}`: hồ sơ (role, classRoom, displayName, avatar, studentProfileComplete…)
+- `classrooms/{classRoom}`: registry lớp (teacherUid, teacherName, studentUids…)
+- `learning_progress/{uid}`: tiến độ + `mentorHistory[]`
+- `arena_sessions/{docId}`: đấu trường
+- `pvp_rooms/{roomId}`: PvP
+
+Đồng bộ tiến độ / lớp / đấu trường / PvP cần đăng nhập và rules đã publish.
 
 ---
 
@@ -146,7 +164,7 @@ Tự động mở theo sao, chủ đề/môn hoàn thành, streak học tập v�
 ## Triển khai Vercel
 
 1. Kết nối repository GitHub/GitLab.
-2. Root Directory: để trống (thư mục gốc là `kidlearningweb` nếu repo chỉ chứa thư mục này, hoặc trỏ đúng thư mục chứa `vercel.json`).
+2. Root Directory: để trống (repo này đã đặt `vercel.json` ở root).
 3. Thêm biến môi trường: `GEMINI_API_KEY`, `GOOGLE_TTS_API_KEY` (nếu dùng TTS Google).
 4. Redeploy sau mỗi lần đổi biến hoặc code API.
 
