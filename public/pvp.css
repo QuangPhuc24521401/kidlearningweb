@@ -233,6 +233,7 @@
   font-size:clamp(22px,5vw,30px);
   cursor:pointer;
   background:rgba(255,255,255,.92);
+  color:#0f172a;
   transition:transform .12s, box-shadow .12s;
   font-family:inherit;
 }
@@ -285,19 +286,76 @@
   background:linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.88));
   border-color:rgba(255,255,255,.12);
 }
-:root[data-theme="dark"] .pvp-card h1{ color:#f1f5f9 }
-:root[data-theme="dark"] .pvp-lead{ color:#94a3b8 }
-:root[data-theme="dark"] .pvp-lead-note{ color:#64748b }
+:root[data-theme="dark"] .pvp-card h1{ color:var(--ink,#f1f5f9); }
+:root[data-theme="dark"] .pvp-lead{ color:#cbd5e1; }
+:root[data-theme="dark"] .pvp-lead-note,
+:root[data-theme="dark"] .pvp-wait-hint{ color:#94a3b8; }
 :root[data-theme="dark"] .pvp-chip{
   background:rgba(30,41,59,.9);
   border-color:rgba(255,255,255,.14);
   color:#e2e8f0;
 }
-:root[data-theme="dark"] .pvp-player-pill{ background:rgba(30,41,59,.7); border-color:rgba(255,255,255,.1) }
-:root[data-theme="dark"] .pvp-p-name{ color:#94a3b8 }
-:root[data-theme="dark"] .pvp-p-score{ color:#f1f5f9 }
-:root[data-theme="dark"] .pvp-question{ color:#f1f5f9 }
-:root[data-theme="dark"] .pvp-ans{ background:rgba(30,41,59,.75); border-color:rgba(255,255,255,.12) }
+:root[data-theme="dark"] .pvp-chip.is-on{
+  background:linear-gradient(135deg,rgba(37,99,235,.35),rgba(79,70,229,.28));
+  border-color:#60a5fa;
+  color:#bfdbfe;
+}
+:root[data-theme="dark"] .pvp-btn-ghost{
+  background:rgba(51,65,85,.85);
+  color:#e2e8f0;
+  border-color:rgba(255,255,255,.16);
+}
+:root[data-theme="dark"] .pvp-code-box{
+  background:rgba(15,23,42,.65);
+  border-color:rgba(96,165,250,.35);
+}
+:root[data-theme="dark"] .pvp-code-label{ color:#94a3b8; }
+:root[data-theme="dark"] .pvp-code-value{ color:#93c5fd; }
+:root[data-theme="dark"] .pvp-input-row input{
+  background:rgba(15,23,42,.75);
+  border-color:rgba(255,255,255,.14);
+  color:var(--ink,#f1f5f9);
+}
+:root[data-theme="dark"] .pvp-input-row input::placeholder{ color:#64748b; }
+:root[data-theme="dark"] .pvp-player-pill{
+  background:rgba(30,41,59,.85);
+  border-color:rgba(255,255,255,.12);
+}
+:root[data-theme="dark"] .pvp-player-pill.is-me{
+  border-color:#34d399;
+  background:rgba(16,185,129,.18);
+}
+:root[data-theme="dark"] .pvp-p-name{ color:#cbd5e1; }
+:root[data-theme="dark"] .pvp-p-score{ color:var(--ink,#f1f5f9); }
+:root[data-theme="dark"] .pvp-vs{ color:#64748b; }
+:root[data-theme="dark"] .pvp-q-meta{ color:#94a3b8; }
+:root[data-theme="dark"] .pvp-question{ color:var(--ink,#f1f5f9); }
+:root[data-theme="dark"] .pvp-ans{
+  background:rgba(51,65,85,.92);
+  border-color:rgba(255,255,255,.16);
+  color:var(--ink,#f1f5f9);
+}
+:root[data-theme="dark"] .pvp-ans:hover:not(:disabled){
+  box-shadow:0 8px 20px rgba(0,0,0,.35);
+}
+:root[data-theme="dark"] .pvp-ans.is-picked{
+  border-color:#60a5fa;
+  background:rgba(37,99,235,.28);
+  color:#dbeafe;
+}
+:root[data-theme="dark"] .pvp-status{ color:#cbd5e1; }
+:root[data-theme="dark"] .pvp-result-banner.win{
+  background:linear-gradient(135deg,rgba(6,95,70,.55),rgba(16,185,129,.35));
+  color:#a7f3d0;
+}
+:root[data-theme="dark"] .pvp-result-banner.lose{
+  background:linear-gradient(135deg,rgba(127,29,29,.5),rgba(239,68,68,.28));
+  color:#fecaca;
+}
+:root[data-theme="dark"] .pvp-result-banner.draw{
+  background:linear-gradient(135deg,rgba(51,65,85,.75),rgba(71,85,105,.55));
+  color:#e2e8f0;
+}
 
 /* ═══════════ MOBILE ═══════════ */
 @media (max-width:640px){

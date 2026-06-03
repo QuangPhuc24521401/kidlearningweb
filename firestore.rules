@@ -32,6 +32,11 @@ service cloud.firestore {
     // mọi user đăng nhập có thể đọc hồ sơ giáo viên (để xác minh mã lớp).
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
+      // Cho phép query giáo viên theo classRoom khi phụ huynh xác minh mã lớp lúc đăng ký (chưa đăng nhập)
+      allow read: if resource.data.role == 'teacher'
+        && resource.data.keys().hasAll(['classRoom'])
+        && resource.data.classRoom is string
+        && resource.data.classRoom.size() >= 3;
       allow read: if isTeacher()
         && resource.data.classRoom == teacherClassRoom()
         && (
@@ -46,6 +51,8 @@ service cloud.firestore {
     }
 
     match /classrooms/{code} {
+      // Tra cứu mã lớp khi đăng ký (chưa đăng nhập) — chỉ đọc 1 doc theo mã, không list cả collection
+      allow get: if true;
       allow read: if isSignedIn();
       allow create, update: if isSignedIn()
         && request.auth.uid == request.resource.data.teacherUid
