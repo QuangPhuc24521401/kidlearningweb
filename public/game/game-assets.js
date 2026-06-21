@@ -221,6 +221,46 @@
     g.destroy();
   }
 
+  /* ─────────── Chủ đề (background) cho từng màn ─────────── */
+  var THEMES = {
+    grass:   { sky: [0x4aa3e8, 0xc7ecff], far: 0x7cc36a, near: 0x9ad97f, gTop: 0x6abe30, gBody: 0x9c6b3f, deco: ['🌳', '🌼', '🦋'], fluid: 'water', dark: false },
+    jungle:  { sky: [0x1f7a4d, 0xa6e3b6], far: 0x2e7d32, near: 0x53b35a, gTop: 0x3d8b37, gBody: 0x6b4a2a, deco: ['🌴', '🌿', '🦜'], fluid: 'water', dark: false },
+    valley:  { sky: [0x5b3b8c, 0xd2b3f0], far: 0x5b3b8c, near: 0x8a63cf, gTop: 0x7e57c2, gBody: 0x4a3570, deco: ['🎵', '🎶', '🌙'], fluid: 'water', dark: false },
+    desert:  { sky: [0xf4a93c, 0xffe7b0], far: 0xe0a85b, near: 0xf2cd7e, gTop: 0xe6c068, gBody: 0xc89b4a, deco: ['🌵', '☀️', '🦂'], fluid: 'water', dark: false },
+    cave:    { sky: [0x161329, 0x3a2f55], far: 0x241f3a, near: 0x3d3358, gTop: 0x5b5366, gBody: 0x322c44, deco: ['💎', '🦇', '🪨'], fluid: 'water', dark: true },
+    inferno: { sky: [0x4a0a0a, 0xd14821], far: 0x6e1610, near: 0xa8331a, gTop: 0x6b2410, gBody: 0x371309, deco: ['🔥', '🌋', '💀'], fluid: 'lava', dark: true },
+    city:    { sky: [0xff7e5f, 0xffd0a8], far: 0x39466b, near: 0x57658c, gTop: 0x8390a6, gBody: 0x4a566b, deco: ['🏙️', '🚦', '🏢'], fluid: 'water', dark: false },
+    heaven:  { sky: [0xfff0c4, 0xffd6ec], far: 0xfff7e6, near: 0xffe9f5, gTop: 0xfde7a8, gBody: 0xe9d39a, deco: ['☁️', '✨', '🕊️'], fluid: 'water', dark: false }
+  };
+
+  function ensureTheme(scene, themeName) {
+    var th = THEMES[themeName] || THEMES.grass;
+    var sk = 'sky_' + themeName, hf = 'hillFar_' + themeName, hn = 'hillNear_' + themeName;
+    var gk = 'ground_' + themeName, pk = 'plat_' + themeName;
+    if (!scene.textures.exists(sk)) {
+      var g = scene.make.graphics({ x: 0, y: 0, add: false });
+      g.fillGradientStyle(th.sky[0], th.sky[0], th.sky[1], th.sky[1], 1);
+      g.fillRect(0, 0, 960, 540);
+      g.generateTexture(sk, 960, 540); g.destroy();
+    }
+    if (!scene.textures.exists(hf)) {
+      var a = scene.make.graphics({ x: 0, y: 0, add: false });
+      a.fillStyle(th.far, 1); a.fillEllipse(220, 220, 440, 280);
+      a.generateTexture(hf, 440, 220); a.destroy();
+    }
+    if (!scene.textures.exists(hn)) {
+      var b = scene.make.graphics({ x: 0, y: 0, add: false });
+      b.fillStyle(th.near, 1); b.fillEllipse(180, 200, 360, 240);
+      b.generateTexture(hn, 360, 200); b.destroy();
+    }
+    if (!scene.textures.exists(gk)) makeBlockTexture(scene, gk, 64, 64, th.gTop, th.gBody, 0);
+    if (!scene.textures.exists(pk)) makeBlockTexture(scene, pk, 110, 28, th.gTop, th.gBody, 10);
+    return {
+      skyKey: sk, hillFarKey: hf, hillNearKey: hn, groundKey: gk, platKey: pk,
+      fluid: th.fluid || 'water', dark: !!th.dark, deco: th.deco || []
+    };
+  }
+
   /* Nền trời gradient + texture đồi cho parallax */
   function makeSky(scene) {
     if (!scene.textures.exists('sky')) {
@@ -299,6 +339,22 @@
     g.destroy();
   }
 
+  /* Dung nham — đáy hố nguy hiểm (theme lửa/lòng đất) */
+  function makeLava(scene) {
+    var key = 'lava';
+    if (scene.textures.exists(key)) return;
+    var w = 64, h = 46;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x8a1c08, 1); g.fillRect(0, 8, w, h - 8);
+    g.fillStyle(0xea580c, 1); g.fillRect(0, 8, w, 14);
+    g.fillStyle(0xfca5a5, 1);
+    for (var i = 0; i < w; i += 16) g.fillCircle(i + 8, 9, 6);
+    g.fillStyle(0xfde68a, 1);
+    g.fillCircle(16, 18, 3); g.fillCircle(40, 24, 4); g.fillCircle(54, 16, 2.5);
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
   function makeBlockTexture(scene, key, w, h, colorTop, colorBody, radius) {
     if (scene.textures.exists(key)) return;
     var g = scene.make.graphics({ x: 0, y: 0, add: false });
@@ -364,6 +420,7 @@
     makeCrate(scene);
     makeCloudPlat(scene);
     makeWater(scene);
+    makeLava(scene);
 
     // vật phẩm/trang trí bằng emoji
     makeEmojiTexture(scene, 'cloud', '☁️', 80);
@@ -459,6 +516,8 @@
   global.GameAssets = {
     createTextures: createTextures,
     getStudentAvatar: getStudentAvatar,
+    ensureTheme: ensureTheme,
+    THEMES: THEMES,
     HERO: { w: HERO_W, h: HERO_H, ss: HERO_SS },
     Sfx: Sfx
   };

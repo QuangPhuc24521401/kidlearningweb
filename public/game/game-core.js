@@ -410,18 +410,38 @@
       this.physics.world.setBounds(0, 0, worldW, H);
       this.cameras.main.setBounds(0, 0, worldW, H);
 
-      // nền trời gradient + đồi núi parallax + mây
+      // ───── nền theo chủ đề của màn ─────
+      var TH = (global.GameAssets && global.GameAssets.ensureTheme)
+        ? global.GameAssets.ensureTheme(this, level.theme)
+        : { skyKey: 'sky', hillFarKey: 'hill2', hillNearKey: 'hill', groundKey: 'ground', platKey: 'platform', fluid: 'water', dark: false, deco: [] };
+      this.theme = TH;
+
       var bg = [];
-      bg.push(this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20));
+      bg.push(this.add.image(0, 0, TH.skyKey).setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20));
       for (var hx = 0; hx < worldW + 400; hx += 380) {
-        bg.push(this.add.image(hx, groundTop + 30, 'hill2').setOrigin(0.5, 1).setScrollFactor(0.25).setDepth(-15).setDisplaySize(440, 220));
+        bg.push(this.add.image(hx, groundTop + 30, TH.hillFarKey).setOrigin(0.5, 1).setScrollFactor(0.25).setDepth(-15).setDisplaySize(440, 220));
       }
       for (var hx2 = 160; hx2 < worldW + 400; hx2 += 330) {
-        bg.push(this.add.image(hx2, groundTop + 24, 'hill').setOrigin(0.5, 1).setScrollFactor(0.5).setDepth(-12).setAlpha(0.95).setDisplaySize(360, 180));
+        bg.push(this.add.image(hx2, groundTop + 24, TH.hillNearKey).setOrigin(0.5, 1).setScrollFactor(0.5).setDepth(-12).setAlpha(0.95).setDisplaySize(360, 180));
       }
-      for (var m = 0; m < Math.ceil(worldW / 340); m++) {
-        bg.push(this.add.image(120 + m * 340, 80 + (m % 2) * 44, 'cloud')
-          .setScrollFactor(0.35).setAlpha(0.92).setDisplaySize(100, 62).setDepth(-10));
+      // trang trí theo chủ đề (cây, xương rồng, lửa, mây...) rải dọc mặt đất
+      if (TH.deco && TH.deco.length) {
+        var dStep = 320;
+        for (var dx = 220, di = 0; dx < worldW - 120; dx += dStep, di++) {
+          var emo = TH.deco[di % TH.deco.length];
+          var big = (di % 3 === 0);
+          bg.push(this.add.text(dx, groundTop - 6, emo, { fontSize: (big ? 44 : 30) + 'px' })
+            .setOrigin(0.5, 1).setScrollFactor(0.85).setDepth(-8).setAlpha(0.96));
+        }
+        // một biểu tượng bầu trời cố định (mặt trời/trăng/mây đầu danh sách)
+        bg.push(this.add.text(W - 120, 92, TH.deco[TH.deco.length - 1], { fontSize: '40px' })
+          .setOrigin(0.5).setScrollFactor(0.2).setDepth(-16).setAlpha(0.9));
+      }
+      // theme tối: phủ lớp tối tạo không khí hang động/luyện ngục
+      if (TH.dark) {
+        var dim = this.add.graphics().setScrollFactor(0).setDepth(-5);
+        dim.fillStyle(0x000000, 0.32); dim.fillRect(0, 0, W, H);
+        bg.push(dim);
       }
       this._bgObjects = bg;
 
@@ -458,13 +478,14 @@
         return c;
       }
       function addSolid(cx, cy, w, h, key) {
-        var t = self2.solids.create(cx, cy, key || 'ground');
+        var t = self2.solids.create(cx, cy, key || TH.groundKey || 'ground');
         t.setDisplaySize(w || 64, h || GH).refreshBody();
         return t;
       }
       function addPlat(cx, cy, w, key) {
-        var p = self2.platforms.create(cx, cy, key || 'platform');
-        p.setDisplaySize(w || 108, key === 'cloudp' ? 40 : 26).refreshBody();
+        var k = key || TH.platKey || 'platform';
+        var p = self2.platforms.create(cx, cy, k);
+        p.setDisplaySize(w || 108, k === 'cloudp' ? 40 : 26).refreshBody();
         return p;
       }
       function addCrate(cx, cy) {
@@ -473,9 +494,10 @@
         return c;
       }
       function addSpikeAt(cx) {
-        var sp = self2.spikes.create(cx, groundTop - 16, 'spike');
-        sp.setDisplaySize(46, 36).refreshBody();
-        sp.body.setSize(38, 22).setOffset(4, 12);
+        // hộp va chạm canh giữa khớp phần chông → bẫy luôn ăn khi chạm
+        var sp = self2.spikes.create(cx, groundTop - 18, 'spike');
+        sp.setDisplaySize(48, 40).refreshBody();
+        sp.body.setSize(44, 32, true);
         return sp;
       }
       function addPit(x1, x2) { self2.pits.push({ x1: x1, x2: x2 }); }
@@ -534,8 +556,13 @@
         var gateX = firstGate + i * gateSpacing;
         var coinArcX = gateX - 440;
         for (var a = 0; a < arcX.length; a++) addCoin(coinArcX + arcX[a], groundTop - arcY[a]);
-        (FEATURES[featureNameFor(i)] || fSteps)(gateX - 250);
-        if (level.id >= 5) addSpikeAt(gateX - 120);
+        var fname = featureNameFor(i);
+        (FEATURES[fname] || fSteps)(gateX - 250);
+        // bẫy chông trước cổng — tăng dần theo độ khó (bỏ qua đoạn đã có hố)
+        if (level.id >= 2 && fname !== 'pit') {
+          var spikeN = level.id >= 6 ? 3 : (level.id >= 4 ? 2 : 1);
+          for (var s = 0; s < spikeN; s++) addSpikeAt(gateX - 140 + s * 46);
+        }
 
         // ổ khóa (cổng câu hỏi)
         var gate = this.physics.add.staticImage(gateX, groundTop - 40, 'padlock');
@@ -559,9 +586,10 @@
         if (inPit(cx)) continue;
         addSolid(cx, groundTop + GH / 2, 64, GH);
       }
+      var fluidKey = (TH.fluid && self2.textures.exists(TH.fluid)) ? TH.fluid : 'water';
       this.pits.forEach(function (p) {
         for (var wx = p.x1; wx < p.x2; wx += 60) {
-          self2._terrainDecor.push(self2.add.image(wx + 30, groundTop + 22, 'water').setDisplaySize(62, 46).setDepth(-2));
+          self2._terrainDecor.push(self2.add.image(wx + 30, groundTop + 22, fluidKey).setDisplaySize(62, 46).setDepth(-2));
         }
       });
 

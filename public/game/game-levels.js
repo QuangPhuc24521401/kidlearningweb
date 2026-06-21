@@ -22,14 +22,14 @@
 
   /* Các màn — độ khó tăng dần. subjects: ưu tiên rút câu hỏi từ đây. */
   var LEVELS = [
-    { id: 1, name: 'Đồng cỏ xanh',   subjects: ['nhan_biet'],            gates: 3, speed: 175, hearts: 3 },
-    { id: 2, name: 'Rừng vui nhộn',  subjects: ['nhan_biet', 'ghep_hinh'], gates: 4, speed: 185, hearts: 3 },
-    { id: 3, name: 'Thung lũng nhạc', subjects: ['ghep_hinh', 'am_nhac'], gates: 4, speed: 195, hearts: 3 },
-    { id: 4, name: 'Đồi sắc màu',    subjects: ['am_nhac', 'my_thuat'],  gates: 5, speed: 205, hearts: 3 },
-    { id: 5, name: 'Hang động trí tuệ', subjects: ['my_thuat', 'tu_duy'], gates: 5, speed: 215, hearts: 2 },
-    { id: 6, name: 'Đỉnh tư duy',    subjects: ['tu_duy'],               gates: 6, speed: 225, hearts: 2 },
-    { id: 7, name: 'Thành phố chữ',  subjects: ['tu_duy', 'ngon_ngu'],   gates: 6, speed: 235, hearts: 2 },
-    { id: 8, name: 'Lâu đài vô địch', subjects: ['ngon_ngu'],            gates: 7, speed: 245, hearts: 2 }
+    { id: 1, name: 'Đồng cỏ xanh',   theme: 'grass',   subjects: ['nhan_biet'],            gates: 3, speed: 175, hearts: 3 },
+    { id: 2, name: 'Rừng rậm vui nhộn', theme: 'jungle', subjects: ['nhan_biet', 'ghep_hinh'], gates: 4, speed: 185, hearts: 3 },
+    { id: 3, name: 'Thung lũng nhạc', theme: 'valley',  subjects: ['ghep_hinh', 'am_nhac'], gates: 4, speed: 195, hearts: 3 },
+    { id: 4, name: 'Sa mạc sắc màu', theme: 'desert',   subjects: ['am_nhac', 'my_thuat'],  gates: 5, speed: 205, hearts: 3 },
+    { id: 5, name: 'Hang động lòng đất', theme: 'cave', subjects: ['my_thuat', 'tu_duy'],   gates: 5, speed: 215, hearts: 2 },
+    { id: 6, name: 'Luyện ngục lửa', theme: 'inferno',  subjects: ['tu_duy'],               gates: 6, speed: 225, hearts: 2 },
+    { id: 7, name: 'Thành phố chữ',  theme: 'city',     subjects: ['tu_duy', 'ngon_ngu'],   gates: 6, speed: 235, hearts: 2 },
+    { id: 8, name: 'Thiên đường vô địch', theme: 'heaven', subjects: ['ngon_ngu'],          gates: 7, speed: 245, hearts: 2 }
   ];
 
   function shuffle(arr) {
