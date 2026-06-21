@@ -148,7 +148,14 @@
     initialize: function LevelSelectScene() { Phaser.Scene.call(this, { key: 'LevelSelect' }); },
     create: function () {
       var self = this;
-      this.cameras.main.setBackgroundColor('#7ec0ee');
+      // nền trời + đồi
+      if (this.textures.exists('sky')) this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(W, H).setDepth(-20);
+      else this.cameras.main.setBackgroundColor('#7ec0ee');
+      if (this.textures.exists('hill2')) {
+        this.add.image(220, H + 10, 'hill2').setOrigin(0.5, 1).setDepth(-15).setDisplaySize(520, 250);
+        this.add.image(720, H + 10, 'hill2').setOrigin(0.5, 1).setDepth(-15).setDisplaySize(520, 250);
+        this.add.image(W / 2, H + 6, 'hill').setOrigin(0.5, 1).setDepth(-12).setDisplaySize(460, 200).setAlpha(0.95);
+      }
 
       this.add.text(W / 2, 42, 'Cuộc phiêu lưu học tập', {
         fontFamily: 'Baloo 2, cursive', fontSize: '34px', color: '#ffffff', stroke: '#2563eb', strokeThickness: 6
@@ -249,19 +256,26 @@
       var questions = (global.GameLevels && global.GameLevels.buildLevelQuestions(level)) || [];
       this.totalGates = questions.length;
 
-      var gateSpacing = 540;
-      var firstGate = 640;
-      var worldW = firstGate + this.totalGates * gateSpacing + 420;
+      var gateSpacing = 560;
+      var firstGate = 700;
+      var worldW = firstGate + this.totalGates * gateSpacing + 440;
       var groundTop = H - GROUND_H;
+      this.groundTop = groundTop;
 
       this.physics.world.setBounds(0, 0, worldW, H);
       this.cameras.main.setBounds(0, 0, worldW, H);
-      this.cameras.main.setBackgroundColor('#7ec0ee');
 
-      // mây trang trí
-      for (var m = 0; m < Math.ceil(worldW / 360); m++) {
-        this.add.image(140 + m * 360, 90 + (m % 2) * 46, 'cloud')
-          .setScrollFactor(0.4).setAlpha(0.9).setDisplaySize(96, 60);
+      // nền trời gradient + đồi núi parallax + mây
+      this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20);
+      for (var hx = 0; hx < worldW + 400; hx += 380) {
+        this.add.image(hx, groundTop + 30, 'hill2').setOrigin(0.5, 1).setScrollFactor(0.25).setDepth(-15).setDisplaySize(440, 220);
+      }
+      for (var hx2 = 160; hx2 < worldW + 400; hx2 += 330) {
+        this.add.image(hx2, groundTop + 24, 'hill').setOrigin(0.5, 1).setScrollFactor(0.5).setDepth(-12).setAlpha(0.95).setDisplaySize(360, 180);
+      }
+      for (var m = 0; m < Math.ceil(worldW / 340); m++) {
+        this.add.image(120 + m * 340, 80 + (m % 2) * 44, 'cloud')
+          .setScrollFactor(0.35).setAlpha(0.92).setDisplaySize(100, 62).setDepth(-10);
       }
 
       // mặt đất liền (tile)
@@ -272,9 +286,9 @@
       }
 
       // người chơi
-      this.player = this.physics.add.sprite(90, groundTop - 60, 'hero');
+      this.player = this.physics.add.sprite(90, groundTop - 70, 'hero');
       this.player.setCollideWorldBounds(true);
-      this.player.body.setSize(36, 46).setOffset(4, 6);
+      this.player.body.setSize(34, 48).setOffset(6, 6);
       this.physics.add.collider(this.player, this.solids);
       this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
@@ -284,35 +298,68 @@
       this.spikes = this.physics.add.staticGroup();
       this.gates = [];
 
-      // dựng từng đoạn: bục + xu + chướng ngại + cổng câu hỏi
+      var self2 = this;
+      function addCoin(cx, cy) {
+        var c = self2.coinsGrp.create(cx, cy, 'coin');
+        c.setDisplaySize(30, 30);
+        c.body.setCircle(13, 2, 2);
+        return c;
+      }
+
+      // tầm với khi nhảy (~155px) → cụm xu vòng cung đặt trong tầm
+      var arcY = [58, 104, 128, 104, 58];
+      var arcX = [-74, -37, 0, 37, 74];
+
       for (var i = 0; i < this.totalGates; i++) {
-        var segStart = firstGate - 360 + i * gateSpacing;
-        // bục nổi + xu
-        var pfX = segStart + 200, pfY = groundTop - 150;
-        var pf = this.platforms.create(pfX, pfY, 'platform');
-        pf.setDisplaySize(110, 28).refreshBody();
-        for (var ci = 0; ci < 3; ci++) {
-          var coin = this.coinsGrp.create(pfX - 30 + ci * 30, pfY - 40, 'coin');
-          coin.setDisplaySize(28, 28);
-        }
-        // chướng ngại gai (cactus) ở các màn khó
-        if (level.id >= 2) {
-          var spX = segStart + 380;
-          var sp = this.spikes.create(spX, groundTop - 22, 'spike');
-          sp.setDisplaySize(40, 44).refreshBody();
-        }
-        // cổng câu hỏi
         var gateX = firstGate + i * gateSpacing;
-        var gate = this.physics.add.staticImage(gateX, groundTop - 44, 'gate');
-        gate.setDisplaySize(64, 86).refreshBody();
+
+        // 1) Cụm xu vòng cung trên mặt đất — nhảy một nhịp là nhặt được
+        var coinArcX = gateX - 400;
+        for (var a = 0; a < arcX.length; a++) {
+          addCoin(coinArcX + arcX[a], groundTop - arcY[a]);
+        }
+
+        // 2) Bẫy chông — có đường chạy đà 2 bên, cách xa cụm xu & ổ khóa
+        if (level.id >= 2) {
+          var spX = gateX - 250;
+          var sp = this.spikes.create(spX, groundTop - 16, 'spike');
+          sp.setDisplaySize(46, 36).refreshBody();
+          sp.body.setSize(38, 22).setOffset(4, 12);
+          // màn khó: thêm 1 bẫy nữa nhưng vẫn chừa khoảng nhảy
+          if (level.id >= 5) {
+            var sp2 = this.spikes.create(spX + 60, groundTop - 16, 'spike');
+            sp2.setDisplaySize(46, 36).refreshBody();
+            sp2.body.setSize(38, 22).setOffset(4, 12);
+          }
+        }
+
+        // 3) Bục nổi thấp (trong tầm nhảy) + xu thưởng trên bục
+        var pfX = gateX - 120, pfY = groundTop - 118;
+        var pf = this.platforms.create(pfX, pfY, 'platform');
+        pf.setDisplaySize(108, 26).refreshBody();
+        for (var ci = 0; ci < 3; ci++) {
+          addCoin(pfX - 32 + ci * 32, pfY - 26);
+        }
+
+        // 4) Ổ khóa (cổng câu hỏi)
+        var gate = this.physics.add.staticImage(gateX, groundTop - 40, 'padlock');
+        gate.setDisplaySize(56, 72).refreshBody();
+        gate.body.setSize(40, 64);
         gate.questionData = questions[i];
         gate.answered = false;
         this.gates.push(gate);
       }
       this.gateCollider = this.physics.add.collider(this.player, this.gates);
 
+      // xu xoay nhẹ cho sinh động
+      this.tweens.add({
+        targets: this.coinsGrp.getChildren(),
+        scaleX: { from: 1, to: 0.25 },
+        duration: 520, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+      });
+
       // cờ kết thúc
-      var flagX = firstGate + this.totalGates * gateSpacing + 160;
+      var flagX = firstGate + this.totalGates * gateSpacing + 180;
       this.flag = this.physics.add.staticImage(flagX, groundTop - 36, 'flag');
       this.flag.setDisplaySize(40, 70).refreshBody();
 
@@ -333,21 +380,35 @@
 
     buildHud: function () {
       var self = this;
+
+      // panel nền HUD (góc trái: tim, góc phải: sao)
+      var panel = this.add.graphics().setScrollFactor(0).setDepth(48);
+      panel.fillStyle(0x1e293b, 0.32);
+      panel.fillRoundedRect(10, 10, 22 + this.hearts * 34, 40, 14);
+      panel.fillRoundedRect(W - 150, 10, 140, 40, 14);
+
       this.heartIcons = [];
       for (var i = 0; i < this.hearts; i++) {
-        var hImg = this.add.image(28 + i * 34, 28, 'heart').setScrollFactor(0).setDepth(50).setDisplaySize(28, 28);
+        var hImg = this.add.image(34 + i * 34, 30, 'heart').setScrollFactor(0).setDepth(50).setDisplaySize(26, 26);
         this.heartIcons.push(hImg);
       }
-      this.starText = this.add.text(W - 20, 18, '⭐ 0/' + this.totalGates, {
-        fontFamily: 'Baloo 2, cursive', fontSize: '24px', color: '#ffffff', stroke: '#1e3a8a', strokeThickness: 5
-      }).setOrigin(1, 0).setScrollFactor(0).setDepth(50);
-      this.add.text(W / 2, 18, this.level.name, {
-        fontFamily: 'Baloo 2, cursive', fontSize: '20px', color: '#ffffff', stroke: '#2563eb', strokeThickness: 5
-      }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(50);
+      this.add.image(W - 128, 30, 'coin').setScrollFactor(0).setDepth(50).setDisplaySize(24, 24);
+      this.starText = this.add.text(W - 110, 30, '0/' + this.totalGates, {
+        fontFamily: 'Baloo 2, cursive', fontSize: '22px', color: '#fff7d6'
+      }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(50);
 
-      var back = this.add.text(20, H - 30, '‹ Bản đồ', {
-        fontFamily: 'Nunito, sans-serif', fontSize: '16px', color: '#ffffff',
-        backgroundColor: '#1e3a8aaa', padding: { x: 10, y: 5 }
+      // tên màn ở giữa (pill)
+      var titlePanel = this.add.graphics().setScrollFactor(0).setDepth(48);
+      titlePanel.fillStyle(0x2563eb, 0.85);
+      var tw = Math.max(160, this.level.name.length * 13 + 40);
+      titlePanel.fillRoundedRect(W / 2 - tw / 2, 12, tw, 34, 17);
+      this.add.text(W / 2, 29, this.level.name, {
+        fontFamily: 'Baloo 2, cursive', fontSize: '19px', color: '#ffffff'
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(50);
+
+      var back = this.add.text(20, H - 32, '‹ Bản đồ', {
+        fontFamily: 'Nunito, sans-serif', fontSize: '15px', color: '#ffffff', fontStyle: 'bold',
+        backgroundColor: '#1e3a8acc', padding: { x: 12, y: 6 }
       }).setScrollFactor(0).setDepth(50).setInteractive({ useHandCursor: true });
       back.on('pointerdown', function () { stopSpeak(); self.scene.start('LevelSelect'); });
     },
@@ -356,7 +417,7 @@
       for (var i = 0; i < this.heartIcons.length; i++) {
         this.heartIcons[i].setAlpha(i < this.hearts ? 1 : 0.22);
       }
-      if (this.starText) this.starText.setText('⭐ ' + this.starsGot + '/' + this.totalGates);
+      if (this.starText) this.starText.setText(this.starsGot + '/' + this.totalGates);
     },
 
     collectCoin: function (player, coin) {
@@ -482,7 +543,7 @@
       else { p.setVelocityX(0); }
 
       var onFloor = p.body.blocked.down || p.body.touching.down;
-      if (jumpPressed && onFloor) { p.setVelocityY(-470); if (Sfx.jump) Sfx.jump(); }
+      if (jumpPressed && onFloor) { p.setVelocityY(-560); if (Sfx.jump) Sfx.jump(); }
 
       // kích hoạt câu hỏi khi tới gần cổng chưa trả lời
       var near = this.nearestUnansweredGate();
@@ -561,7 +622,7 @@
       backgroundColor: '#7ec0ee',
       pixelArt: false,
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-      physics: { default: 'arcade', arcade: { gravity: { y: 980 }, debug: false } },
+      physics: { default: 'arcade', arcade: { gravity: { y: 900 }, debug: false } },
       scene: [BootScene, LevelSelectScene, PlayScene, ResultScene]
     };
     global.__kidGame = new Phaser.Game(config);
