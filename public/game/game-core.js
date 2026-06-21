@@ -405,6 +405,7 @@
       var worldW = firstGate + this.totalGates * gateSpacing + 440;
       var groundTop = H - GROUND_H;
       this.groundTop = groundTop;
+      this.worldW = worldW;
 
       this.physics.world.setBounds(0, 0, worldW, H);
       this.cameras.main.setBounds(0, 0, worldW, H);
@@ -424,12 +425,15 @@
       }
       this._bgObjects = bg;
 
-      // mặt đất liền (tile)
+      // ───── nhóm vật thể & nhân vật ─────
       this.solids = this.physics.add.staticGroup();
-      for (var gx = 0; gx < worldW; gx += 64) {
-        var t = this.solids.create(gx + 32, groundTop + GROUND_H / 2, 'ground');
-        t.setDisplaySize(64, GROUND_H).refreshBody();
-      }
+      this.platforms = this.physics.add.staticGroup();
+      this.movers = this.physics.add.group({ allowGravity: false, immovable: true });
+      this.coinsGrp = this.physics.add.group({ allowGravity: false, immovable: true });
+      this.spikes = this.physics.add.staticGroup();
+      this.gates = [];
+      this._terrainDecor = [];
+      this.pits = [];
 
       // người chơi (nhân vật cá nhân hóa theo avatar tài khoản)
       var HERO = (global.GameAssets && global.GameAssets.HERO) || { w: 46, h: 56, ss: 1 };
@@ -437,61 +441,103 @@
       this.player.setDisplaySize(HERO.w, HERO.h);
       this.player.setCollideWorldBounds(true);
       this.player.body.setSize(34 * HERO.ss, 48 * HERO.ss).setOffset(6 * HERO.ss, 6 * HERO.ss);
+      this.lastSafeX = 90;
       this.physics.add.collider(this.player, this.solids);
+      this.physics.add.collider(this.player, this.platforms);
+      this.physics.add.collider(this.player, this.movers);
       this.cameras.main.setZoom(DPR);
       this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
       this.cameras.main.centerOn(this.player.x, this.player.y);
 
-      // nhóm vật thể
-      this.platforms = this.physics.add.staticGroup();
-      this.coinsGrp = this.physics.add.group({ allowGravity: false, immovable: true });
-      this.spikes = this.physics.add.staticGroup();
-      this.gates = [];
-
       var self2 = this;
+      var GH = GROUND_H;
       function addCoin(cx, cy) {
         var c = self2.coinsGrp.create(cx, cy, 'coin');
         c.setDisplaySize(30, 30);
         c.body.setCircle(13, 2, 2);
         return c;
       }
+      function addSolid(cx, cy, w, h, key) {
+        var t = self2.solids.create(cx, cy, key || 'ground');
+        t.setDisplaySize(w || 64, h || GH).refreshBody();
+        return t;
+      }
+      function addPlat(cx, cy, w, key) {
+        var p = self2.platforms.create(cx, cy, key || 'platform');
+        p.setDisplaySize(w || 108, key === 'cloudp' ? 40 : 26).refreshBody();
+        return p;
+      }
+      function addCrate(cx, cy) {
+        var c = self2.solids.create(cx, cy, 'crate');
+        c.setDisplaySize(40, 40).refreshBody();
+        return c;
+      }
+      function addSpikeAt(cx) {
+        var sp = self2.spikes.create(cx, groundTop - 16, 'spike');
+        sp.setDisplaySize(46, 36).refreshBody();
+        sp.body.setSize(38, 22).setOffset(4, 12);
+        return sp;
+      }
+      function addPit(x1, x2) { self2.pits.push({ x1: x1, x2: x2 }); }
 
-      // tầm với khi nhảy (~155px) → cụm xu vòng cung đặt trong tầm
-      var arcY = [58, 104, 128, 104, 58];
-      var arcX = [-74, -37, 0, 37, 74];
+      // ───── các kiểu địa hình ─────
+      function fSteps(fx) { // gò đất bậc cao
+        for (var k = -1; k <= 1; k++) addSolid(fx + k * 64, groundTop - GH / 2, 64, GH);
+        addCoin(fx - 44, groundTop - GH - 30); addCoin(fx, groundTop - GH - 30); addCoin(fx + 44, groundTop - GH - 30);
+      }
+      function fCrates(fx) { // thùng gỗ chồng
+        addCrate(fx, groundTop - 20); addCrate(fx, groundTop - 60);
+        addCrate(fx - 84, groundTop - 20);
+        addCoin(fx, groundTop - 104); addCoin(fx - 84, groundTop - 64);
+      }
+      function fIslands(fx) { // đảo mây bay (thưởng)
+        var ys = [groundTop - 92, groundTop - 140, groundTop - 92];
+        for (var k = 0; k < 3; k++) {
+          addPlat(fx - 92 + k * 92, ys[k], 92, 'cloudp');
+          addCoin(fx - 92 + k * 92, ys[k] - 34);
+        }
+      }
+      function fPit(fx) { // hố nước + đảo đá giữa
+        addPit(fx - 96, fx + 96);
+        addPlat(fx, groundTop + 8, 96, 'platform');
+        addCoin(fx, groundTop - 64); addCoin(fx - 46, groundTop - 80); addCoin(fx + 46, groundTop - 80);
+      }
+      function fStairs(fx) { // cầu thang bay
+        for (var k = 0; k < 3; k++) {
+          addPlat(fx - 92 + k * 84, groundTop - 58 - k * 42, 84, 'platform');
+          addCoin(fx - 92 + k * 84, groundTop - 92 - k * 42);
+        }
+      }
+      function fMovers(fx) { // bục thang máy + xu trên cao
+        var m = self2.movers.create(fx, groundTop - 80, 'platform');
+        m.setDisplaySize(96, 24);
+        m.body.setSize(110, 28);
+        m._minY = groundTop - 184; m._maxY = groundTop - 80; m._spd = 55;
+        m.setVelocityY(-m._spd);
+        addCoin(fx, groundTop - 150); addCoin(fx, groundTop - 180);
+      }
+      var FEATURES = { steps: fSteps, crates: fCrates, islands: fIslands, pit: fPit, stairs: fStairs, movers: fMovers };
+      function featureNameFor(i) {
+        var id = level.id, pool = ['islands', 'steps'];
+        if (id >= 2) pool.push('crates');
+        if (id >= 3) pool.push('pit');
+        if (id >= 4) pool.push('stairs');
+        if (id >= 6) pool.push('movers');
+        return pool[i % pool.length];
+      }
+
+      // cụm xu vòng cung trên mặt đất phẳng (luôn có)
+      var arcY = [54, 96, 118, 96, 54];
+      var arcX = [-72, -36, 0, 36, 72];
 
       for (var i = 0; i < this.totalGates; i++) {
         var gateX = firstGate + i * gateSpacing;
+        var coinArcX = gateX - 440;
+        for (var a = 0; a < arcX.length; a++) addCoin(coinArcX + arcX[a], groundTop - arcY[a]);
+        (FEATURES[featureNameFor(i)] || fSteps)(gateX - 250);
+        if (level.id >= 5) addSpikeAt(gateX - 120);
 
-        // 1) Cụm xu vòng cung trên mặt đất — nhảy một nhịp là nhặt được
-        var coinArcX = gateX - 400;
-        for (var a = 0; a < arcX.length; a++) {
-          addCoin(coinArcX + arcX[a], groundTop - arcY[a]);
-        }
-
-        // 2) Bẫy chông — có đường chạy đà 2 bên, cách xa cụm xu & ổ khóa
-        if (level.id >= 2) {
-          var spX = gateX - 250;
-          var sp = this.spikes.create(spX, groundTop - 16, 'spike');
-          sp.setDisplaySize(46, 36).refreshBody();
-          sp.body.setSize(38, 22).setOffset(4, 12);
-          // màn khó: thêm 1 bẫy nữa nhưng vẫn chừa khoảng nhảy
-          if (level.id >= 5) {
-            var sp2 = this.spikes.create(spX + 60, groundTop - 16, 'spike');
-            sp2.setDisplaySize(46, 36).refreshBody();
-            sp2.body.setSize(38, 22).setOffset(4, 12);
-          }
-        }
-
-        // 3) Bục nổi thấp (trong tầm nhảy) + xu thưởng trên bục
-        var pfX = gateX - 120, pfY = groundTop - 118;
-        var pf = this.platforms.create(pfX, pfY, 'platform');
-        pf.setDisplaySize(108, 26).refreshBody();
-        for (var ci = 0; ci < 3; ci++) {
-          addCoin(pfX - 32 + ci * 32, pfY - 26);
-        }
-
-        // 4) Ổ khóa (cổng câu hỏi)
+        // ổ khóa (cổng câu hỏi)
         var gate = this.physics.add.staticImage(gateX, groundTop - 40, 'padlock');
         gate.setDisplaySize(56, 72).refreshBody();
         gate.body.setSize(40, 64);
@@ -500,6 +546,24 @@
         this.gates.push(gate);
       }
       this.gateCollider = this.physics.add.collider(this.player, this.gates);
+
+      // ───── mặt đất (chừa hố) + nước ─────
+      function inPit(x) {
+        for (var pi = 0; pi < self2.pits.length; pi++) {
+          if (x > self2.pits[pi].x1 && x < self2.pits[pi].x2) return true;
+        }
+        return false;
+      }
+      for (var gx = 0; gx < worldW; gx += 64) {
+        var cx = gx + 32;
+        if (inPit(cx)) continue;
+        addSolid(cx, groundTop + GH / 2, 64, GH);
+      }
+      this.pits.forEach(function (p) {
+        for (var wx = p.x1; wx < p.x2; wx += 60) {
+          self2._terrainDecor.push(self2.add.image(wx + 30, groundTop + 22, 'water').setDisplaySize(62, 46).setDepth(-2));
+        }
+      });
 
       // xu xoay nhẹ cho sinh động
       this.tweens.add({
@@ -514,7 +578,6 @@
       this.flag.setDisplaySize(40, 70).refreshBody();
 
       // va chạm vật phẩm
-      this.physics.add.collider(this.player, this.platforms);
       this.physics.add.overlap(this.player, this.coinsGrp, this.collectCoin, null, this);
       this.physics.add.overlap(this.player, this.spikes, this.hitSpike, null, this);
       this.physics.add.overlap(this.player, this.flag, this.reachFlag, null, this);
@@ -530,8 +593,10 @@
       var worldObjects = (this._bgObjects || []).concat(
         this.solids.getChildren(),
         this.platforms.getChildren(),
+        this.movers.getChildren(),
         this.coinsGrp.getChildren(),
         this.spikes.getChildren(),
+        this._terrainDecor || [],
         this.gates,
         [this.player, this.flag]
       );
@@ -598,6 +663,16 @@
       coin.disableBody(true, true);
       this.coins++;
       if (Sfx.coin) Sfx.coin();
+    },
+
+    fallRespawn: function () {
+      if (this.finished || this.invuln) return;
+      var alive = this.loseHeart();
+      if (alive) {
+        this.player.setVelocity(0, 0);
+        var rx = Phaser.Math.Clamp(this.lastSafeX || 90, 60, (this.worldW || W) - 60);
+        this.player.setPosition(rx, this.groundTop - 100);
+      }
     },
 
     hitSpike: function () {
@@ -704,6 +779,18 @@
     update: function () {
       if (this.finished || this.quizActive) return;
       var p = this.player, speed = this.level.speed || 180;
+
+      // bục thang máy chạy lên/xuống
+      var movers = this.movers ? this.movers.getChildren() : [];
+      for (var mi = 0; mi < movers.length; mi++) {
+        var m = movers[mi], sp = m._spd || 55;
+        if (m.y <= m._minY && m.body.velocity.y < 0) m.setVelocityY(sp);
+        else if (m.y >= m._maxY && m.body.velocity.y > 0) m.setVelocityY(-sp);
+      }
+
+      // rơi xuống hố → mất tim, hồi sinh ở chỗ an toàn
+      if (p.y > this.groundTop + 30) { this.fallRespawn(); return; }
+      if (p.body.blocked.down || p.body.touching.down) this.lastSafeX = p.x;
       var left = this.cursors.left.isDown || touch.left;
       var right = this.cursors.right.isDown || touch.right;
       var jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) ||

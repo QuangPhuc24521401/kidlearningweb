@@ -246,6 +246,59 @@
     }
   }
 
+  /* Thùng gỗ — chướng ngại để nhảy qua / leo lên */
+  function makeCrate(scene) {
+    var key = 'crate';
+    if (scene.textures.exists(key)) return;
+    var s = 42;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x6b4423, 1); g.fillRoundedRect(0, 0, s, s, 5);
+    g.fillStyle(0xa9683a, 1); g.fillRoundedRect(2, 2, s - 4, s - 4, 4);
+    g.lineStyle(3, 0x6b4423, 1);
+    g.strokeRect(3, 3, s - 6, s - 6);
+    g.beginPath();
+    g.moveTo(4, 4); g.lineTo(s - 4, s - 4);
+    g.moveTo(s - 4, 4); g.lineTo(4, s - 4);
+    g.strokePath();
+    g.fillStyle(0xf5deb3, 1);
+    [[7, 7], [s - 7, 7], [7, s - 7], [s - 7, s - 7]].forEach(function (p) { g.fillCircle(p[0], p[1], 2.2); });
+    g.generateTexture(key, s, s);
+    g.destroy();
+  }
+
+  /* Bệ mây — bục nổi mềm mại */
+  function makeCloudPlat(scene) {
+    var key = 'cloudp';
+    if (scene.textures.exists(key)) return;
+    var w = 120, h = 50;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0xbfe3ff, 1); g.fillRoundedRect(6, h - 18, w - 12, 16, 8);
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(28, 26, 20);
+    g.fillCircle(60, 20, 26);
+    g.fillCircle(92, 26, 20);
+    g.fillRoundedRect(8, 22, w - 16, 20, 12);
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  /* Nước — đáy hố nguy hiểm */
+  function makeWater(scene) {
+    var key = 'water';
+    if (scene.textures.exists(key)) return;
+    var w = 64, h = 46;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x1f78c1, 1); g.fillRect(0, 8, w, h - 8);
+    g.fillStyle(0x3a98e0, 1); g.fillRect(0, 8, w, 12);
+    g.fillStyle(0x9fd4ff, 1);
+    for (var i = 0; i < w; i += 16) g.fillCircle(i + 8, 9, 6);
+    g.fillStyle(0xffffff, 0.45);
+    g.fillRoundedRect(7, 18, 12, 3, 1);
+    g.fillRoundedRect(34, 24, 14, 3, 1);
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
   function makeBlockTexture(scene, key, w, h, colorTop, colorBody, radius) {
     if (scene.textures.exists(key)) return;
     var g = scene.make.graphics({ x: 0, y: 0, add: false });
@@ -307,6 +360,10 @@
     makeBlockTexture(scene, 'ground', 64, 64, 0x6abe30, 0x9c6b3f, 0);
     // bục nhảy
     makeBlockTexture(scene, 'platform', 110, 28, 0xa7e57d, 0x6aa84f, 10);
+    // địa hình bổ sung
+    makeCrate(scene);
+    makeCloudPlat(scene);
+    makeWater(scene);
 
     // vật phẩm/trang trí bằng emoji
     makeEmojiTexture(scene, 'cloud', '☁️', 80);
