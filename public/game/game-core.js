@@ -416,12 +416,10 @@
         : { skyKey: 'sky', groundKey: 'ground', platKey: 'platform', fluid: 'water', dark: false };
       this.theme = TH;
 
-      // Cảnh nền hoàn chỉnh (bức tranh vẽ theo chủ đề) + parallax
-      this._parallax = [];
+      // Cảnh nền hoàn chỉnh (bức tranh vẽ theo chủ đề, parallax bằng scrollFactor)
       if (global.GameAssets && global.GameAssets.buildScenery) {
         var scn = global.GameAssets.buildScenery(this, level.theme, worldW, groundTop);
         this._bgObjects = scn.objects;
-        this._parallax = scn.parallax;
       } else {
         this._bgObjects = [this.add.image(0, 0, TH.skyKey).setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20)];
       }
@@ -432,6 +430,7 @@
       this.movers = this.physics.add.group({ allowGravity: false, immovable: true });
       this.coinsGrp = this.physics.add.group({ allowGravity: false, immovable: true });
       this.spikes = this.physics.add.staticGroup();
+      this.hazards = this.physics.add.group({ allowGravity: false, immovable: true });
       this.gates = [];
       this._terrainDecor = [];
       this.pits = [];
@@ -479,13 +478,23 @@
         c.setDepth(2);
         return c;
       }
-      function addSpikeAt(cx) {
-        // chông nổi rõ trên mặt đất + hộp va chạm canh giữa → bẫy luôn ăn khi chạm
-        var sp = self2.spikes.create(cx, groundTop - 18, 'spike');
+      function addSpikeAt(cx, cy) {
+        // chông nổi rõ + hộp va chạm canh giữa → bẫy luôn ăn khi chạm
+        var sp = self2.spikes.create(cx, (cy == null ? groundTop - 18 : cy), 'spike');
         sp.setDisplaySize(48, 40).refreshBody();
         sp.body.setSize(44, 32, true);
         sp.setDepth(5);
         return sp;
+      }
+      function addSaw(cx, cy, range, spd) {
+        // lưỡi cưa tuần tra ngang (bẫy động kiểu Mario)
+        var s = self2.hazards.create(cx, cy, 'saw');
+        s.setDisplaySize(46, 46);
+        s.body.setSize(38, 38, true);
+        s.setDepth(5);
+        s._minX = cx - range; s._maxX = cx + range; s._spd = spd || 110;
+        s.setVelocityX(s._spd);
+        return s;
       }
       function addPit(x1, x2) { self2.pits.push({ x1: x1, x2: x2 }); }
 
@@ -533,18 +542,43 @@
         for (var k = 0; k < n; k++) addSpikeAt(start + k * 46);
         addCoin(fx, groundTop - 114); addCoin(fx - 40, groundTop - 100); addCoin(fx + 40, groundTop - 100);
       }
-      var FEATURES = { steps: fSteps, crates: fCrates, islands: fIslands, pit: fPit, stairs: fStairs, movers: fMovers, spikes: fSpikes };
-      var FOOT = { steps: 250, crates: 220, islands: 300, pit: 270, stairs: 300, movers: 230, spikes: 210 };
+      function fSaw(fx) { // lưỡi cưa tuần tra ngang trên mặt đất → canh nhịp băng qua
+        addSaw(fx, groundTop - 24, 96, 120 + level.id * 8);
+        addCoin(fx, groundTop - 110); addCoin(fx - 78, groundTop - 80); addCoin(fx + 78, groundTop - 80);
+      }
+      function fSawAir(fx) { // lưỡi cưa treo lơ lửng chắn đường nhảy
+        addSaw(fx, groundTop - 96, 70, 130);
+        addPlat(fx - 120, groundTop - 44, 80); addPlat(fx + 120, groundTop - 44, 80);
+        addCoin(fx, groundTop - 150);
+      }
+      function fSpikeGap(fx) { // hai cụm chông, nhảy qua khe ở giữa
+        addSpikeAt(fx - 92); addSpikeAt(fx - 46);
+        addSpikeAt(fx + 46); addSpikeAt(fx + 92);
+        addCoin(fx, groundTop - 118); addCoin(fx, groundTop - 150);
+      }
+      function fTower(fx) { // tháp thùng gắn chông trên đỉnh → nhảy vượt cẩn thận
+        addCrate(fx, groundTop - 20); addCrate(fx, groundTop - 60);
+        addSpikeAt(fx, groundTop - 100);
+        addCoin(fx - 70, groundTop - 70); addCoin(fx + 70, groundTop - 130);
+      }
+      var FEATURES = {
+        steps: fSteps, crates: fCrates, islands: fIslands, pit: fPit, stairs: fStairs,
+        movers: fMovers, spikes: fSpikes, saw: fSaw, sawair: fSawAir, spikegap: fSpikeGap, tower: fTower
+      };
+      var FOOT = {
+        steps: 250, crates: 220, islands: 300, pit: 270, stairs: 300, movers: 230, spikes: 210,
+        saw: 250, sawair: 300, spikegap: 240, tower: 210
+      };
 
       // bộ địa hình theo độ khó (càng cao càng nhiều kiểu & bẫy)
       function buildPool(id) {
         var pool = ['islands', 'steps', 'crates'];
-        if (id >= 2) pool.push('crates', 'spikes');
-        if (id >= 3) pool.push('pit', 'islands');
-        if (id >= 4) pool.push('stairs', 'spikes');
-        if (id >= 5) pool.push('pit');
-        if (id >= 6) pool.push('movers', 'spikes');
-        if (id >= 7) pool.push('pit', 'stairs');
+        if (id >= 2) pool.push('spikes', 'saw');
+        if (id >= 3) pool.push('pit', 'spikegap');
+        if (id >= 4) pool.push('stairs', 'tower', 'saw');
+        if (id >= 5) pool.push('pit', 'sawair');
+        if (id >= 6) pool.push('movers', 'spikes', 'spikegap');
+        if (id >= 7) pool.push('saw', 'tower', 'sawair');
         return pool;
       }
       function shuffleArr(arr) {
@@ -642,6 +676,7 @@
       // va chạm vật phẩm
       this.physics.add.overlap(this.player, this.coinsGrp, this.collectCoin, null, this);
       this.physics.add.overlap(this.player, this.spikes, this.hitSpike, null, this);
+      this.physics.add.overlap(this.player, this.hazards, this.hitSpike, null, this);
       this.physics.add.overlap(this.player, this.flag, this.reachFlag, null, this);
 
       // input
@@ -656,6 +691,7 @@
         this.solids.getChildren(),
         this.platforms.getChildren(),
         this.movers.getChildren(),
+        this.hazards.getChildren(),
         this.coinsGrp.getChildren(),
         this.spikes.getChildren(),
         this._terrainDecor || [],
@@ -839,13 +875,6 @@
     },
 
     update: function () {
-      // parallax cảnh nền cuộn theo camera
-      if (this._parallax && this._parallax.length) {
-        var sx = this.cameras.main.scrollX;
-        for (var pp = 0; pp < this._parallax.length; pp++) {
-          this._parallax[pp].obj.tilePositionX = sx * this._parallax[pp].f;
-        }
-      }
       if (this.finished || this.quizActive) return;
       var p = this.player, speed = this.level.speed || 260;
 
@@ -855,6 +884,15 @@
         var m = movers[mi], sp = m._spd || 55;
         if (m.y <= m._minY && m.body.velocity.y < 0) m.setVelocityY(sp);
         else if (m.y >= m._maxY && m.body.velocity.y > 0) m.setVelocityY(-sp);
+      }
+
+      // lưỡi cưa: tuần tra ngang + quay tròn
+      var saws = this.hazards ? this.hazards.getChildren() : [];
+      for (var si = 0; si < saws.length; si++) {
+        var s = saws[si], ss = s._spd || 110;
+        if (s.x <= s._minX && s.body.velocity.x < 0) s.setVelocityX(ss);
+        else if (s.x >= s._maxX && s.body.velocity.x > 0) s.setVelocityX(-ss);
+        s.angle += 12;
       }
 
       // rơi xuống hố → mất tim, hồi sinh ở chỗ an toàn
@@ -873,7 +911,11 @@
       else { p.setVelocityX(0); }
 
       var onFloor = p.body.blocked.down || p.body.touching.down;
-      if (jumpPressed && onFloor) { p.setVelocityY(-640); if (Sfx.jump) Sfx.jump(); }
+      if (jumpPressed && onFloor) { p.setVelocityY(-720); if (Sfx.jump) Sfx.jump(); }
+      // nhảy biến thiên kiểu Mario: nhả nút sớm → nhảy ngắn, rơi xuống nhanh hơn
+      var jumpHeld = this.cursors.up.isDown || this.keySpace.isDown || touch.jumpHeld;
+      if (!jumpHeld && p.body.velocity.y < -240) p.setVelocityY(-240);
+      if (p.body.velocity.y > 0) p.body.velocity.y += 32; // tăng tốc rơi cho dứt khoát
 
       // kích hoạt câu hỏi khi tới gần cổng chưa trả lời
       var near = this.nearestUnansweredGate();
@@ -956,7 +998,7 @@
       pixelArt: false,
       render: { antialias: true, roundPixels: false },
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-      physics: { default: 'arcade', arcade: { gravity: { y: 1050 }, debug: false } },
+      physics: { default: 'arcade', arcade: { gravity: { y: 1900 }, debug: false } },
       scene: [BootScene, LevelSelectScene, PlayScene, ResultScene]
     };
     global.__kidGame = new Phaser.Game(config);

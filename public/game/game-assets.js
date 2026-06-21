@@ -221,6 +221,28 @@
     g.destroy();
   }
 
+  /* Lưỡi cưa quay — bẫy di chuyển kiểu Mario */
+  function makeSaw(scene) {
+    var key = 'saw';
+    if (scene.textures.exists(key)) return;
+    var S = 46, r = S / 2, c = r;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x8a929c, 1); g.fillCircle(c, c, r - 2);
+    g.fillStyle(0xd2d8df, 1);
+    for (var i = 0; i < 10; i++) {
+      var a = (i / 10) * Math.PI * 2;
+      g.fillTriangle(
+        c + Math.cos(a - 0.16) * (r - 6), c + Math.sin(a - 0.16) * (r - 6),
+        c + Math.cos(a + 0.16) * (r - 6), c + Math.sin(a + 0.16) * (r - 6),
+        c + Math.cos(a) * (r + 2), c + Math.sin(a) * (r + 2)
+      );
+    }
+    g.fillStyle(0x5b6470, 1); g.fillCircle(c, c, 7);
+    g.fillStyle(0xeef2f6, 1); g.fillCircle(c, c, 3);
+    g.generateTexture(key, S, S);
+    g.destroy();
+  }
+
   /* ─────────── Chủ đề (background) cho từng màn ─────────── */
   var THEMES = {
     grass:   { sky: [0x4aa3e8, 0xc7ecff], far: 0x8ccf72, near: 0x6fb84e, gTop: 0x6abe30, gBody: 0x9c6b3f, sun: 0xfff3b0, farType: 'hills',    tree: 'tree',    fluid: 'water', dark: false },
@@ -346,33 +368,35 @@
     }
   }
 
-  /* Tạo cảnh nền nhiều lớp; trả về { objects, parallax } */
+  /* Tạo cảnh nền nhiều lớp (tilesprite phủ toàn thế giới + parallax theo scrollFactor) */
   function buildScenery(scene, themeName, worldW, groundTop) {
     var th = THEMES[themeName] || THEMES.grass;
     ensureTheme(scene, themeName);
     _ensureSceneryTex(scene, themeName, th);
-    var W = 960, H = 540, objs = [], parallax = [];
+    var W = 960, H = 540, objs = [], ww = worldW + 600;
 
-    objs.push(scene.add.image(0, 0, 'sky_' + themeName).setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-30));
+    // Trời: phủ cả thế giới, cuộn rất chậm
+    objs.push(scene.add.tileSprite(0, 0, ww, H, 'sky_' + themeName).setOrigin(0, 0).setScrollFactor(0.06).setDepth(-30));
 
+    // Mặt trời/trăng (vật trong thế giới, cuộn chậm → luôn ở phía xa)
     if (th.sun) {
-      var s = scene.add.graphics().setScrollFactor(0.04).setDepth(-29);
+      var s = scene.add.graphics().setScrollFactor(0.06).setDepth(-28);
       s.fillStyle(th.sun, 0.22); s.fillCircle(772, 118, 78);
       s.fillStyle(th.sun, 0.95); s.fillCircle(772, 118, 48);
       objs.push(s);
     }
 
-    var far = scene.add.tileSprite(0, 0, W, H, 'far_' + themeName).setOrigin(0, 0).setScrollFactor(0).setDepth(-25);
-    var mid = scene.add.tileSprite(0, 0, W, H, 'mid_' + themeName).setOrigin(0, 0).setScrollFactor(0).setDepth(-18);
-    objs.push(far, mid);
-    parallax.push({ obj: far, f: 0.18 }, { obj: mid, f: 0.45 });
+    // Lớp xa & gần: parallax bằng scrollFactor để hiển thị đúng dưới camera zoom
+    objs.push(scene.add.tileSprite(0, 0, ww, H, 'far_' + themeName).setOrigin(0, 0).setScrollFactor(0.2).setDepth(-25));
+    objs.push(scene.add.tileSprite(0, 0, ww, H, 'mid_' + themeName).setOrigin(0, 0).setScrollFactor(0.5).setDepth(-18));
 
+    // Theme tối: phủ lớp tối đồng nhất (scrollFactor 0 vẫn phủ kín vì màu đồng nhất)
     if (th.dark) {
       var d = scene.add.graphics().setScrollFactor(0).setDepth(-10);
-      d.fillStyle(0x000000, 0.34); d.fillRect(0, 0, W, H);
+      d.fillStyle(0x000000, 0.34); d.fillRect(-W, -H, W * 3, H * 3);
       objs.push(d);
     }
-    return { objects: objs, parallax: parallax };
+    return { objects: objs };
   }
 
   /* Nền trời gradient + texture đồi cho parallax */
@@ -526,6 +550,7 @@
     makeCoin(scene);
     makePadlock(scene);
     makeSpike(scene);
+    makeSaw(scene);
     // nền đất (cỏ trên, đất dưới)
     makeBlockTexture(scene, 'ground', 64, 64, 0x6abe30, 0x9c6b3f, 0);
     // bục nhảy
