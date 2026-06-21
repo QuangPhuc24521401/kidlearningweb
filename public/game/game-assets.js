@@ -9,6 +9,52 @@
 (function (global) {
   'use strict';
 
+  /* ─────────── Avatar người dùng (đồng bộ với tài khoản) ─────────── */
+  var HERO_W = 46, HERO_H = 56, HERO_SS = 3; // SS: vẽ ở độ phân giải cao cho nét
+
+  function getStudentAvatar() {
+    var def = { mode: 'emoji', emoji: '🧒', ring: '#FF9800', photo: '' };
+    try {
+      var mode = localStorage.getItem('studentAvatarMode') === 'photo' ? 'photo' : 'emoji';
+      var emoji = (localStorage.getItem('studentAvatarEmoji') || '🧒').trim() || '🧒';
+      var ringRe = /^#[0-9A-Fa-f]{6}$/;
+      var ringRaw = (localStorage.getItem('studentAvatarRing') || '').trim();
+      var ring = ringRe.test(ringRaw) ? ringRaw : '#FF9800';
+      var photo = localStorage.getItem('studentAvatarPhoto') || '';
+      var photoOk = mode === 'photo'
+        && photo.indexOf('data:image/jpeg;base64,') === 0
+        && photo.length < 200000;
+      return { mode: photoOk ? 'photo' : 'emoji', emoji: emoji, ring: ring, photo: photoOk ? photo : '' };
+    } catch (e) { return def; }
+  }
+
+  /* ─────────── Tiện ích màu ─────────── */
+  function clamp255(v) { return Math.max(0, Math.min(255, v)); }
+  function hexToRgb(hex) {
+    hex = String(hex || '').replace('#', '');
+    if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    var n = parseInt(hex, 16);
+    if (isNaN(n)) return { r: 255, g: 152, b: 0 };
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+  function shade(hex, amt) {
+    var c = hexToRgb(hex), t = amt < 0 ? 0 : 255, p = Math.abs(amt);
+    return 'rgb(' + clamp255(Math.round((t - c.r) * p + c.r)) + ','
+      + clamp255(Math.round((t - c.g) * p + c.g)) + ','
+      + clamp255(Math.round((t - c.b) * p + c.b)) + ')';
+  }
+  function roundRectPath(ctx, x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
   /* ─────────── Texture từ emoji ─────────── */
   function makeEmojiTexture(scene, key, emoji, size) {
     if (scene.textures.exists(key)) return;
@@ -25,49 +71,81 @@
     canvas.refresh();
   }
 
-  /* ─────────── Texture vẽ tay (Graphics) ─────────── */
-  function makeHero(scene) {
-    var key = 'hero';
-    if (scene.textures.exists(key)) return;
-    var w = 46, h = 56;
-    var g = scene.make.graphics({ x: 0, y: 0, add: false });
-    // bóng chân
-    g.fillStyle(0x7a4a23, 1);
-    g.fillRoundedRect(8, h - 8, 12, 8, 4);
-    g.fillRoundedRect(w - 20, h - 8, 12, 8, 4);
-    // thân tròn vàng cam (viền nâu)
-    g.fillStyle(0xb5651d, 1);
-    g.fillRoundedRect(2, 9, w - 4, h - 16, 15);
-    g.fillStyle(0xffb84d, 1);
-    g.fillRoundedRect(4, 11, w - 8, h - 20, 13);
+  /* ─────────── Nhân vật cá nhân hóa theo avatar tài khoản ─────────── */
+  function drawHero(scene, key, avatar, img) {
+    if (scene.textures.exists(key)) scene.textures.remove(key);
+    var SS = HERO_SS, W = HERO_W, H = HERO_H;
+    var tex = scene.textures.createCanvas(key, W * SS, H * SS);
+    if (!tex) return;
+    var ctx = tex.context || (tex.getContext && tex.getContext('2d'));
+    if (!ctx) return;
+    ctx.clearRect(0, 0, W * SS, H * SS);
+    ctx.save();
+    ctx.scale(SS, SS); // vẽ theo toạ độ logic 46×56
+
+    var ring = (avatar && avatar.ring) || '#FF9800';
+    var bodyDark = shade(ring, -0.30);
+    var bodyLight = shade(ring, 0.30);
+
+    // chân
+    ctx.fillStyle = '#6b4423';
+    roundRectPath(ctx, 9, H - 9, 11, 8, 4); ctx.fill();
+    roundRectPath(ctx, W - 20, H - 9, 11, 8, 4); ctx.fill();
+    // tay
+    ctx.fillStyle = bodyDark;
+    ctx.beginPath(); ctx.arc(5, 36, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(W - 5, 36, 4.5, 0, Math.PI * 2); ctx.fill();
+    // thân (viền + nền theo màu avatar)
+    ctx.fillStyle = bodyDark; roundRectPath(ctx, 2, 12, W - 4, H - 20, 14); ctx.fill();
+    ctx.fillStyle = ring; roundRectPath(ctx, 4, 14, W - 8, H - 24, 12); ctx.fill();
     // bụng sáng
-    g.fillStyle(0xffe7b3, 1);
-    g.fillRoundedRect(12, 24, w - 24, h - 32, 10);
-    // mũ đỏ
-    g.fillStyle(0xc62828, 1);
-    g.fillRoundedRect(2, 0, w - 4, 17, 8);
-    g.fillStyle(0xe53935, 1);
-    g.fillRoundedRect(4, 1, w - 8, 13, 7);
-    g.fillStyle(0xffffff, 1);
-    g.fillCircle(w / 2, 8, 5);
-    // mắt
-    g.fillStyle(0x1e293b, 1);
-    g.fillCircle(w / 2 - 7, 27, 3.4);
-    g.fillCircle(w / 2 + 7, 27, 3.4);
-    g.fillStyle(0xffffff, 1);
-    g.fillCircle(w / 2 - 6, 26, 1.2);
-    g.fillCircle(w / 2 + 8, 26, 1.2);
-    // miệng cười
-    g.lineStyle(2, 0x9a3412, 1);
-    g.beginPath();
-    g.arc(w / 2, 33, 6, 0.15 * Math.PI, 0.85 * Math.PI);
-    g.strokePath();
-    // má hồng
-    g.fillStyle(0xff8a8a, 0.65);
-    g.fillCircle(w / 2 - 13, 33, 3);
-    g.fillCircle(w / 2 + 13, 33, 3);
-    g.generateTexture(key, w, h);
-    g.destroy();
+    ctx.fillStyle = bodyLight; roundRectPath(ctx, 11, H - 23, W - 22, 13, 8); ctx.fill();
+
+    // khuôn mặt = avatar (emoji hoặc ảnh)
+    var fx = W / 2, fy = 17, fr = 15;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(fx, fy, fr, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.beginPath(); ctx.arc(fx, fy, fr - 1.6, 0, Math.PI * 2); ctx.clip();
+    if (img) {
+      var d = (fr - 1.6) * 2;
+      var s = Math.min(img.width, img.height) || 1;
+      ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, fx - d / 2, fy - d / 2, d, d);
+    } else {
+      ctx.fillStyle = '#eef4ff';
+      ctx.fillRect(fx - fr, fy - fr, fr * 2, fr * 2);
+      ctx.font = '22px "Segoe UI Emoji","Noto Color Emoji",serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText((avatar && avatar.emoji) || '🧒', fx, fy + 1);
+    }
+    ctx.restore();
+    // viền mặt theo màu avatar
+    ctx.lineWidth = 2.6; ctx.strokeStyle = bodyDark;
+    ctx.beginPath(); ctx.arc(fx, fy, fr, 0, Math.PI * 2); ctx.stroke();
+
+    ctx.restore();
+    tex.refresh();
+  }
+
+  function makeHero(scene, avatar, done) {
+    var key = 'hero';
+    done = done || function () {};
+    avatar = avatar || getStudentAvatar();
+    if (scene.textures.exists(key)) { done(); return; }
+    if (avatar.mode === 'photo' && avatar.photo) {
+      var img = new Image();
+      var settled = false;
+      var finish = function (image) { if (settled) return; settled = true; drawHero(scene, key, avatar, image); done(); };
+      img.onload = function () { finish(img); };
+      img.onerror = function () { finish(null); };
+      // an toàn: nếu ảnh không tải được sau 2.5s vẫn vào game (mặt emoji)
+      setTimeout(function () { finish(null); }, 2500);
+      img.src = avatar.photo;
+    } else {
+      drawHero(scene, key, avatar, null);
+      done();
+    }
   }
 
   /* Xu vàng có ánh sáng (vẽ tay, sắc nét hơn emoji) */
@@ -217,9 +295,9 @@
   }
 
   /* ─────────── Tạo tất cả texture cho 1 scene ─────────── */
-  function createTextures(scene) {
+  function createTextures(scene, avatar, onReady) {
+    onReady = onReady || function () {};
     makeSky(scene);
-    makeHero(scene);
     makeStar(scene);
     makeFlag(scene);
     makeCoin(scene);
@@ -236,6 +314,9 @@
     makeEmojiTexture(scene, 'lock', '🔒', 56);
     makeEmojiTexture(scene, 'trophy', '🏆', 96);
     makeEmojiTexture(scene, 'sad', '😿', 96);
+
+    // nhân vật cá nhân hóa (có thể async khi dùng ảnh đại diện)
+    makeHero(scene, avatar || getStudentAvatar(), onReady);
   }
 
   /* ═════════════════ Âm thanh (Web Audio) ═════════════════ */
@@ -320,6 +401,8 @@
 
   global.GameAssets = {
     createTextures: createTextures,
+    getStudentAvatar: getStudentAvatar,
+    HERO: { w: HERO_W, h: HERO_H, ss: HERO_SS },
     Sfx: Sfx
   };
 })(window);

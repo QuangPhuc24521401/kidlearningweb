@@ -152,8 +152,13 @@
     Extends: Phaser.Scene,
     initialize: function BootScene() { Phaser.Scene.call(this, { key: 'Boot' }); },
     create: function () {
-      if (global.GameAssets) global.GameAssets.createTextures(this);
-      this.scene.start('LevelSelect');
+      var self = this;
+      if (global.GameAssets) {
+        var avatar = global.GameAssets.getStudentAvatar ? global.GameAssets.getStudentAvatar() : null;
+        global.GameAssets.createTextures(this, avatar, function () { self.scene.start('LevelSelect'); });
+      } else {
+        this.scene.start('LevelSelect');
+      }
     }
   });
 
@@ -305,10 +310,12 @@
         t.setDisplaySize(64, GROUND_H).refreshBody();
       }
 
-      // người chơi
+      // người chơi (nhân vật cá nhân hóa theo avatar tài khoản)
+      var HERO = (global.GameAssets && global.GameAssets.HERO) || { w: 46, h: 56, ss: 1 };
       this.player = this.physics.add.sprite(90, groundTop - 70, 'hero');
+      this.player.setDisplaySize(HERO.w, HERO.h);
       this.player.setCollideWorldBounds(true);
-      this.player.body.setSize(34, 48).setOffset(6, 6);
+      this.player.body.setSize(34 * HERO.ss, 48 * HERO.ss).setOffset(6 * HERO.ss, 6 * HERO.ss);
       this.physics.add.collider(this.player, this.solids);
       this.cameras.main.setZoom(DPR);
       this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
