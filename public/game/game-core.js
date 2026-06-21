@@ -21,7 +21,7 @@
   var W = 960, H = 540;
   var GROUND_H = 56;
   // Render ở độ phân giải theo màn hình (chống vỡ chữ / nhòe hình trên màn DPI cao)
-  var DPR = Math.max(1, Math.min(3, Math.round(global.devicePixelRatio || 1)));
+  var DPR = Math.max(1, Math.min(2, Math.round(global.devicePixelRatio || 1)));
   var Sfx = (global.GameAssets && global.GameAssets.Sfx) || {};
 
   /* Tăng độ nét cho mọi Text trong scene + map toạ độ logic cho camera tĩnh */
@@ -413,37 +413,18 @@
       // ───── nền theo chủ đề của màn ─────
       var TH = (global.GameAssets && global.GameAssets.ensureTheme)
         ? global.GameAssets.ensureTheme(this, level.theme)
-        : { skyKey: 'sky', hillFarKey: 'hill2', hillNearKey: 'hill', groundKey: 'ground', platKey: 'platform', fluid: 'water', dark: false, deco: [] };
+        : { skyKey: 'sky', groundKey: 'ground', platKey: 'platform', fluid: 'water', dark: false };
       this.theme = TH;
 
-      var bg = [];
-      bg.push(this.add.image(0, 0, TH.skyKey).setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20));
-      for (var hx = 0; hx < worldW + 400; hx += 380) {
-        bg.push(this.add.image(hx, groundTop + 30, TH.hillFarKey).setOrigin(0.5, 1).setScrollFactor(0.25).setDepth(-15).setDisplaySize(440, 220));
+      // Cảnh nền hoàn chỉnh (bức tranh vẽ theo chủ đề) + parallax
+      this._parallax = [];
+      if (global.GameAssets && global.GameAssets.buildScenery) {
+        var scn = global.GameAssets.buildScenery(this, level.theme, worldW, groundTop);
+        this._bgObjects = scn.objects;
+        this._parallax = scn.parallax;
+      } else {
+        this._bgObjects = [this.add.image(0, 0, TH.skyKey).setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20)];
       }
-      for (var hx2 = 160; hx2 < worldW + 400; hx2 += 330) {
-        bg.push(this.add.image(hx2, groundTop + 24, TH.hillNearKey).setOrigin(0.5, 1).setScrollFactor(0.5).setDepth(-12).setAlpha(0.95).setDisplaySize(360, 180));
-      }
-      // trang trí theo chủ đề (cây, xương rồng, lửa, mây...) rải dọc mặt đất
-      if (TH.deco && TH.deco.length) {
-        var dStep = 320;
-        for (var dx = 220, di = 0; dx < worldW - 120; dx += dStep, di++) {
-          var emo = TH.deco[di % TH.deco.length];
-          var big = (di % 3 === 0);
-          bg.push(this.add.text(dx, groundTop - 6, emo, { fontSize: (big ? 44 : 30) + 'px' })
-            .setOrigin(0.5, 1).setScrollFactor(0.85).setDepth(-8).setAlpha(0.96));
-        }
-        // một biểu tượng bầu trời cố định (mặt trời/trăng/mây đầu danh sách)
-        bg.push(this.add.text(W - 120, 92, TH.deco[TH.deco.length - 1], { fontSize: '40px' })
-          .setOrigin(0.5).setScrollFactor(0.2).setDepth(-16).setAlpha(0.9));
-      }
-      // theme tối: phủ lớp tối tạo không khí hang động/luyện ngục
-      if (TH.dark) {
-        var dim = this.add.graphics().setScrollFactor(0).setDepth(-5);
-        dim.fillStyle(0x000000, 0.32); dim.fillRect(0, 0, W, H);
-        bg.push(dim);
-      }
-      this._bgObjects = bg;
 
       // ───── nhóm vật thể & nhân vật ─────
       this.solids = this.physics.add.staticGroup();
@@ -467,7 +448,8 @@
       this.physics.add.collider(this.player, this.platforms);
       this.physics.add.collider(this.player, this.movers);
       this.cameras.main.setZoom(DPR);
-      this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+      this.cameras.main.startFollow(this.player, true, 0.22, 0.2);
+      this.cameras.main.setFollowOffset(-60, 20);
       this.cameras.main.centerOn(this.player.x, this.player.y);
 
       var self2 = this;
@@ -488,18 +470,21 @@
         var k = key || TH.platKey || 'platform';
         var p = self2.platforms.create(cx, cy, k);
         p.setDisplaySize(w || 108, k === 'cloudp' ? 40 : 26).refreshBody();
+        p.setDepth(1);
         return p;
       }
       function addCrate(cx, cy) {
         var c = self2.solids.create(cx, cy, 'crate');
         c.setDisplaySize(40, 40).refreshBody();
+        c.setDepth(2);
         return c;
       }
       function addSpikeAt(cx) {
-        // hộp va chạm canh giữa khớp phần chông → bẫy luôn ăn khi chạm
+        // chông nổi rõ trên mặt đất + hộp va chạm canh giữa → bẫy luôn ăn khi chạm
         var sp = self2.spikes.create(cx, groundTop - 18, 'spike');
         sp.setDisplaySize(48, 40).refreshBody();
         sp.body.setSize(44, 32, true);
+        sp.setDepth(5);
         return sp;
       }
       function addPit(x1, x2) { self2.pits.push({ x1: x1, x2: x2 }); }
@@ -537,7 +522,8 @@
         var m = self2.movers.create(fx, groundTop - 80, 'platform');
         m.setDisplaySize(96, 24);
         m.body.setSize(110, 28);
-        m._minY = groundTop - 184; m._maxY = groundTop - 80; m._spd = 55;
+        m.setDepth(1);
+        m._minY = groundTop - 184; m._maxY = groundTop - 80; m._spd = 70;
         m.setVelocityY(-m._spd);
         addCoin(fx, groundTop - 150); addCoin(fx, groundTop - 180);
       }
@@ -580,7 +566,7 @@
       }
 
       // ───── cổng câu hỏi + cụm xu thưởng dẫn tới cổng ─────
-      var GATE_MARGIN = 210;
+      var GATE_MARGIN = 178;
       var arcY = [54, 96, 118, 96, 54];
       var arcX = [-72, -36, 0, 36, 72];
       var gateXs = [];
@@ -619,7 +605,7 @@
         var fw = FOOT[fn] || 240;
         if (spanHitsGate(fx - fw / 2, fx + fw / 2)) { fx = jumpPastZone(fx + fw / 2); continue; }
         (FEATURES[fn] || fSteps)(fx);
-        fx += fw + 60 + Math.floor(Math.random() * 120);
+        fx += fw + 44 + Math.floor(Math.random() * 78);
       }
 
       // ───── mặt đất (chừa hố) + nước ─────
@@ -651,6 +637,7 @@
       // cờ kết thúc
       this.flag = this.physics.add.staticImage(flagX, groundTop - 36, 'flag');
       this.flag.setDisplaySize(40, 70).refreshBody();
+      this.flag.setDepth(3);
 
       // va chạm vật phẩm
       this.physics.add.overlap(this.player, this.coinsGrp, this.collectCoin, null, this);
@@ -852,8 +839,15 @@
     },
 
     update: function () {
+      // parallax cảnh nền cuộn theo camera
+      if (this._parallax && this._parallax.length) {
+        var sx = this.cameras.main.scrollX;
+        for (var pp = 0; pp < this._parallax.length; pp++) {
+          this._parallax[pp].obj.tilePositionX = sx * this._parallax[pp].f;
+        }
+      }
       if (this.finished || this.quizActive) return;
-      var p = this.player, speed = this.level.speed || 180;
+      var p = this.player, speed = this.level.speed || 260;
 
       // bục thang máy chạy lên/xuống
       var movers = this.movers ? this.movers.getChildren() : [];
@@ -879,7 +873,7 @@
       else { p.setVelocityX(0); }
 
       var onFloor = p.body.blocked.down || p.body.touching.down;
-      if (jumpPressed && onFloor) { p.setVelocityY(-560); if (Sfx.jump) Sfx.jump(); }
+      if (jumpPressed && onFloor) { p.setVelocityY(-640); if (Sfx.jump) Sfx.jump(); }
 
       // kích hoạt câu hỏi khi tới gần cổng chưa trả lời
       var near = this.nearestUnansweredGate();
@@ -962,7 +956,7 @@
       pixelArt: false,
       render: { antialias: true, roundPixels: false },
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-      physics: { default: 'arcade', arcade: { gravity: { y: 900 }, debug: false } },
+      physics: { default: 'arcade', arcade: { gravity: { y: 1050 }, debug: false } },
       scene: [BootScene, LevelSelectScene, PlayScene, ResultScene]
     };
     global.__kidGame = new Phaser.Game(config);

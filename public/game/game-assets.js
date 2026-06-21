@@ -223,14 +223,14 @@
 
   /* ─────────── Chủ đề (background) cho từng màn ─────────── */
   var THEMES = {
-    grass:   { sky: [0x4aa3e8, 0xc7ecff], far: 0x7cc36a, near: 0x9ad97f, gTop: 0x6abe30, gBody: 0x9c6b3f, deco: ['🌳', '🌼', '🦋'], fluid: 'water', dark: false },
-    jungle:  { sky: [0x1f7a4d, 0xa6e3b6], far: 0x2e7d32, near: 0x53b35a, gTop: 0x3d8b37, gBody: 0x6b4a2a, deco: ['🌴', '🌿', '🦜'], fluid: 'water', dark: false },
-    valley:  { sky: [0x5b3b8c, 0xd2b3f0], far: 0x5b3b8c, near: 0x8a63cf, gTop: 0x7e57c2, gBody: 0x4a3570, deco: ['🎵', '🎶', '🌙'], fluid: 'water', dark: false },
-    desert:  { sky: [0xf4a93c, 0xffe7b0], far: 0xe0a85b, near: 0xf2cd7e, gTop: 0xe6c068, gBody: 0xc89b4a, deco: ['🌵', '☀️', '🦂'], fluid: 'water', dark: false },
-    cave:    { sky: [0x161329, 0x3a2f55], far: 0x241f3a, near: 0x3d3358, gTop: 0x5b5366, gBody: 0x322c44, deco: ['💎', '🦇', '🪨'], fluid: 'water', dark: true },
-    inferno: { sky: [0x4a0a0a, 0xd14821], far: 0x6e1610, near: 0xa8331a, gTop: 0x6b2410, gBody: 0x371309, deco: ['🔥', '🌋', '💀'], fluid: 'lava', dark: true },
-    city:    { sky: [0xff7e5f, 0xffd0a8], far: 0x39466b, near: 0x57658c, gTop: 0x8390a6, gBody: 0x4a566b, deco: ['🏙️', '🚦', '🏢'], fluid: 'water', dark: false },
-    heaven:  { sky: [0xfff0c4, 0xffd6ec], far: 0xfff7e6, near: 0xffe9f5, gTop: 0xfde7a8, gBody: 0xe9d39a, deco: ['☁️', '✨', '🕊️'], fluid: 'water', dark: false }
+    grass:   { sky: [0x4aa3e8, 0xc7ecff], far: 0x8ccf72, near: 0x6fb84e, gTop: 0x6abe30, gBody: 0x9c6b3f, sun: 0xfff3b0, farType: 'hills',    tree: 'tree',    fluid: 'water', dark: false },
+    jungle:  { sky: [0x2f8f57, 0xc1eccf], far: 0x2e7d4e, near: 0x3f9e5a, gTop: 0x3d8b37, gBody: 0x6b4a2a, sun: 0,        farType: 'hills',    tree: 'palm',    fluid: 'water', dark: false },
+    valley:  { sky: [0x4b3b86, 0xc9b3f0], far: 0x6a5aa0, near: 0x8a72c8, gTop: 0x7e57c2, gBody: 0x4a3570, sun: 0xe6dcff, farType: 'mountain', tree: 'tree',    fluid: 'water', dark: false },
+    desert:  { sky: [0xf4a93c, 0xffe7b0], far: 0xe7b86a, near: 0xf0c87e, gTop: 0xe6c068, gBody: 0xc89b4a, sun: 0xfff0b0, farType: 'dune',     tree: 'cactus',  fluid: 'water', dark: false },
+    cave:    { sky: [0x161329, 0x342a4e], far: 0x2a2440, near: 0x3a3156, gTop: 0x5b5366, gBody: 0x322c44, sun: 0,        farType: 'cave',     tree: 'crystal', fluid: 'water', dark: true },
+    inferno: { sky: [0x3a0808, 0xc7361f], far: 0x5e1410, near: 0x86251a, gTop: 0x6b2410, gBody: 0x371309, sun: 0xff7a3c, farType: 'volcano',  tree: 'dead',    fluid: 'lava',  dark: true },
+    city:    { sky: [0xff7e5f, 0xffd0a8], far: 0x39466b, near: 0x4a566b, gTop: 0x8390a6, gBody: 0x4a566b, sun: 0xffd9a8, farType: 'city',     tree: 'tree',    fluid: 'water', dark: false },
+    heaven:  { sky: [0xbfe0ff, 0xffe1f0], far: 0xffffff, near: 0xfff3d6, gTop: 0xfde7a8, gBody: 0xe9d39a, sun: 0xffffff, farType: 'cloud',    tree: 'tree',    fluid: 'water', dark: false }
   };
 
   function ensureTheme(scene, themeName) {
@@ -257,8 +257,122 @@
     if (!scene.textures.exists(pk)) makeBlockTexture(scene, pk, 110, 28, th.gTop, th.gBody, 10);
     return {
       skyKey: sk, hillFarKey: hf, hillNearKey: hn, groundKey: gk, platKey: pk,
-      fluid: th.fluid || 'water', dark: !!th.dark, deco: th.deco || []
+      fluid: th.fluid || 'water', dark: !!th.dark
     };
+  }
+
+  /* ─────────── Vẽ cảnh nền hoàn chỉnh theo chủ đề (parallax) ─────────── */
+  function _drawTree(g, type, bx, by) {
+    if (type === 'cactus') {
+      g.fillStyle(0x3f8f4a, 1);
+      g.fillRoundedRect(bx - 9, by - 64, 18, 74, 8);
+      g.fillRoundedRect(bx - 30, by - 46, 16, 30, 6); g.fillRoundedRect(bx - 30, by - 46, 22, 12, 6);
+      g.fillRoundedRect(bx + 14, by - 56, 16, 30, 6); g.fillRoundedRect(bx + 8, by - 56, 22, 12, 6);
+      return;
+    }
+    if (type === 'crystal') {
+      g.fillStyle(0x6fd6f5, 0.95); g.fillTriangle(bx - 16, by, bx - 3, by - 60, bx + 8, by);
+      g.fillStyle(0xa7ecff, 0.95); g.fillTriangle(bx + 2, by, bx + 14, by - 42, bx + 24, by);
+      return;
+    }
+    if (type === 'dead') {
+      g.fillStyle(0x241006, 1);
+      g.fillRect(bx - 5, by - 56, 10, 66);
+      g.fillRect(bx - 28, by - 46, 24, 8); g.fillRect(bx + 4, by - 36, 26, 8);
+      g.fillRect(bx - 22, by - 64, 8, 18); g.fillRect(bx + 14, by - 56, 8, 18);
+      return;
+    }
+    if (type === 'palm') {
+      g.fillStyle(0x7a4a23, 1); g.fillRect(bx - 5, by - 60, 10, 70);
+      g.fillStyle(0x2e8b3a, 1);
+      g.fillEllipse(bx - 28, by - 60, 64, 22); g.fillEllipse(bx + 28, by - 60, 64, 22);
+      g.fillEllipse(bx - 16, by - 74, 44, 22); g.fillEllipse(bx + 16, by - 74, 44, 22);
+      g.fillEllipse(bx, by - 68, 36, 28);
+      return;
+    }
+    // cây lá tròn mặc định
+    g.fillStyle(0x6b4423, 1); g.fillRect(bx - 6, by - 36, 12, 46);
+    g.fillStyle(0x2e7d32, 1); g.fillCircle(bx, by - 48, 27); g.fillCircle(bx - 22, by - 36, 18); g.fillCircle(bx + 22, by - 36, 18);
+    g.fillStyle(0x46a64f, 1); g.fillCircle(bx - 7, by - 54, 16);
+  }
+
+  function _drawFar(g, th, W, H) {
+    var horizon = H - 110, c = th.far, x;
+    g.fillStyle(c, 1);
+    var t = th.farType;
+    if (t === 'hills') {
+      for (x = 0; x <= W; x += 320) g.fillEllipse(x, horizon + 110, 380, 240);
+    } else if (t === 'mountain') {
+      for (x = 0; x <= W; x += 240) g.fillTriangle(x - 120, horizon + 60, x, horizon - 130, x + 120, horizon + 60);
+      g.fillStyle(0xffffff, 0.85);
+      for (x = 0; x <= W; x += 240) g.fillTriangle(x - 26, horizon - 86, x, horizon - 130, x + 26, horizon - 86);
+    } else if (t === 'dune') {
+      for (x = 0; x <= W; x += 320) g.fillEllipse(x, horizon + 170, 470, 340);
+    } else if (t === 'volcano') {
+      for (x = 0; x <= W; x += 320) g.fillTriangle(x - 160, horizon + 70, x, horizon - 140, x + 160, horizon + 70);
+      g.fillStyle(0xff7a2a, 0.95);
+      for (x = 0; x <= W; x += 320) g.fillTriangle(x - 22, horizon - 110, x, horizon - 140, x + 22, horizon - 110);
+    } else if (t === 'cave') {
+      for (x = 0; x <= W; x += 96) g.fillTriangle(x - 48, 0, x, 100, x + 48, 0);
+      g.fillRect(0, horizon + 40, W, H - horizon);
+    } else if (t === 'city') {
+      for (x = 0; x <= W; x += 96) { var bh = 120 + (((x / 96) | 0) % 4) * 54; g.fillRect(x - 40, horizon - bh + 130, 80, bh + 40); }
+      g.fillStyle(0xffe08a, 0.75);
+      for (x = 0; x <= W; x += 96) { for (var wy = horizon - 80; wy < horizon + 110; wy += 28) { g.fillRect(x - 24, wy, 11, 13); g.fillRect(x + 8, wy, 11, 13); } }
+    } else if (t === 'cloud') {
+      g.fillStyle(0xffffff, 0.92);
+      for (x = 0; x <= W; x += 320) { g.fillCircle(x - 62, horizon + 20, 42); g.fillCircle(x, horizon, 56); g.fillCircle(x + 62, horizon + 20, 42); g.fillRoundedRect(x - 96, horizon + 14, 192, 46, 22); }
+    }
+  }
+
+  function _drawMid(g, th, W, H) {
+    var nc = th.near, baseY = H - 28, x;
+    g.fillStyle(nc, 1);
+    for (x = 0; x <= W; x += 240) g.fillEllipse(x, baseY + 44, 340, 200);
+    for (x = 120; x < W + 120; x += 240) _drawTree(g, th.tree, x, baseY - 4);
+  }
+
+  function _ensureSceneryTex(scene, name, th) {
+    var W = 960, H = 540;
+    if (!scene.textures.exists('far_' + name)) {
+      var g = scene.make.graphics({ x: 0, y: 0, add: false });
+      _drawFar(g, th, W, H);
+      g.generateTexture('far_' + name, W, H); g.destroy();
+    }
+    if (!scene.textures.exists('mid_' + name)) {
+      var m = scene.make.graphics({ x: 0, y: 0, add: false });
+      _drawMid(m, th, W, H);
+      m.generateTexture('mid_' + name, W, H); m.destroy();
+    }
+  }
+
+  /* Tạo cảnh nền nhiều lớp; trả về { objects, parallax } */
+  function buildScenery(scene, themeName, worldW, groundTop) {
+    var th = THEMES[themeName] || THEMES.grass;
+    ensureTheme(scene, themeName);
+    _ensureSceneryTex(scene, themeName, th);
+    var W = 960, H = 540, objs = [], parallax = [];
+
+    objs.push(scene.add.image(0, 0, 'sky_' + themeName).setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-30));
+
+    if (th.sun) {
+      var s = scene.add.graphics().setScrollFactor(0.04).setDepth(-29);
+      s.fillStyle(th.sun, 0.22); s.fillCircle(772, 118, 78);
+      s.fillStyle(th.sun, 0.95); s.fillCircle(772, 118, 48);
+      objs.push(s);
+    }
+
+    var far = scene.add.tileSprite(0, 0, W, H, 'far_' + themeName).setOrigin(0, 0).setScrollFactor(0).setDepth(-25);
+    var mid = scene.add.tileSprite(0, 0, W, H, 'mid_' + themeName).setOrigin(0, 0).setScrollFactor(0).setDepth(-18);
+    objs.push(far, mid);
+    parallax.push({ obj: far, f: 0.18 }, { obj: mid, f: 0.45 });
+
+    if (th.dark) {
+      var d = scene.add.graphics().setScrollFactor(0).setDepth(-10);
+      d.fillStyle(0x000000, 0.34); d.fillRect(0, 0, W, H);
+      objs.push(d);
+    }
+    return { objects: objs, parallax: parallax };
   }
 
   /* Nền trời gradient + texture đồi cho parallax */
@@ -517,6 +631,7 @@
     createTextures: createTextures,
     getStudentAvatar: getStudentAvatar,
     ensureTheme: ensureTheme,
+    buildScenery: buildScenery,
     THEMES: THEMES,
     HERO: { w: HERO_W, h: HERO_H, ss: HERO_SS },
     Sfx: Sfx
