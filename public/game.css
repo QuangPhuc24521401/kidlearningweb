@@ -135,6 +135,40 @@
 .game-quiz-feedback.ok{ color:#059669; }
 .game-quiz-feedback.no{ color:#dc2626; }
 
+/* ─────────── Nút điều khiển game (DOM, luôn hiện) ─────────── */
+.game-controls{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:25;
+  display:flex;
+  gap:8px;
+}
+.game-ctrl{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.85);
+  background:rgba(30,41,59,.5);
+  color:#fff;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.28);
+  backdrop-filter:blur(4px);
+  transition:transform .12s, background .12s;
+}
+.game-ctrl:hover{ transform:scale(1.12); background:rgba(30,41,59,.72); }
+.game-ctrl:active{ transform:scale(.94); }
+.game-ctrl.is-muted{ background:rgba(220,38,38,.62); }
+
+@media (max-width:640px){
+  .game-ctrl{ width:38px; height:38px; font-size:18px; }
+}
+
 /* ─────────── Nút cảm ứng mobile ─────────── */
 .game-touch{
   position:absolute;

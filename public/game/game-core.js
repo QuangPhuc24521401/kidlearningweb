@@ -38,7 +38,7 @@
   }
 
   /* Trạng thái nút cảm ứng dùng chung với PlayScene */
-  var touch = { left: false, right: false, jumpQueued: false, jumpHeld: false };
+  var touch = { left: false, right: false, down: false, jumpQueued: false, jumpHeld: false };
 
   function safeSpeak(text) {
     try { if (typeof global.speak === 'function') global.speak(text); } catch (e) {}
@@ -144,7 +144,51 @@
     }
     bind('left', function () { touch.left = true; }, function () { touch.left = false; });
     bind('right', function () { touch.right = true; }, function () { touch.right = false; });
+    bind('down', function () { touch.down = true; }, function () { touch.down = false; });
     bind('jump', function () { touch.jumpQueued = true; touch.jumpHeld = true; }, function () { touch.jumpHeld = false; });
+  }
+
+  /* ════════════════ Nút điều khiển DOM (âm thanh / chơi lại / bản đồ) ════════════════ */
+  function activePlayScene() {
+    var g = global.__kidGame;
+    if (!g) return null;
+    var ps = g.scene.getScene('Play');
+    return (ps && ps.scene && ps.scene.isActive()) ? ps : null;
+  }
+  function gotoScene(key, data) {
+    var g = global.__kidGame; if (!g) return;
+    stopSpeak(); GameUI.hide();
+    ['Play', 'Result', 'LevelSelect'].forEach(function (k) {
+      if (g.scene.isActive(k)) g.scene.stop(k);
+    });
+    g.scene.start(key, data || {});
+  }
+  function wireGameControls() {
+    var sound = document.getElementById('btnSound');
+    var replay = document.getElementById('btnReplay');
+    var map = document.getElementById('btnMap');
+    if (sound) {
+      var muted = Sfx.isMuted ? Sfx.isMuted() : false;
+      sound.textContent = muted ? '🔇' : '🔊';
+      sound.classList.toggle('is-muted', muted);
+      sound.addEventListener('click', function () {
+        var m = Sfx.toggleMute ? Sfx.toggleMute() : false;
+        sound.textContent = m ? '🔇' : '🔊';
+        sound.classList.toggle('is-muted', m);
+        if (!m && Sfx.coin) Sfx.coin();
+      });
+    }
+    if (replay) {
+      replay.addEventListener('click', function () {
+        var g = global.__kidGame; if (!g) return;
+        var ps = g.scene.getScene('Play');
+        var idx = ps && typeof ps.levelIndex === 'number' ? ps.levelIndex : 0;
+        gotoScene('Play', { levelIndex: idx });
+      });
+    }
+    if (map) {
+      map.addEventListener('click', function () { gotoScene('LevelSelect'); });
+    }
   }
 
   /* ════════════════ BootScene ════════════════ */
@@ -387,6 +431,7 @@
       this.levelIndex = data && typeof data.levelIndex === 'number' ? data.levelIndex : 0;
       this.level = levels[this.levelIndex] || levels[0];
       this.hearts = this.level.hearts || 3;
+      this.maxHearts = this.hearts;
       this.starsGot = 0;
       this.coins = 0;
       this.quizActive = false;
@@ -432,9 +477,17 @@
       this.coinsGrp = this.physics.add.group({ allowGravity: false, immovable: true });
       this.spikes = this.physics.add.staticGroup();
       this.hazards = this.physics.add.group({ allowGravity: false, immovable: true });
+      this.enemies = this.physics.add.group();
+      this.springs = this.physics.add.staticGroup();
+      this.pipes = this.physics.add.staticGroup();
+      this.powerups = this.physics.add.group();
       this.gates = [];
       this._terrainDecor = [];
       this.pits = [];
+      this.pipeWarps = [];
+      this.starUntil = 0;
+      this._warping = false;
+      this._warpCd = 0;
 
       // người chơi (nhân vật cá nhân hóa theo avatar tài khoản)
       var HERO = (global.GameAssets && global.GameAssets.HERO) || { w: 46, h: 56, ss: 1 };
@@ -447,6 +500,16 @@
       this.physics.add.collider(this.player, this.solids);
       this.physics.add.collider(this.player, this.platforms);
       this.physics.add.collider(this.player, this.movers);
+      this.physics.add.collider(this.player, this.pipes);
+      this.physics.add.collider(this.player, this.springs, this.bounceSpring, null, this);
+      this.physics.add.collider(this.enemies, this.solids);
+      this.physics.add.collider(this.enemies, this.platforms);
+      this.physics.add.collider(this.enemies, this.pipes);
+      this.physics.add.collider(this.powerups, this.solids);
+      this.physics.add.collider(this.powerups, this.platforms);
+      this.physics.add.collider(this.powerups, this.pipes);
+      this.physics.add.overlap(this.player, this.enemies, this.onEnemy, null, this);
+      this.physics.add.overlap(this.player, this.powerups, this.onPowerup, null, this);
       this.cameras.main.setZoom(DPR);
       this.cameras.main.startFollow(this.player, true, 0.22, 0.2);
       this.cameras.main.setFollowOffset(-60, 20);
@@ -498,6 +561,40 @@
         return s;
       }
       function addPit(x1, x2) { self2.pits.push({ x1: x1, x2: x2 }); }
+      function addEnemy(cx) { // quái đi bộ (giẫm để hạ)
+        var e = self2.enemies.create(cx, groundTop - 22, 'goomba');
+        e.setDisplaySize(42, 38); e.body.setSize(34, 28, true);
+        e.setDepth(5);
+        e._spd = 44 + level.id * 5;
+        e.setVelocityX(Math.random() < 0.5 ? -e._spd : e._spd);
+        return e;
+      }
+      function addSpring(cx) { // lò xo nhún
+        var s = self2.springs.create(cx, groundTop - 14, 'spring');
+        s.setDisplaySize(46, 30).refreshBody();
+        s.body.setSize(42, 22, true);
+        s.setDepth(4);
+        return s;
+      }
+      function addPipe(cx, ph, warpTo) { // ống cống (cao ph), warpTo != null → miệng đường hầm
+        ph = ph || 84;
+        var p = self2.pipes.create(cx, groundTop - ph / 2, 'pipe');
+        p.setDisplaySize(64, ph).refreshBody();
+        p.setDepth(4);
+        if (warpTo != null) { p._warpTo = warpTo; self2.pipeWarps.push(p); }
+        return p;
+      }
+      function addPower(cx, cy, kind) { // nấm / ngôi sao
+        var k = kind || 'mushroom';
+        var pu = self2.powerups.create(cx, cy, k === 'star' ? 'star' : 'mushroom');
+        pu.setDisplaySize(k === 'star' ? 30 : 36, k === 'star' ? 30 : 34);
+        pu.body.setSize(24, 24, true);
+        pu.setDepth(5);
+        pu._kind = k;
+        if (k === 'star') { pu.setVelocity(110, -240); pu.setBounce(1, 0.7); }
+        else { pu.setVelocityX(80); pu.setBounce(0, 0); }
+        return pu;
+      }
 
       // ───── các kiểu địa hình ─────
       function fSteps(fx) { // gò đất bậc cao
@@ -562,24 +659,51 @@
         addSpikeAt(fx, groundTop - 100);
         addCoin(fx - 70, groundTop - 70); addCoin(fx + 70, groundTop - 130);
       }
+      function fGoombas(fx) { // đàn quái đi bộ (giẫm để hạ)
+        var n = level.id >= 5 ? 3 : 2;
+        for (var k = 0; k < n; k++) addEnemy(fx - (n - 1) * 40 + k * 80);
+        addCoin(fx, groundTop - 112); addCoin(fx - 60, groundTop - 92); addCoin(fx + 60, groundTop - 92);
+      }
+      function fSpringJump(fx) { // lò xo nhún tới cụm xu trên cao
+        addSpring(fx);
+        addCoin(fx, groundTop - 150); addCoin(fx, groundTop - 196); addCoin(fx, groundTop - 240);
+      }
+      function fPipe(fx) { // ống cống đôi — nhấn ▼ để chui đường hầm bí mật
+        addPipe(fx - 150, 84, fx + 220);
+        addPipe(fx + 150, 96, null);
+        addCoin(fx + 220, groundTop - 120); addCoin(fx + 188, groundTop - 150); addCoin(fx + 252, groundTop - 150);
+      }
+      function fPipeRow(fx) { // hàng ống cống cao thấp (nhảy vượt) + quái
+        addPipe(fx - 96, 70, null); addPipe(fx + 8, 112, null); addPipe(fx + 112, 84, null);
+        addEnemy(fx - 44);
+        addCoin(fx - 44, groundTop - 150); addCoin(fx + 60, groundTop - 172);
+      }
+      function fPower(fx) { // bục thưởng có nấm (đôi khi ngôi sao)
+        addPlat(fx, groundTop - 70, 100);
+        addPower(fx, groundTop - 100, Math.random() < 0.28 ? 'star' : 'mushroom');
+        addCoin(fx - 72, groundTop - 60); addCoin(fx + 72, groundTop - 60);
+      }
       var FEATURES = {
         steps: fSteps, crates: fCrates, islands: fIslands, pit: fPit, stairs: fStairs,
-        movers: fMovers, spikes: fSpikes, saw: fSaw, sawair: fSawAir, spikegap: fSpikeGap, tower: fTower
+        movers: fMovers, spikes: fSpikes, saw: fSaw, sawair: fSawAir, spikegap: fSpikeGap, tower: fTower,
+        goombas: fGoombas, spring: fSpringJump, pipe: fPipe, piperow: fPipeRow, power: fPower
       };
       var FOOT = {
         steps: 250, crates: 220, islands: 300, pit: 270, stairs: 300, movers: 230, spikes: 210,
-        saw: 250, sawair: 300, spikegap: 240, tower: 210
+        saw: 250, sawair: 300, spikegap: 240, tower: 210,
+        goombas: 280, spring: 200, pipe: 440, piperow: 330, power: 250
       };
+      var STACKABLE = { spikes: 1, crates: 1, goombas: 1, saw: 1, spikegap: 1, steps: 1 };
 
       // bộ địa hình theo độ khó (càng cao càng nhiều kiểu & bẫy)
       function buildPool(id) {
-        var pool = ['islands', 'steps', 'crates'];
-        if (id >= 2) pool.push('spikes', 'saw');
-        if (id >= 3) pool.push('pit', 'spikegap');
-        if (id >= 4) pool.push('stairs', 'tower', 'saw');
-        if (id >= 5) pool.push('pit', 'sawair');
-        if (id >= 6) pool.push('movers', 'spikes', 'spikegap');
-        if (id >= 7) pool.push('saw', 'tower', 'sawair');
+        var pool = ['islands', 'steps', 'crates', 'goombas', 'spring', 'power'];
+        if (id >= 2) pool.push('spikes', 'saw', 'goombas');
+        if (id >= 3) pool.push('pit', 'spikegap', 'pipe');
+        if (id >= 4) pool.push('stairs', 'tower', 'saw', 'piperow');
+        if (id >= 5) pool.push('pit', 'sawair', 'goombas', 'pipe');
+        if (id >= 6) pool.push('movers', 'spikes', 'spikegap', 'piperow');
+        if (id >= 7) pool.push('saw', 'tower', 'sawair', 'goombas');
         return pool;
       }
       function shuffleArr(arr) {
@@ -634,13 +758,19 @@
         return x + 90;
       }
       var fx = 320, guard = 0;
-      while (fx < flagX - 240 && guard++ < 500) {
+      while (fx < flagX - 240 && guard++ < 600) {
         if (inGateZone(fx)) { fx = jumpPastZone(fx); continue; }
         var fn = nextFeature();
         var fw = FOOT[fn] || 240;
         if (spanHitsGate(fx - fw / 2, fx + fw / 2)) { fx = jumpPastZone(fx + fw / 2); continue; }
-        (FEATURES[fn] || fSteps)(fx);
-        fx += fw + 44 + Math.floor(Math.random() * 78);
+        // đôi khi xếp cùng một loại nhiều lần liền nhau thành cụm
+        var reps = (STACKABLE[fn] && Math.random() < 0.34) ? (2 + (Math.random() < 0.35 ? 1 : 0)) : 1;
+        for (var r = 0; r < reps; r++) {
+          if (inGateZone(fx) || spanHitsGate(fx - fw / 2, fx + fw / 2)) break;
+          (FEATURES[fn] || fSteps)(fx);
+          fx += fw + (reps > 1 ? 18 : 0);
+        }
+        fx += 44 + Math.floor(Math.random() * 78);
       }
 
       // ───── mặt đất (chừa hố) + nước ─────
@@ -693,6 +823,10 @@
         this.platforms.getChildren(),
         this.movers.getChildren(),
         this.hazards.getChildren(),
+        this.enemies.getChildren(),
+        this.springs.getChildren(),
+        this.pipes.getChildren(),
+        this.powerups.getChildren(),
         this.coinsGrp.getChildren(),
         this.spikes.getChildren(),
         this._terrainDecor || [],
@@ -710,7 +844,6 @@
     },
 
     buildHud: function () {
-      var self = this;
       this.hudObjects = [];
       var hud = this.hudObjects;
 
@@ -743,41 +876,7 @@
         fontFamily: 'Baloo 2, cursive', fontSize: '19px', color: '#ffffff'
       }).setOrigin(0.5).setScrollFactor(0).setDepth(50));
 
-      // ── cụm nút điều khiển (góc phải): âm thanh, chơi lại, về bản đồ ──
-      function mkBtn(x, y, icon, color, tip) {
-        var r = 20;
-        var c = self.add.circle(x, y, r, color, 0.92).setScrollFactor(0).setDepth(52)
-          .setStrokeStyle(2.5, 0xffffff, 0.85).setInteractive({ useHandCursor: true });
-        var t = self.add.text(x, y + 1, icon, { fontSize: '21px' })
-          .setOrigin(0.5).setScrollFactor(0).setDepth(53);
-        c.on('pointerover', function () { c.setScale(1.12); });
-        c.on('pointerout', function () { c.setScale(1); });
-        hud.push(c, t);
-        return { circle: c, label: t, tip: tip };
-      }
-      var bx = W - 32, by0 = 78, gap = 46;
-
-      // nút âm thanh (bật/tắt)
-      var soundBtn = mkBtn(bx, by0, Sfx.isMuted && Sfx.isMuted() ? '🔇' : '🔊', 0x0ea5e9, 'Âm thanh');
-      soundBtn.circle.on('pointerdown', function () {
-        var muted = Sfx.toggleMute ? Sfx.toggleMute() : false;
-        soundBtn.label.setText(muted ? '🔇' : '🔊');
-        if (!muted && Sfx.coin) Sfx.coin();
-      });
-
-      // nút chơi lại màn hiện tại
-      var replayBtn = mkBtn(bx, by0 + gap, '🔄', 0xf59e0b, 'Chơi lại');
-      replayBtn.circle.on('pointerdown', function () {
-        stopSpeak();
-        self.scene.start('Play', { levelIndex: self.levelIndex });
-      });
-
-      // nút quay về bản đồ chính
-      var mapBtn = mkBtn(bx, by0 + gap * 2, '🗺️', 0x22c55e, 'Bản đồ');
-      mapBtn.circle.on('pointerdown', function () {
-        stopSpeak();
-        self.scene.start('LevelSelect');
-      });
+      // (Nút âm thanh / chơi lại / bản đồ nằm ở lớp DOM overlay — xem wireGameControls)
     },
 
     updateHud: function () {
@@ -805,9 +904,78 @@
 
     hitSpike: function () {
       if (this.invuln || this.quizActive || this.finished) return;
+      if (this.time.now < this.starUntil) return; // đang bất tử
       this.loseHeart();
       // bật ngược lại một chút
       this.player.setVelocity(this.player.flipX ? 220 : -220, -260);
+    },
+
+    bounceSpring: function (player, spring) {
+      // chỉ bật khi rơi xuống chạm mặt trên lò xo
+      if (player.body.velocity.y >= 0 && player.y < spring.y) {
+        player.setVelocityY(-1180);
+        if (Sfx.jump) Sfx.jump();
+        this.tweens.add({ targets: spring, scaleY: 0.6, yoyo: true, duration: 90 });
+      }
+    },
+
+    onEnemy: function (player, enemy) {
+      if (this.finished || this.quizActive || this._warping) return;
+      var starActive = this.time.now < this.starUntil;
+      var stomp = player.body.velocity.y > 0 && player.y < enemy.y - 6;
+      if (starActive || stomp) {
+        // hạ quái
+        enemy.disableBody(true, true);
+        if (stomp && !starActive) player.setVelocityY(-460);
+        this.coins += 1;
+        if (Sfx.coin) Sfx.coin();
+      } else if (!this.invuln) {
+        this.loseHeart();
+        player.setVelocity(player.x < enemy.x ? -240 : 240, -260);
+      }
+    },
+
+    onPowerup: function (player, pu) {
+      var kind = pu._kind;
+      pu.disableBody(true, true);
+      if (kind === 'star') {
+        this.starUntil = this.time.now + 7000;
+        if (Sfx.win) Sfx.win();
+      } else {
+        if (this.hearts < this.maxHearts) { this.hearts += 1; this.updateHud(); }
+        else { this.coins += 3; }
+        this.grow();
+        if (Sfx.correct) Sfx.correct();
+      }
+    },
+
+    grow: function () {
+      var p = this.player, self = this;
+      this.tweens.add({ targets: p, scaleX: p.scaleX * 1.25, scaleY: p.scaleY * 1.25,
+        yoyo: true, duration: 200, ease: 'Back.easeOut',
+        onComplete: function () { self.player.setScale(self.player.scaleX, self.player.scaleY); } });
+    },
+
+    warpPipe: function (pipe) {
+      if (this._warping) return;
+      this._warping = true;
+      this._warpCd = this.time.now + 1400;
+      var self = this, p = this.player, tx = pipe._warpTo;
+      p.setVelocity(0, 0);
+      if (p.body) p.body.enable = false;
+      if (Sfx.gate) Sfx.gate();
+      this.tweens.add({ targets: p, y: p.y + 46, alpha: 0, duration: 260, ease: 'Quad.easeIn',
+        onComplete: function () {
+          p.setPosition(tx, self.groundTop - 90);
+          // thưởng đường hầm bí mật
+          for (var k = 0; k < 4; k++) {
+            var c = self.coinsGrp.create(tx - 60 + k * 40, self.groundTop - 120, 'coin');
+            c.setDisplaySize(30, 30).setDepth(4); c.body.setCircle(13, 2, 2);
+          }
+          if (Sfx.coin) Sfx.coin();
+          self.tweens.add({ targets: p, alpha: 1, duration: 200,
+            onComplete: function () { if (p.body) p.body.enable = true; self._warping = false; } });
+        } });
     },
 
     loseHeart: function () {
@@ -931,6 +1099,46 @@
         s.angle += 12;
       }
 
+      // quái đi bộ: quay đầu khi chạm tường, rơi xuống hố thì xoá
+      var enemies = this.enemies ? this.enemies.getChildren() : [];
+      for (var ei = 0; ei < enemies.length; ei++) {
+        var e = enemies[ei];
+        if (!e.active) continue;
+        if (e.body.blocked.left) { e.setVelocityX(e._spd); e.setFlipX(true); }
+        else if (e.body.blocked.right) { e.setVelocityX(-e._spd); e.setFlipX(false); }
+        else if (e.body.velocity.x === 0) e.setVelocityX(e._spd);
+        if (e.y > this.groundTop + 80) e.disableBody(true, true);
+      }
+
+      // power-up (nấm) trượt và quay đầu khi chạm tường
+      var pups = this.powerups ? this.powerups.getChildren() : [];
+      for (var pi2 = 0; pi2 < pups.length; pi2++) {
+        var pu = pups[pi2];
+        if (!pu.active || pu._kind === 'star') continue;
+        if (pu.body.blocked.left) pu.setVelocityX(80);
+        else if (pu.body.blocked.right) pu.setVelocityX(-80);
+      }
+
+      // hiệu ứng bất tử (ngôi sao): nhân vật nhấp nháy màu
+      if (this.time.now < this.starUntil) {
+        p.setTint(((this.time.now / 90) | 0) % 2 ? 0xffe14a : 0xff7ae0);
+      } else if (this._wasStar) {
+        p.clearTint();
+      }
+      this._wasStar = this.time.now < this.starUntil;
+
+      // đang chui ống → khoá điều khiển
+      if (this._warping) { return; }
+
+      // nhấn xuống trên miệng ống cống → chui đường hầm bí mật
+      var downPressed = this.cursors.down.isDown || touch.down;
+      if (downPressed && this.time.now > this._warpCd && (p.body.blocked.down || p.body.touching.down)) {
+        for (var wi = 0; wi < this.pipeWarps.length; wi++) {
+          var wp = this.pipeWarps[wi];
+          if (Math.abs(p.x - wp.x) < 30 && p.y < this.groundTop - 18) { this.warpPipe(wp); break; }
+        }
+      }
+
       // rơi xuống hố → mất tim, hồi sinh ở chỗ an toàn
       if (p.y > this.groundTop + 30) { this.fallRespawn(); return; }
       if (p.body.blocked.down || p.body.touching.down) this.lastSafeX = p.x;
@@ -1024,6 +1232,7 @@
     if (!mount) { console.error('[game-core] thiếu #gameMount'); return; }
     GameUI.init();
     wireTouchControls();
+    wireGameControls();
 
     var config = {
       type: Phaser.AUTO,

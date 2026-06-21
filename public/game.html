@@ -103,6 +103,13 @@
       <div id="gameStage" class="game-stage">
         <div id="gameMount" class="game-mount"></div>
 
+        <!-- Nút điều khiển game (luôn hiện) -->
+        <div id="gameControls" class="game-controls" aria-label="Điều khiển game">
+          <button type="button" id="btnSound" class="game-ctrl" title="Bật/tắt âm thanh" aria-label="Âm thanh">🔊</button>
+          <button type="button" id="btnReplay" class="game-ctrl" title="Chơi lại màn" aria-label="Chơi lại">🔄</button>
+          <button type="button" id="btnMap" class="game-ctrl" title="Về bản đồ" aria-label="Bản đồ">🗺️</button>
+        </div>
+
         <!-- Câu hỏi overlay -->
         <div id="gameQuiz" class="game-quiz" hidden>
           <div class="game-quiz-card">
@@ -118,6 +125,7 @@
           <div class="game-touch-left">
             <button type="button" class="game-tbtn" data-key="left" aria-label="Trái">◀</button>
             <button type="button" class="game-tbtn" data-key="right" aria-label="Phải">▶</button>
+            <button type="button" class="game-tbtn" data-key="down" aria-label="Xuống / Cống">▼</button>
           </div>
           <div class="game-touch-right">
             <button type="button" class="game-tbtn game-tbtn-jump" data-key="jump" aria-label="Nhảy">⤴</button>
@@ -125,7 +133,7 @@
         </div>
       </div>
 
-      <p class="game-hint">Mẹo: dùng phím <b>← →</b> để đi, <b>Space / ↑</b> để nhảy. Trả lời đúng để mở cổng và đi tiếp!</p>
+      <p class="game-hint">Mẹo: <b>← →</b> để đi, <b>Space / ↑</b> để nhảy, <b>↓</b> trên ống cống để chui đường hầm bí mật. Giẫm lên quái, ăn 🍄 để khoẻ, ⭐ để bất tử. Trả lời đúng để mở cổng!</p>
     </div>
   </div>
 </main>

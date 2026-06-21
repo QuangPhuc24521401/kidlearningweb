@@ -347,11 +347,34 @@
     }
   }
 
+  function _shadeNum(c, amt) {
+    var r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+    function ad(v) { return Math.max(0, Math.min(255, Math.round(v + amt * 255))); }
+    return (ad(r) << 16) | (ad(g) << 8) | ad(b);
+  }
+  function _drawBush(g, th, bx, by) {
+    var col = (th.tree === 'cactus') ? 0x6bbf4a
+      : (th.tree === 'crystal') ? 0x4a6f8f
+        : (th.tree === 'dead') ? 0x3a2412 : 0x3f9e4a;
+    g.fillStyle(_shadeNum(col, -0.08), 1);
+    g.fillCircle(bx - 11, by, 11); g.fillCircle(bx + 11, by, 11);
+    g.fillStyle(col, 1);
+    g.fillCircle(bx, by - 7, 14);
+  }
   function _drawMid(g, th, W, H) {
-    var nc = th.near, baseY = H - 28, x;
+    var nc = th.near, baseY = H - 24, x;
+    // đồi gần hai tông + điểm sáng đỉnh
+    g.fillStyle(_shadeNum(nc, -0.12), 1);
+    for (x = 0; x <= W; x += 240) g.fillEllipse(x + 120, baseY + 60, 380, 240);
     g.fillStyle(nc, 1);
-    for (x = 0; x <= W; x += 240) g.fillEllipse(x, baseY + 44, 340, 200);
-    for (x = 120; x < W + 120; x += 240) _drawTree(g, th.tree, x, baseY - 4);
+    for (x = 0; x <= W; x += 240) g.fillEllipse(x, baseY + 48, 340, 200);
+    g.fillStyle(_shadeNum(nc, 0.16), 0.55);
+    for (x = 0; x <= W; x += 240) g.fillEllipse(x, baseY + 28, 230, 84);
+    // cây xen bụi cho sinh động
+    for (x = 120; x < W + 120; x += 240) {
+      _drawBush(g, th, x - 96, baseY + 8);
+      _drawTree(g, th.tree, x, baseY - 2);
+    }
   }
 
   function _ensureSceneryTex(scene, name, th) {
@@ -410,10 +433,10 @@
       }
     }
 
-    // Lớp "sương mờ" giúp nền lùi lại, chướng ngại vật nổi bật hơn
+    // Lớp "sương mờ" nhẹ giúp nền lùi lại, chướng ngại vật nổi bật hơn
     var veil = scene.add.graphics().setScrollFactor(0).setDepth(-9);
-    if (th.dark) { veil.fillStyle(0x0a0a16, 0.42); }
-    else { veil.fillStyle(0xffffff, 0.22); }
+    if (th.dark) { veil.fillStyle(0x0a0a16, 0.46); }
+    else { veil.fillStyle(0xeaf2ff, 0.14); }
     veil.fillRect(-W, -H, W * 3, H * 3);
     objs.push(veil);
 
@@ -514,6 +537,68 @@
     g.destroy();
   }
 
+  /* Quái đi bộ (giẫm để hạ) — kiểu Goomba */
+  function makeGoomba(scene) {
+    var key = 'goomba';
+    if (scene.textures.exists(key)) return;
+    var w = 44, h = 40;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x5a3417, 1); g.fillEllipse(w / 2, h - 8, w - 4, 16);          // chân
+    g.fillStyle(0x8b4a1f, 1); g.fillEllipse(w / 2, 18, w - 6, 30);            // thân/đầu nấm
+    g.fillStyle(0xa9682f, 1); g.fillEllipse(w / 2, 14, w - 14, 18);          // sáng trên
+    g.fillStyle(0xffffff, 1); g.fillCircle(16, 18, 6); g.fillCircle(28, 18, 6); // mắt
+    g.fillStyle(0x1e1e1e, 1); g.fillCircle(17, 19, 2.6); g.fillCircle(27, 19, 2.6);
+    g.fillStyle(0x3a1d0c, 1); g.fillRect(14, 26, 16, 3);                       // miệng cau
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  /* Lò xo nhún — bật người chơi lên cao */
+  function makeSpring(scene) {
+    var key = 'spring';
+    if (scene.textures.exists(key)) return;
+    var w = 46, h = 34;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x9aa3ad, 1); g.fillRect(8, 14, w - 16, 6);                    // cuộn lò xo
+    g.fillRect(8, 22, w - 16, 6);
+    g.fillStyle(0xe11d48, 1); g.fillRoundedRect(4, 4, w - 8, 12, 5);           // mặt đỏ trên
+    g.fillStyle(0xfb7185, 1); g.fillRoundedRect(6, 5, w - 12, 5, 3);
+    g.fillStyle(0x6b7280, 1); g.fillRoundedRect(6, h - 8, w - 12, 6, 3);       // đế
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  /* Ống cống (Mario) — chướng ngại + miệng đường hầm bí mật */
+  function makePipe(scene) {
+    var key = 'pipe';
+    if (scene.textures.exists(key)) return;
+    var w = 76, h = 120;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x1c8b3a, 1); g.fillRoundedRect(8, 22, w - 16, h - 22, 4);     // thân ống
+    g.fillStyle(0x37c45a, 1); g.fillRoundedRect(12, 24, 14, h - 26, 4);        // sáng trái
+    g.fillStyle(0x0f5f24, 1); g.fillRoundedRect(w - 26, 24, 12, h - 26, 4);    // tối phải
+    g.fillStyle(0x1c8b3a, 1); g.fillRoundedRect(0, 0, w, 26, 6);               // miệng ống
+    g.fillStyle(0x37c45a, 1); g.fillRoundedRect(4, 3, w - 8, 8, 4);
+    g.fillStyle(0x0f5f24, 1); g.fillRoundedRect(4, 18, w - 8, 6, 3);
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  /* Nấm power-up (Mario) — ăn để khoẻ hơn */
+  function makeMushroom(scene) {
+    var key = 'mushroom';
+    if (scene.textures.exists(key)) return;
+    var w = 38, h = 36;
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0xfff1d6, 1); g.fillRoundedRect(11, 18, 16, 16, 5);            // thân
+    g.fillStyle(0xe11d48, 1); g.fillEllipse(w / 2, 16, w - 4, 26);            // mũ đỏ
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(13, 14, 4.5); g.fillCircle(26, 12, 5); g.fillCircle(w / 2, 20, 4);
+    g.fillStyle(0x3a1d0c, 1); g.fillCircle(16, 26, 2); g.fillCircle(23, 26, 2); // mắt
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
   function makeBlockTexture(scene, key, w, h, colorTop, colorBody, radius) {
     if (scene.textures.exists(key)) return;
     var g = scene.make.graphics({ x: 0, y: 0, add: false });
@@ -581,6 +666,10 @@
     makeCloudPlat(scene);
     makeWater(scene);
     makeLava(scene);
+    makeGoomba(scene);
+    makeSpring(scene);
+    makePipe(scene);
+    makeMushroom(scene);
 
     // vật phẩm/trang trí bằng emoji
     makeEmojiTexture(scene, 'cloud', '☁️', 80);
