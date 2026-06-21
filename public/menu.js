@@ -24,6 +24,11 @@ function goLesson(type){
   // Vào danh sách chủ đề (Màu sắc, Hình dạng, …) — mỗi chủ đề có tiến độ riêng.
   window.location.href = 'lessons/' + type + '/index.html';
 }
+/** Mở game phiêu lưu học tập (platformer). */
+function goGame(){
+  try{ if(typeof playPop === 'function') playPop(); }catch(e){}
+  window.location.href = 'game.html';
+}
 /** Đăng xuất: xoá cache avatar/role local rồi redirect login. */
 function handleLogout(){
   playPop();

@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tiến độ & huy hiệu — Kid Learning</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Cuộc phiêu lưu học tập · Kid Learning</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -13,8 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
-<link rel="stylesheet" href="arena.css">
-<link rel="stylesheet" href="pvp.css">
+<link rel="stylesheet" href="game.css">
 <link rel="stylesheet" href="spa.css">
 <script>
   (function(){
@@ -34,8 +33,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
-<body class="page-scroll page-progress">
+<body class="page-scroll page-game">
 
 <header class="app-topbar" role="banner">
   <div class="app-topbar-inner">
@@ -43,13 +43,13 @@
       <img src="favicon.svg" alt="Kid Learning" class="topbar-brand-logo" width="36" height="36" decoding="async">
       <span class="topbar-brand-text">
         <span class="topbar-brand-name">Kid Learning</span>
-        <span class="topbar-brand-tag">Chương trình học tập cho trẻ mầm non</span>
+        <span class="topbar-brand-tag">Cuộc phiêu lưu học tập</span>
       </span>
     </a>
     <nav class="topbar-nav" aria-label="Điều hướng chính">
       <a href="index.html" class="topbar-link">Trang chủ</a>
-      <a href="progress.html" class="topbar-link is-current" aria-current="page">Tiến độ &amp; huy hiệu</a>
-      <a href="game.html" class="topbar-link">Game</a>
+      <a href="progress.html" class="topbar-link">Tiến độ &amp; huy hiệu</a>
+      <a href="game.html" class="topbar-link is-current" aria-current="page">Game</a>
       <a href="pvp.html" class="topbar-link">PvP</a>
       <a href="mentor.html" class="topbar-link">Cô giáo AI</a>
     </nav>
@@ -74,64 +74,60 @@
   <div class="blob b3"></div>
 </div>
 <div class="ground"></div>
-<div class="sprinkles" id="sprinkles"></div>
 <div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
 
 <div id="settingsModal">
   <div class="settings-card">
     <button class="settings-close" onclick="closeSettings()">×</button>
     <h2>🎙️ Cài đặt giọng đọc</h2>
-    <p>Dùng <strong>FPT.AI</strong> để có giọng Tiếng Việt tự nhiên nhất.<br>Miễn phí 2.000 lượt/ngày sau khi đăng ký.</p>
+    <p>Dùng <strong>FPT.AI</strong> để có giọng Tiếng Việt tự nhiên nhất.</p>
     <div class="key-input-wrap">
-      <input class="key-input" id="fptKeyInput" type="password" placeholder="Paste FPT.AI API key vào đây...">
+      <input class="key-input" id="fptKeyInput" type="password" placeholder="Paste FPT.AI API key...">
       <button class="save-btn" onclick="saveKey()">💾 Lưu</button>
     </div>
-    <div class="key-saved hidden" id="keySavedMsg">✅ API key đã được lưu!</div>
-    <p style="font-family:Nunito,sans-serif;font-size:14px;color:#555;margin:16px 0 6px"><strong>Chọn giọng đọc:</strong></p>
+    <div class="key-saved hidden" id="keySavedMsg">✅ Đã lưu!</div>
+    <p style="font-family:Nunito,sans-serif;font-size:14px;color:#555;margin:16px 0 6px"><strong>Giọng đọc:</strong></p>
     <div class="voice-chips" id="voiceChips">
-      <div class="chip active" onclick="setVoice('lannhi',this)">🌸 Lan Nhi (nữ Nam)</div>
-      <div class="chip" onclick="setVoice('linhsan',this)">💐 Linh San (nữ Bắc)</div>
-      <div class="chip" onclick="setVoice('minhquang',this)">🎯 Minh Quang (nam Bắc)</div>
-      <div class="chip" onclick="setVoice('giahuy',this)">🚀 Gia Huy (nam Nam)</div>
+      <div class="chip active" onclick="setVoice('lannhi',this)">🌸 Lan Nhi</div>
+      <div class="chip" onclick="setVoice('linhsan',this)">💐 Linh San</div>
+      <div class="chip" onclick="setVoice('minhquang',this)">🎯 Minh Quang</div>
+      <div class="chip" onclick="setVoice('giahuy',this)">🚀 Gia Huy</div>
     </div>
-    <p class="settings-link">Chưa có API key? <a href="https://fpt.ai/tts" target="_blank">Đăng ký miễn phí tại fpt.ai →</a></p>
+    <p class="settings-link"><a href="https://fpt.ai/tts" target="_blank">fpt.ai →</a></p>
   </div>
 </div>
 
-<main id="page-root" data-page="progress">
-<div class="card menu-card progress-page-card">
-  <div class="menu-hero-block" id="progress-page-top">
-    <h1 class="menu-title">Tiến độ &amp; huy hiệu</h1>
-    <p class="subtitle">Theo dõi tổng sao, số môn đã hoàn thành và các huy hiệu bé đã mở khóa. Quay lại <a href="index.html">trang chủ</a> để tiếp tục học.</p>
-  </div>
+<main id="page-root" data-page="game">
+  <div class="game-wrap">
+    <div class="game-card">
+      <div id="gameStage" class="game-stage">
+        <div id="gameMount" class="game-mount"></div>
 
-  <div class="menu-progress-stack">
-    <div id="overallProgress" class="overall-progress" hidden>
-      <div class="op-row">
-        <span class="op-icon">🌟</span>
-        <span class="op-label">Tổng sao:</span>
-        <span class="op-value" id="opStars">0</span>
-      </div>
-      <div class="op-row">
-        <span class="op-icon">✅</span>
-        <span class="op-label">Đã hoàn thành:</span>
-        <span class="op-value"><span id="opDone">0</span>/6 môn</span>
-      </div>
-      <div class="op-row">
-        <button class="op-reset" onclick="resetProgress()" title="Xoá toàn bộ tiến độ học">🗑️ Bắt đầu lại</button>
-      </div>
-    </div>
+        <!-- Câu hỏi overlay -->
+        <div id="gameQuiz" class="game-quiz" hidden>
+          <div class="game-quiz-card">
+            <p id="gameQuizMeta" class="game-quiz-meta"></p>
+            <h2 id="gameQuizQuestion" class="game-quiz-question"></h2>
+            <div id="gameQuizAnswers" class="game-quiz-answers"></div>
+            <p id="gameQuizFeedback" class="game-quiz-feedback" aria-live="polite"></p>
+          </div>
+        </div>
 
-    <div id="achievementsPanel" class="achievements-panel" hidden>
-      <div class="ach-head">
-        <h3 class="ach-h3">🏅 Huy hiệu</h3>
-        <span class="ach-streak-line" title="Số ngày học liên tiếp (theo lịch)">🔥 Chuỗi: <strong id="achStreak">0</strong> ngày</span>
+        <!-- Nút điều khiển cảm ứng (mobile) -->
+        <div id="gameTouch" class="game-touch" hidden>
+          <div class="game-touch-left">
+            <button type="button" class="game-tbtn" data-key="left" aria-label="Trái">◀</button>
+            <button type="button" class="game-tbtn" data-key="right" aria-label="Phải">▶</button>
+          </div>
+          <div class="game-touch-right">
+            <button type="button" class="game-tbtn game-tbtn-jump" data-key="jump" aria-label="Nhảy">⤴</button>
+          </div>
+        </div>
       </div>
-      <p class="ach-hint">Hoàn thành bài học, gom sao và học đều mỗi ngày để mở thêm huy hiệu nhé!</p>
-      <div id="achievementsGrid" class="ach-grid"></div>
+
+      <p class="game-hint">Mẹo: dùng phím <b>← →</b> để đi, <b>Space / ↑</b> để nhảy. Trả lời đúng để mở cổng và đi tiếp!</p>
     </div>
   </div>
-</div>
 </main>
 
 <script src="firebase.js"></script>
@@ -139,8 +135,10 @@
 <script src="class-sync.js?v=20260528g"></script>
 <script src="lessons/data/lessons-data.js"></script>
 <script src="achievements.js"></script>
-<script src="arena.js"></script>
-<script src="pvp.js"></script>
+<script src="game/game-progress.js"></script>
+<script src="game/game-levels.js"></script>
+<script src="game/game-assets.js"></script>
+<script src="game/game-core.js"></script>
 <script>
   (function deepRoleGuard(){
     if(localStorage.getItem('userRole')) return;
@@ -152,11 +150,10 @@
           var data = snap && snap.exists ? snap.data() : null;
           var role = data?.role || 'parent';
           localStorage.setItem('userRole', role);
-          if(data?.classRoom)   localStorage.setItem('classRoom', data.classRoom);
           if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
           if(role === 'teacher') window.location.replace('mentor-teacher.html');
         })
-        .catch(function(err){ console.warn('[deepRoleGuard]', err); });
+        .catch(function(e){ console.warn('[deepRoleGuard]', e); });
     });
   })();
 </script>
