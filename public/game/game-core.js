@@ -420,6 +420,7 @@
       if (global.GameAssets && global.GameAssets.buildScenery) {
         var scn = global.GameAssets.buildScenery(this, level.theme, worldW, groundTop);
         this._bgObjects = scn.objects;
+        this._bgDrift = scn.drift || [];
       } else {
         this._bgObjects = [this.add.image(0, 0, TH.skyKey).setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20)];
       }
@@ -742,12 +743,41 @@
         fontFamily: 'Baloo 2, cursive', fontSize: '19px', color: '#ffffff'
       }).setOrigin(0.5).setScrollFactor(0).setDepth(50));
 
-      var back = this.add.text(20, H - 32, '‹ Bản đồ', {
-        fontFamily: 'Nunito, sans-serif', fontSize: '15px', color: '#ffffff', fontStyle: 'bold',
-        backgroundColor: '#1e3a8acc', padding: { x: 12, y: 6 }
-      }).setScrollFactor(0).setDepth(50).setInteractive({ useHandCursor: true });
-      back.on('pointerdown', function () { stopSpeak(); self.scene.start('LevelSelect'); });
-      hud.push(back);
+      // ── cụm nút điều khiển (góc phải): âm thanh, chơi lại, về bản đồ ──
+      function mkBtn(x, y, icon, color, tip) {
+        var r = 20;
+        var c = self.add.circle(x, y, r, color, 0.92).setScrollFactor(0).setDepth(52)
+          .setStrokeStyle(2.5, 0xffffff, 0.85).setInteractive({ useHandCursor: true });
+        var t = self.add.text(x, y + 1, icon, { fontSize: '21px' })
+          .setOrigin(0.5).setScrollFactor(0).setDepth(53);
+        c.on('pointerover', function () { c.setScale(1.12); });
+        c.on('pointerout', function () { c.setScale(1); });
+        hud.push(c, t);
+        return { circle: c, label: t, tip: tip };
+      }
+      var bx = W - 32, by0 = 78, gap = 46;
+
+      // nút âm thanh (bật/tắt)
+      var soundBtn = mkBtn(bx, by0, Sfx.isMuted && Sfx.isMuted() ? '🔇' : '🔊', 0x0ea5e9, 'Âm thanh');
+      soundBtn.circle.on('pointerdown', function () {
+        var muted = Sfx.toggleMute ? Sfx.toggleMute() : false;
+        soundBtn.label.setText(muted ? '🔇' : '🔊');
+        if (!muted && Sfx.coin) Sfx.coin();
+      });
+
+      // nút chơi lại màn hiện tại
+      var replayBtn = mkBtn(bx, by0 + gap, '🔄', 0xf59e0b, 'Chơi lại');
+      replayBtn.circle.on('pointerdown', function () {
+        stopSpeak();
+        self.scene.start('Play', { levelIndex: self.levelIndex });
+      });
+
+      // nút quay về bản đồ chính
+      var mapBtn = mkBtn(bx, by0 + gap * 2, '🗺️', 0x22c55e, 'Bản đồ');
+      mapBtn.circle.on('pointerdown', function () {
+        stopSpeak();
+        self.scene.start('LevelSelect');
+      });
     },
 
     updateHud: function () {
@@ -875,6 +905,12 @@
     },
 
     update: function () {
+      // lớp nền xa trôi nhẹ cho sinh động (chạy cả khi đang mở câu hỏi)
+      if (this._bgDrift) {
+        for (var di = 0; di < this._bgDrift.length; di++) {
+          this._bgDrift[di].obj.tilePositionX += this._bgDrift[di].dx;
+        }
+      }
       if (this.finished || this.quizActive) return;
       var p = this.player, speed = this.level.speed || 260;
 

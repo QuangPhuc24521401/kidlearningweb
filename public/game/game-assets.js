@@ -378,25 +378,46 @@
     // Trời: phủ cả thế giới, cuộn rất chậm
     objs.push(scene.add.tileSprite(0, 0, ww, H, 'sky_' + themeName).setOrigin(0, 0).setScrollFactor(0.06).setDepth(-30));
 
-    // Mặt trời/trăng (vật trong thế giới, cuộn chậm → luôn ở phía xa)
+    // Mặt trời/trăng (vật trong thế giới, cuộn chậm → luôn ở phía xa) + nhịp sáng nhẹ
     if (th.sun) {
       var s = scene.add.graphics().setScrollFactor(0.06).setDepth(-28);
       s.fillStyle(th.sun, 0.22); s.fillCircle(772, 118, 78);
       s.fillStyle(th.sun, 0.95); s.fillCircle(772, 118, 48);
       objs.push(s);
+      var glow = scene.add.circle(772, 118, 86, th.sun, 0.16).setScrollFactor(0.06).setDepth(-29);
+      objs.push(glow);
+      scene.tweens.add({ targets: glow, scale: { from: 1, to: 1.18 }, alpha: { from: 0.16, to: 0.32 }, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
 
     // Lớp xa & gần: parallax bằng scrollFactor để hiển thị đúng dưới camera zoom
-    objs.push(scene.add.tileSprite(0, 0, ww, H, 'far_' + themeName).setOrigin(0, 0).setScrollFactor(0.2).setDepth(-25));
+    var far = scene.add.tileSprite(0, 0, ww, H, 'far_' + themeName).setOrigin(0, 0).setScrollFactor(0.2).setDepth(-25);
+    objs.push(far);
     objs.push(scene.add.tileSprite(0, 0, ww, H, 'mid_' + themeName).setOrigin(0, 0).setScrollFactor(0.5).setDepth(-18));
 
-    // Theme tối: phủ lớp tối đồng nhất (scrollFactor 0 vẫn phủ kín vì màu đồng nhất)
-    if (th.dark) {
-      var d = scene.add.graphics().setScrollFactor(0).setDepth(-10);
-      d.fillStyle(0x000000, 0.34); d.fillRect(-W, -H, W * 3, H * 3);
-      objs.push(d);
+    // Mây trôi cho theme sáng → nền sinh động
+    if (!th.dark && scene.textures.exists('cloud')) {
+      for (var ci = 0; ci < 5; ci++) {
+        var cy = 60 + ci * 26 + Math.random() * 20;
+        var cw = 70 + Math.random() * 60;
+        var cl = scene.add.image(Math.random() * W, cy, 'cloud')
+          .setScrollFactor(0.12).setDepth(-23)
+          .setDisplaySize(cw, cw * 0.62).setAlpha(0.55 + Math.random() * 0.25);
+        objs.push(cl);
+        scene.tweens.add({
+          targets: cl, x: cl.x + 220 + Math.random() * 160,
+          duration: 9000 + Math.random() * 8000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+        });
+      }
     }
-    return { objects: objs };
+
+    // Lớp "sương mờ" giúp nền lùi lại, chướng ngại vật nổi bật hơn
+    var veil = scene.add.graphics().setScrollFactor(0).setDepth(-9);
+    if (th.dark) { veil.fillStyle(0x0a0a16, 0.42); }
+    else { veil.fillStyle(0xffffff, 0.22); }
+    veil.fillRect(-W, -H, W * 3, H * 3);
+    objs.push(veil);
+
+    return { objects: objs, drift: [{ obj: far, dx: 0.12 }] };
   }
 
   /* Nền trời gradient + texture đồi cho parallax */
@@ -574,6 +595,8 @@
 
   /* ═════════════════ Âm thanh (Web Audio) ═════════════════ */
   var actx = null;
+  var _muted = false;
+  try { _muted = localStorage.getItem('kidGameMuted') === '1'; } catch (e) {}
   function ctx() {
     if (actx) return actx;
     try {
@@ -589,6 +612,7 @@
   }
 
   function tone(freq, start, dur, type, gain) {
+    if (_muted) return;
     var c = ctx();
     if (!c) return;
     var t0 = c.currentTime + (start || 0);
@@ -606,6 +630,7 @@
   }
 
   function slide(f1, f2, start, dur, type, gain) {
+    if (_muted) return;
     var c = ctx();
     if (!c) return;
     var t0 = c.currentTime + (start || 0);
@@ -649,7 +674,14 @@
       var notes = [392, 330, 262, 196];
       notes.forEach(function (f, i) { tone(f, i * 0.16, 0.2, 'triangle', 0.16); });
     },
-    gate: function () { resume(); slide(200, 500, 0, 0.25, 'triangle', 0.14); }
+    gate: function () { resume(); slide(200, 500, 0, 0.25, 'triangle', 0.14); },
+    isMuted: function () { return _muted; },
+    setMuted: function (v) {
+      _muted = !!v;
+      try { localStorage.setItem('kidGameMuted', _muted ? '1' : '0'); } catch (e) {}
+      return _muted;
+    },
+    toggleMute: function () { return Sfx.setMuted(!_muted); }
   };
 
   global.GameAssets = {
