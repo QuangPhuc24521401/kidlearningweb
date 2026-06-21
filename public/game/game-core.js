@@ -20,7 +20,22 @@
 
   var W = 960, H = 540;
   var GROUND_H = 56;
+  // Render ở độ phân giải theo màn hình (chống vỡ chữ / nhòe hình trên màn DPI cao)
+  var DPR = Math.max(1, Math.min(3, Math.round(global.devicePixelRatio || 1)));
   var Sfx = (global.GameAssets && global.GameAssets.Sfx) || {};
+
+  /* Tăng độ nét cho mọi Text trong scene + map toạ độ logic cho camera tĩnh */
+  function sharpenTexts(scene) {
+    var list = (scene.children && scene.children.list) || [];
+    for (var i = 0; i < list.length; i++) {
+      var o = list[i];
+      if (o && o.type === 'Text' && o.setResolution) o.setResolution(DPR);
+    }
+  }
+  function fitStaticCamera(scene) {
+    scene.cameras.main.setZoom(DPR);
+    scene.cameras.main.centerOn(W / 2, H / 2);
+  }
 
   /* Trạng thái nút cảm ứng dùng chung với PlayScene */
   var touch = { left: false, right: false, jumpQueued: false, jumpHeld: false };
@@ -148,6 +163,7 @@
     initialize: function LevelSelectScene() { Phaser.Scene.call(this, { key: 'LevelSelect' }); },
     create: function () {
       var self = this;
+      fitStaticCamera(this);
       // nền trời + đồi
       if (this.textures.exists('sky')) this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(W, H).setDepth(-20);
       else this.cameras.main.setBackgroundColor('#7ec0ee');
@@ -230,6 +246,8 @@
       this.add.text(W / 2, H - 22, 'Tổng sao đã thu thập: ⭐ ' + totalStars, {
         fontFamily: 'Nunito, sans-serif', fontSize: '16px', color: '#ffffff', stroke: '#1e3a8a', strokeThickness: 4
       }).setOrigin(0.5);
+
+      sharpenTexts(this);
     }
   });
 
@@ -266,17 +284,19 @@
       this.cameras.main.setBounds(0, 0, worldW, H);
 
       // nền trời gradient + đồi núi parallax + mây
-      this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20);
+      var bg = [];
+      bg.push(this.add.image(0, 0, 'sky').setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0).setDepth(-20));
       for (var hx = 0; hx < worldW + 400; hx += 380) {
-        this.add.image(hx, groundTop + 30, 'hill2').setOrigin(0.5, 1).setScrollFactor(0.25).setDepth(-15).setDisplaySize(440, 220);
+        bg.push(this.add.image(hx, groundTop + 30, 'hill2').setOrigin(0.5, 1).setScrollFactor(0.25).setDepth(-15).setDisplaySize(440, 220));
       }
       for (var hx2 = 160; hx2 < worldW + 400; hx2 += 330) {
-        this.add.image(hx2, groundTop + 24, 'hill').setOrigin(0.5, 1).setScrollFactor(0.5).setDepth(-12).setAlpha(0.95).setDisplaySize(360, 180);
+        bg.push(this.add.image(hx2, groundTop + 24, 'hill').setOrigin(0.5, 1).setScrollFactor(0.5).setDepth(-12).setAlpha(0.95).setDisplaySize(360, 180));
       }
       for (var m = 0; m < Math.ceil(worldW / 340); m++) {
-        this.add.image(120 + m * 340, 80 + (m % 2) * 44, 'cloud')
-          .setScrollFactor(0.35).setAlpha(0.92).setDisplaySize(100, 62).setDepth(-10);
+        bg.push(this.add.image(120 + m * 340, 80 + (m % 2) * 44, 'cloud')
+          .setScrollFactor(0.35).setAlpha(0.92).setDisplaySize(100, 62).setDepth(-10));
       }
+      this._bgObjects = bg;
 
       // mặt đất liền (tile)
       this.solids = this.physics.add.staticGroup();
@@ -290,7 +310,9 @@
       this.player.setCollideWorldBounds(true);
       this.player.body.setSize(34, 48).setOffset(6, 6);
       this.physics.add.collider(this.player, this.solids);
+      this.cameras.main.setZoom(DPR);
       this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+      this.cameras.main.centerOn(this.player.x, this.player.y);
 
       // nhóm vật thể
       this.platforms = this.physics.add.staticGroup();
@@ -375,42 +397,66 @@
       this.keyEsc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
       this.buildHud();
+
+      // Camera riêng cho HUD: không bám theo nhân vật, giữ toạ độ logic & nét chữ
+      var worldObjects = (this._bgObjects || []).concat(
+        this.solids.getChildren(),
+        this.platforms.getChildren(),
+        this.coinsGrp.getChildren(),
+        this.spikes.getChildren(),
+        this.gates,
+        [this.player, this.flag]
+      );
+      this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
+      this.hudCam.setZoom(DPR);
+      this.hudCam.centerOn(W / 2, H / 2);
+      this.hudCam.ignore(worldObjects);
+      this.cameras.main.ignore(this.hudObjects);
+      sharpenTexts(this);
+
       GameUI.hide();
     },
 
     buildHud: function () {
       var self = this;
+      this.hudObjects = [];
+      var hud = this.hudObjects;
 
       // panel nền HUD (góc trái: tim, góc phải: sao)
       var panel = this.add.graphics().setScrollFactor(0).setDepth(48);
       panel.fillStyle(0x1e293b, 0.32);
       panel.fillRoundedRect(10, 10, 22 + this.hearts * 34, 40, 14);
       panel.fillRoundedRect(W - 150, 10, 140, 40, 14);
+      hud.push(panel);
 
       this.heartIcons = [];
       for (var i = 0; i < this.hearts; i++) {
         var hImg = this.add.image(34 + i * 34, 30, 'heart').setScrollFactor(0).setDepth(50).setDisplaySize(26, 26);
         this.heartIcons.push(hImg);
+        hud.push(hImg);
       }
-      this.add.image(W - 128, 30, 'coin').setScrollFactor(0).setDepth(50).setDisplaySize(24, 24);
+      hud.push(this.add.image(W - 128, 30, 'coin').setScrollFactor(0).setDepth(50).setDisplaySize(24, 24));
       this.starText = this.add.text(W - 110, 30, '0/' + this.totalGates, {
         fontFamily: 'Baloo 2, cursive', fontSize: '22px', color: '#fff7d6'
       }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(50);
+      hud.push(this.starText);
 
       // tên màn ở giữa (pill)
       var titlePanel = this.add.graphics().setScrollFactor(0).setDepth(48);
       titlePanel.fillStyle(0x2563eb, 0.85);
       var tw = Math.max(160, this.level.name.length * 13 + 40);
       titlePanel.fillRoundedRect(W / 2 - tw / 2, 12, tw, 34, 17);
-      this.add.text(W / 2, 29, this.level.name, {
+      hud.push(titlePanel);
+      hud.push(this.add.text(W / 2, 29, this.level.name, {
         fontFamily: 'Baloo 2, cursive', fontSize: '19px', color: '#ffffff'
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(50);
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(50));
 
       var back = this.add.text(20, H - 32, '‹ Bản đồ', {
         fontFamily: 'Nunito, sans-serif', fontSize: '15px', color: '#ffffff', fontStyle: 'bold',
         backgroundColor: '#1e3a8acc', padding: { x: 12, y: 6 }
       }).setScrollFactor(0).setDepth(50).setInteractive({ useHandCursor: true });
       back.on('pointerdown', function () { stopSpeak(); self.scene.start('LevelSelect'); });
+      hud.push(back);
     },
 
     updateHud: function () {
@@ -563,6 +609,7 @@
       var d = this.data2;
       var levels = (global.GameLevels && global.GameLevels.LEVELS) || [];
       var win = !!d.win;
+      fitStaticCamera(this);
       this.cameras.main.setBackgroundColor(win ? '#bbf7d0' : '#fecdd3');
 
       var panel = this.add.graphics();
@@ -604,6 +651,8 @@
         hit.on('pointerdown', function () { if (Sfx.unlock) Sfx.unlock(); b.act(); });
         bx += bw + gap;
       });
+
+      sharpenTexts(this);
     }
   });
 
@@ -617,10 +666,11 @@
     var config = {
       type: Phaser.AUTO,
       parent: 'gameMount',
-      width: W,
-      height: H,
+      width: W * DPR,
+      height: H * DPR,
       backgroundColor: '#7ec0ee',
       pixelArt: false,
+      render: { antialias: true, roundPixels: false },
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       physics: { default: 'arcade', arcade: { gravity: { y: 900 }, debug: false } },
       scene: [BootScene, LevelSelectScene, PlayScene, ResultScene]
