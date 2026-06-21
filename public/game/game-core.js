@@ -400,9 +400,9 @@
       var questions = (global.GameLevels && global.GameLevels.buildLevelQuestions(level)) || [];
       this.totalGates = questions.length;
 
-      var gateSpacing = 560;
-      var firstGate = 700;
-      var worldW = firstGate + this.totalGates * gateSpacing + 440;
+      var gateSpacing = 920;
+      var firstGate = 820;
+      var worldW = firstGate + this.totalGates * gateSpacing + 520;
       var groundTop = H - GROUND_H;
       this.groundTop = groundTop;
       this.worldW = worldW;
@@ -459,6 +459,7 @@
       var HERO = (global.GameAssets && global.GameAssets.HERO) || { w: 46, h: 56, ss: 1 };
       this.player = this.physics.add.sprite(90, groundTop - 70, 'hero');
       this.player.setDisplaySize(HERO.w, HERO.h);
+      this.player.setDepth(6);
       this.player.setCollideWorldBounds(true);
       this.player.body.setSize(34 * HERO.ss, 48 * HERO.ss).setOffset(6 * HERO.ss, 6 * HERO.ss);
       this.lastSafeX = 90;
@@ -474,6 +475,7 @@
       function addCoin(cx, cy) {
         var c = self2.coinsGrp.create(cx, cy, 'coin');
         c.setDisplaySize(30, 30);
+        c.setDepth(4); // luôn nổi trên bục/nền (tránh bị cầu thang che)
         c.body.setCircle(13, 2, 2);
         return c;
       }
@@ -524,10 +526,11 @@
         addPlat(fx, groundTop + 8, 96, 'platform');
         addCoin(fx, groundTop - 64); addCoin(fx - 46, groundTop - 80); addCoin(fx + 46, groundTop - 80);
       }
-      function fStairs(fx) { // cầu thang bay
+      function fStairs(fx) { // cầu thang bay (xu nổi rõ phía trên mỗi bậc)
         for (var k = 0; k < 3; k++) {
-          addPlat(fx - 92 + k * 84, groundTop - 58 - k * 42, 84, 'platform');
-          addCoin(fx - 92 + k * 84, groundTop - 92 - k * 42);
+          var px = fx - 92 + k * 84, py = groundTop - 58 - k * 42;
+          addPlat(px, py, 84);
+          addCoin(px, py - 44);
         }
       }
       function fMovers(fx) { // bục thang máy + xu trên cao
@@ -538,41 +541,86 @@
         m.setVelocityY(-m._spd);
         addCoin(fx, groundTop - 150); addCoin(fx, groundTop - 180);
       }
-      var FEATURES = { steps: fSteps, crates: fCrates, islands: fIslands, pit: fPit, stairs: fStairs, movers: fMovers };
-      function featureNameFor(i) {
-        var id = level.id, pool = ['islands', 'steps'];
-        if (id >= 2) pool.push('crates');
-        if (id >= 3) pool.push('pit');
-        if (id >= 4) pool.push('stairs');
-        if (id >= 6) pool.push('movers');
-        return pool[i % pool.length];
+      function fSpikes(fx) { // bãi chông + xu thưởng phía trên (nhảy qua để nhặt)
+        var n = level.id >= 6 ? 3 : 2;
+        var start = fx - (n - 1) * 23;
+        for (var k = 0; k < n; k++) addSpikeAt(start + k * 46);
+        addCoin(fx, groundTop - 114); addCoin(fx - 40, groundTop - 100); addCoin(fx + 40, groundTop - 100);
+      }
+      var FEATURES = { steps: fSteps, crates: fCrates, islands: fIslands, pit: fPit, stairs: fStairs, movers: fMovers, spikes: fSpikes };
+      var FOOT = { steps: 250, crates: 220, islands: 300, pit: 270, stairs: 300, movers: 230, spikes: 210 };
+
+      // bộ địa hình theo độ khó (càng cao càng nhiều kiểu & bẫy)
+      function buildPool(id) {
+        var pool = ['islands', 'steps', 'crates'];
+        if (id >= 2) pool.push('crates', 'spikes');
+        if (id >= 3) pool.push('pit', 'islands');
+        if (id >= 4) pool.push('stairs', 'spikes');
+        if (id >= 5) pool.push('pit');
+        if (id >= 6) pool.push('movers', 'spikes');
+        if (id >= 7) pool.push('pit', 'stairs');
+        return pool;
+      }
+      function shuffleArr(arr) {
+        arr = arr.slice();
+        for (var x = arr.length - 1; x > 0; x--) {
+          var y = Math.floor(Math.random() * (x + 1));
+          var tmp = arr[x]; arr[x] = arr[y]; arr[y] = tmp;
+        }
+        return arr;
+      }
+      var POOL = buildPool(level.id);
+      var bag = [], lastF = null;
+      function nextFeature() {
+        if (!bag.length) bag = shuffleArr(POOL);
+        var f = bag.pop();
+        if (f === lastF && bag.length) { var alt = bag.pop(); bag.push(f); f = alt; } // tránh lặp liền nhau
+        lastF = f;
+        return f;
       }
 
-      // cụm xu vòng cung trên mặt đất phẳng (luôn có)
+      // ───── cổng câu hỏi + cụm xu thưởng dẫn tới cổng ─────
+      var GATE_MARGIN = 210;
       var arcY = [54, 96, 118, 96, 54];
       var arcX = [-72, -36, 0, 36, 72];
-
-      for (var i = 0; i < this.totalGates; i++) {
-        var gateX = firstGate + i * gateSpacing;
-        var coinArcX = gateX - 440;
-        for (var a = 0; a < arcX.length; a++) addCoin(coinArcX + arcX[a], groundTop - arcY[a]);
-        var fname = featureNameFor(i);
-        (FEATURES[fname] || fSteps)(gateX - 250);
-        // bẫy chông trước cổng — tăng dần theo độ khó (bỏ qua đoạn đã có hố)
-        if (level.id >= 2 && fname !== 'pit') {
-          var spikeN = level.id >= 6 ? 3 : (level.id >= 4 ? 2 : 1);
-          for (var s = 0; s < spikeN; s++) addSpikeAt(gateX - 140 + s * 46);
-        }
-
-        // ổ khóa (cổng câu hỏi)
+      var gateXs = [];
+      for (var gi = 0; gi < this.totalGates; gi++) {
+        var gateX = firstGate + gi * gateSpacing;
+        gateXs.push(gateX);
+        for (var a = 0; a < arcX.length; a++) addCoin(gateX - 120 + arcX[a], groundTop - arcY[a]);
         var gate = this.physics.add.staticImage(gateX, groundTop - 40, 'padlock');
         gate.setDisplaySize(56, 72).refreshBody();
         gate.body.setSize(40, 64);
-        gate.questionData = questions[i];
+        gate.setDepth(3);
+        gate.questionData = questions[gi];
         gate.answered = false;
         this.gates.push(gate);
       }
       this.gateCollider = this.physics.add.collider(this.player, this.gates);
+      var flagX = firstGate + this.totalGates * gateSpacing + 200;
+
+      // ───── dòng địa hình liên tục, không lặp mô-típ, né vùng cổng/cờ ─────
+      function inGateZone(x) {
+        for (var z = 0; z < gateXs.length; z++) if (Math.abs(x - gateXs[z]) < GATE_MARGIN) return true;
+        return x > flagX - 150;
+      }
+      function spanHitsGate(a, b) {
+        for (var z = 0; z < gateXs.length; z++) if (a < gateXs[z] + GATE_MARGIN && b > gateXs[z] - GATE_MARGIN) return true;
+        return b > flagX - 150;
+      }
+      function jumpPastZone(x) {
+        for (var z = 0; z < gateXs.length; z++) if (x > gateXs[z] - GATE_MARGIN && x < gateXs[z] + GATE_MARGIN) return gateXs[z] + GATE_MARGIN + 30;
+        return x + 90;
+      }
+      var fx = 320, guard = 0;
+      while (fx < flagX - 240 && guard++ < 500) {
+        if (inGateZone(fx)) { fx = jumpPastZone(fx); continue; }
+        var fn = nextFeature();
+        var fw = FOOT[fn] || 240;
+        if (spanHitsGate(fx - fw / 2, fx + fw / 2)) { fx = jumpPastZone(fx + fw / 2); continue; }
+        (FEATURES[fn] || fSteps)(fx);
+        fx += fw + 60 + Math.floor(Math.random() * 120);
+      }
 
       // ───── mặt đất (chừa hố) + nước ─────
       function inPit(x) {
@@ -601,7 +649,6 @@
       });
 
       // cờ kết thúc
-      var flagX = firstGate + this.totalGates * gateSpacing + 180;
       this.flag = this.physics.add.staticImage(flagX, groundTop - 36, 'flag');
       this.flag.setDisplaySize(40, 70).refreshBody();
 
