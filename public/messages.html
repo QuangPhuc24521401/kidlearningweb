@@ -2,76 +2,16 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tin nhắn — Kid Learning</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared.css?v=20260528d">
-<link rel="stylesheet" href="menu.css?v=20260528d">
-<link rel="stylesheet" href="social.css?v=20260623">
+<meta http-equiv="refresh" content="0;url=social.html?tab=chat">
+<title>Chuyển hướng…</title>
 <script>
   (function(){
-    try{ if(localStorage.getItem('userRole')) return; }catch(e){}
-    document.documentElement.style.visibility='hidden';
+    var q = location.search || '';
+    var uid = '';
+    try { uid = new URLSearchParams(q).get('uid'); } catch(e) {}
+    location.replace('social.html?tab=chat' + (uid ? '&uid=' + encodeURIComponent(uid) : ''));
   })();
 </script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
-<body class="page-scroll page-messages">
-
-<header class="app-topbar" role="banner">
-  <div class="app-topbar-inner">
-    <a href="index.html" class="topbar-brand">
-      <img src="favicon.svg" alt="Kid Learning" class="topbar-brand-logo" width="36" height="36">
-      <span class="topbar-brand-text">
-        <span class="topbar-brand-name">Kid Learning</span>
-        <span class="topbar-brand-tag">Tin nhắn</span>
-      </span>
-    </a>
-    <nav class="topbar-nav">
-      <a href="social.html" class="topbar-link">Cộng đồng</a>
-      <a href="messages.html" class="topbar-link is-current" aria-current="page">Tin nhắn</a>
-      <a href="index.html" class="topbar-link">Trang chủ</a>
-    </nav>
-    <div class="topbar-end">
-      <div id="topbarUserSlot" class="topbar-user-slot"></div>
-      <button type="button" class="topbar-logout" onclick="handleLogout()">Đăng xuất</button>
-    </div>
-  </div>
-</header>
-
-<div class="sky"><div class="sun"></div></div>
-<div class="ground"></div>
-
-<main id="page-root" class="msg-wrap">
-  <div class="msg-layout">
-    <aside class="msg-inbox">
-      <div class="msg-inbox-head">
-        <h1>💬 Tin nhắn</h1>
-        <a href="social.html" class="msg-back-soc">← Cộng đồng</a>
-      </div>
-      <div id="msgRequests" class="msg-requests"></div>
-      <div id="msgInboxList" class="msg-inbox-list"><div class="msg-empty">Đang tải…</div></div>
-    </aside>
-    <section class="msg-chat" id="msgChat">
-      <div class="msg-chat-head" id="msgHeader">
-        <p class="msg-empty">Chọn hội thoại hoặc nhắn tin từ trang hồ sơ bạn bè</p>
-      </div>
-      <div class="msg-list" id="msgList"></div>
-      <form class="msg-form" id="msgForm">
-        <input type="text" id="msgInput" maxlength="500" placeholder="Nhập tin nhắn…" autocomplete="off">
-        <button type="submit">Gửi</button>
-      </form>
-    </section>
-  </div>
-</main>
-
-<script src="firebase.js"></script>
-<script src="social-sync.js"></script>
-<script src="shared.js"></script>
-<script src="menu.js"></script>
-<script src="messages.js"></script>
-</body>
+<body><p><a href="social.html?tab=chat">Mở Tin nhắn</a></p></body>
 </html>

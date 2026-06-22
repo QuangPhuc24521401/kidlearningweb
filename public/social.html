@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css?v=20260528d">
 <link rel="stylesheet" href="menu.css?v=20260528d">
-<link rel="stylesheet" href="social.css?v=20260622">
+<link rel="stylesheet" href="social.css?v=20260624">
 <script>
   (function(){
     try{ if(localStorage.getItem('userRole')) return; }catch(e){}
@@ -46,7 +46,6 @@
       <a href="progress.html" class="topbar-link">Tiến độ &amp; huy hiệu</a>
       <a href="game.html" class="topbar-link">Game</a>
       <a href="social.html" class="topbar-link is-current" aria-current="page">Cộng đồng</a>
-      <a href="messages.html" class="topbar-link">Tin nhắn</a>
       <a href="pvp.html" class="topbar-link">PvP</a>
       <a href="mentor.html" class="topbar-link">Cô giáo AI</a>
     </nav>
@@ -65,51 +64,96 @@
 <div class="ground"></div>
 
 <main id="page-root" data-page="social">
-  <div class="soc-wrap">
-    <div class="soc-hero">
-      <h1>🌈 Cộng đồng Kid Learning</h1>
-      <p>Chia sẻ thành tích, tìm bạn, kết bạn và nhắn tin!</p>
-    </div>
+  <div class="soc-shell">
 
-    <div class="soc-layout">
-      <div class="soc-main">
-        <div class="soc-card soc-compose">
-          <form id="socCompose">
-            <textarea id="socComposeText" maxlength="500" placeholder="Bé vừa học được gì hôm nay? Chia sẻ với mọi người nhé! 🎉"></textarea>
-            <div class="soc-compose-actions">
-              <button type="submit" class="soc-btn-post">📣 Đăng bài</button>
-              <button type="button" id="socShareProgress" class="soc-btn-share">⭐ Chia sẻ thành tích</button>
+    <header class="soc-banner">
+      <div class="soc-banner-text">
+        <h1>🌈 Cộng đồng Kid Learning</h1>
+        <p>Chia sẻ, kết bạn và trò chuyện cùng lớp!</p>
+      </div>
+      <div class="soc-banner-deco" aria-hidden="true">✨🎈⭐</div>
+    </header>
+
+    <nav class="soc-nav" role="tablist" aria-label="Chức năng cộng đồng">
+      <button type="button" class="soc-nav-btn is-active" data-panel="feed" role="tab" aria-selected="true">
+        <span class="soc-nav-icon">📣</span><span class="soc-nav-label">Bảng tin</span>
+      </button>
+      <button type="button" class="soc-nav-btn" data-panel="search" role="tab" aria-selected="false">
+        <span class="soc-nav-icon">🔍</span><span class="soc-nav-label">Tìm bạn</span>
+      </button>
+      <button type="button" class="soc-nav-btn" data-panel="friends" role="tab" aria-selected="false">
+        <span class="soc-nav-icon">🤝</span><span class="soc-nav-label">Bạn bè</span>
+        <span class="soc-nav-badge" id="socFriendBadge" hidden>0</span>
+      </button>
+      <button type="button" class="soc-nav-btn" data-panel="chat" role="tab" aria-selected="false">
+        <span class="soc-nav-icon">💬</span><span class="soc-nav-label">Tin nhắn</span>
+      </button>
+    </nav>
+
+    <!-- ═══ TAB: BẢNG TIN ═══ -->
+    <section class="soc-panel is-active" id="panel-feed" data-panel="feed" role="tabpanel">
+      <div class="soc-card soc-compose-card">
+        <div class="soc-card-head"><span class="soc-card-icon">✏️</span><h2>Viết bài mới</h2></div>
+        <form id="socCompose">
+          <textarea id="socComposeText" maxlength="500" placeholder="Bé vừa học được gì hôm nay? Chia sẻ nhé! 🎉"></textarea>
+          <div class="soc-compose-actions">
+            <button type="submit" class="soc-btn soc-btn--primary">📣 Đăng bài</button>
+            <button type="button" id="socShareProgress" class="soc-btn soc-btn--gold">⭐ Chia sẻ thành tích</button>
+          </div>
+        </form>
+      </div>
+      <div class="soc-feed-tabs" role="tablist">
+        <button type="button" class="soc-feed-tab is-active" data-feed="class">🏫 Lớp học</button>
+        <button type="button" class="soc-feed-tab" data-feed="following">👀 Theo dõi</button>
+        <button type="button" class="soc-feed-tab" data-feed="all">🌍 Tất cả</button>
+      </div>
+      <div class="soc-card soc-feed-card" id="socFeed" aria-live="polite"></div>
+    </section>
+
+    <!-- ═══ TAB: TÌM BẠN ═══ -->
+    <section class="soc-panel" id="panel-search" data-panel="search" role="tabpanel" hidden>
+      <div class="soc-card">
+        <div class="soc-card-head"><span class="soc-card-icon">🔍</span><h2>Tìm bạn trong lớp</h2></div>
+        <div class="soc-search-box">
+          <input type="search" id="socSearchInput" class="soc-search-input" placeholder="Nhập tên bạn (ít nhất 2 chữ)…" maxlength="32" autocomplete="off">
+        </div>
+        <p class="soc-hint">💡 Lưu mã lớp ở trang Hồ sơ để thấy bạn cùng lớp.</p>
+      </div>
+      <div id="socSearchResults" class="soc-user-list"></div>
+    </section>
+
+    <!-- ═══ TAB: BẠN BÈ ═══ -->
+    <section class="soc-panel" id="panel-friends" data-panel="friends" role="tabpanel" hidden>
+      <div class="soc-card soc-req-card" id="socFriendRequests"></div>
+      <div class="soc-section-title">👫 Danh sách bạn bè</div>
+      <div id="socFriendsList" class="soc-user-list"></div>
+      <div class="soc-section-title">🏫 Gợi ý cùng lớp</div>
+      <div id="socClassSuggest" class="soc-user-list"></div>
+    </section>
+
+    <!-- ═══ TAB: TIN NHẮN ═══ -->
+    <section class="soc-panel" id="panel-chat" data-panel="chat" role="tabpanel" hidden>
+      <div class="soc-chat-layout">
+        <aside class="soc-chat-inbox" id="socChatInbox">
+          <div class="soc-card-head soc-inbox-head"><span class="soc-card-icon">📬</span><h2>Hộp thư</h2></div>
+          <div id="msgInboxList" class="soc-inbox-list"><div class="soc-empty">Đang tải…</div></div>
+        </aside>
+        <div class="soc-chat-main" id="socChatMain">
+          <div class="soc-chat-head" id="msgHeader">
+            <div class="soc-chat-placeholder">
+              <span class="soc-chat-placeholder-icon">💬</span>
+              <p>Chọn cuộc trò chuyện bên trái<br>hoặc nhắn tin từ hồ sơ bạn bè</p>
             </div>
+          </div>
+          <div class="soc-chat-messages" id="msgList"></div>
+          <form class="soc-chat-form" id="msgForm">
+            <input type="text" id="msgInput" maxlength="500" placeholder="Nhập tin nhắn…" autocomplete="off" disabled>
+            <button type="submit" class="soc-btn soc-btn--primary" disabled id="msgSendBtn">Gửi</button>
           </form>
         </div>
-
-        <div class="soc-tabs" role="tablist">
-          <button type="button" class="soc-tab is-active" data-feed="class">🏫 Lớp học</button>
-          <button type="button" class="soc-tab" data-feed="following">👀 Theo dõi</button>
-          <button type="button" class="soc-tab" data-feed="all">🌍 Tất cả</button>
-        </div>
-
-        <div class="soc-card" id="socFeed" aria-live="polite"></div>
       </div>
+    </section>
 
-      <aside class="soc-side">
-        <div class="soc-card soc-search">
-          <h3 class="soc-side-title">🔍 Tìm bạn</h3>
-          <input type="search" id="socSearchInput" class="soc-search-input" placeholder="Nhập tên (≥2 ký tự)…" maxlength="32">
-          <div id="socSearchResults" class="soc-search-results"></div>
-        </div>
-        <div class="soc-card">
-          <a href="messages.html" class="soc-link-msg">💬 Tin nhắn &amp; lời mời kết bạn</a>
-        </div>
-        <div class="soc-card" id="socSuggest"></div>
-        <div class="soc-card">
-          <h3 class="soc-side-title">💡 Gợi ý</h3>
-          <p style="font-family:Nunito,sans-serif;font-size:12px;color:#64748b;line-height:1.5;margin:0">
-            Xem hồ sơ bạn bè, bấm <b>Theo dõi</b> để thấy bài đăng của họ ở tab Theo dõi.
-          </p>
-        </div>
-      </aside>
-    </div>
   </div>
 </main>
 
@@ -137,6 +181,6 @@
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
-<script src="social.js"></script>
+<script src="social.js?v=20260624"></script>
 </body>
 </html>

@@ -551,7 +551,7 @@ function _applyProfileInfo(info, isOther){
           friendBtn.onclick = function(){
             KidSocial.listIncomingFriendRequests().then(function(reqs){
               var req = reqs.find(function(r){ return r.fromUid === info.viewUid; });
-              if(!req){ window.location.href = 'messages.html'; return; }
+              if(!req){ window.location.href = 'social.html?tab=friends'; return; }
               KidSocial.acceptFriendRequest(req.id).then(function(){
                 friendBtn.textContent = '✓ Bạn bè';
                 friendBtn.disabled = true;
@@ -572,7 +572,7 @@ function _applyProfileInfo(info, isOther){
     }
     var msgBtn = document.getElementById('profMsgBtn');
     if(msgBtn){
-      msgBtn.href = 'messages.html?uid=' + encodeURIComponent(info.viewUid);
+      msgBtn.href = 'social.html?tab=chat&uid=' + encodeURIComponent(info.viewUid);
     }
   }
 
