@@ -124,19 +124,50 @@
     }
   };
 
-  /* ════════════════ Nút cảm ứng ════════════════ */
+  /* ════════════════ Nút cảm ứng (chỉ hiện khi đang chơi Play) ════════════════ */
+  function isTouchDevice() {
+    return ('ontouchstart' in global) || (navigator.maxTouchPoints > 0);
+  }
+
+  function resetTouchState() {
+    touch.left = false;
+    touch.right = false;
+    touch.down = false;
+    touch.jumpQueued = false;
+    touch.jumpHeld = false;
+  }
+
+  /** mode: 'play' | 'map' | 'result' | 'boot' */
+  function setControlsMode(mode) {
+    var pad = document.getElementById('gameTouch');
+    var replay = document.getElementById('btnReplay');
+    var mapBtn = document.getElementById('btnMap');
+    var ctrls = document.getElementById('gameControls');
+
+    if (mode !== 'play') resetTouchState();
+
+    if (pad) {
+      var showPad = mode === 'play' && isTouchDevice();
+      pad.hidden = !showPad;
+      pad.classList.toggle('is-play-active', showPad);
+    }
+    if (replay) replay.hidden = mode !== 'play';
+    if (mapBtn) mapBtn.hidden = mode !== 'play';
+    if (ctrls) ctrls.classList.toggle('is-map-mode', mode === 'map' || mode === 'result');
+  }
+
   function wireTouchControls() {
     var pad = document.getElementById('gameTouch');
     if (!pad) return;
-    var isTouch = ('ontouchstart' in global) || (navigator.maxTouchPoints > 0);
-    if (!isTouch) { pad.hidden = true; return; }
-    pad.hidden = false;
+    if (!isTouchDevice()) { pad.hidden = true; return; }
+    pad.hidden = true;
+    pad.classList.remove('is-play-active');
 
     function bind(key, onDown, onUp) {
       var btn = pad.querySelector('[data-key="' + key + '"]');
       if (!btn) return;
-      var down = function (e) { e.preventDefault(); onDown(); };
-      var up = function (e) { e.preventDefault(); onUp(); };
+      var down = function (e) { e.preventDefault(); e.stopPropagation(); onDown(); };
+      var up = function (e) { e.preventDefault(); e.stopPropagation(); onUp(); };
       btn.addEventListener('pointerdown', down);
       btn.addEventListener('pointerup', up);
       btn.addEventListener('pointercancel', up);
@@ -158,6 +189,8 @@
   function gotoScene(key, data) {
     var g = global.__kidGame; if (!g) return;
     stopSpeak(); GameUI.hide();
+    var modeMap = { Play: 'play', LevelSelect: 'map', Result: 'result' };
+    setControlsMode(modeMap[key] || 'boot');
     ['Play', 'Result', 'LevelSelect'].forEach(function (k) {
       if (g.scene.isActive(k)) g.scene.stop(k);
     });
@@ -197,6 +230,7 @@
     initialize: function BootScene() { Phaser.Scene.call(this, { key: 'Boot' }); },
     create: function () {
       var self = this;
+      setControlsMode('boot');
       if (global.GameAssets) {
         var avatar = global.GameAssets.getStudentAvatar ? global.GameAssets.getStudentAvatar() : null;
         global.GameAssets.createTextures(this, avatar, function () { self.scene.start('LevelSelect'); });
@@ -212,7 +246,10 @@
     initialize: function LevelSelectScene() { Phaser.Scene.call(this, { key: 'LevelSelect' }); },
     create: function () {
       var self = this;
+      self._mapPickLock = false;
+      setControlsMode('map');
       fitStaticCamera(this);
+      this.input.topOnly = true;
       var GA = global.GameAssets || {};
       var MAP_PATH = GA.MAP_PATH || [];
       var MAP_TREASURE = GA.MAP_TREASURE || { x: 868, y: 168 };
@@ -293,6 +330,9 @@
       this.tweens.add({ targets: chest, y: ty - 6, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
       // ───── các đảo theo chủ đề ─────
+      var coarsePointer = global.matchMedia && global.matchMedia('(pointer: coarse)').matches;
+      var hitR = coarsePointer ? 68 : 48;
+
       levels.forEach(function (lv, i) {
         var p = pos[i];
         var unlocked = unlockedArr[i];
@@ -334,17 +374,28 @@
           self.tweens.add({ targets: glow, alpha: 0.15, scaleX: 1.1, scaleY: 1.1, duration: 800, yoyo: true, repeat: -1 });
         }
 
-        var hit = self.add.circle(0, 4, 48).setInteractive({ useHandCursor: unlocked });
+        var hit = self.add.circle(0, 4, hitR, 0xffffff, 0.0001);
+        hit.setInteractive({
+          useHandCursor: unlocked,
+          hitArea: new Phaser.Geom.Circle(0, 4, hitR),
+          hitAreaCallback: Phaser.Geom.Circle.Contains
+        });
         if (unlocked) {
-          hit.on('pointerover', function () { self.tweens.add({ targets: node, scaleX: 1.08, scaleY: 1.08, duration: 100 }); });
-          hit.on('pointerout', function () { self.tweens.add({ targets: node, scaleX: 1, scaleY: 1, duration: 100 }); });
-          hit.on('pointerdown', function () {
+          hit.on('pointerover', function () { self.tweens.add({ targets: node, scaleX: 1.12, scaleY: 1.12, duration: 100 }); });
+          hit.on('pointerout', function () { self.tweens.add({ targets: node, scaleX: 1.08, scaleY: 1.08, duration: 100 }); });
+          hit.on('pointerup', function (pointer) {
+            if (self._mapPickLock) return;
+            if (pointer.getDistance && pointer.getDistance() > 22) return;
+            self._mapPickLock = true;
+            self.tweens.add({ targets: node, scaleX: 0.9, scaleY: 0.9, duration: 70, yoyo: true });
             if (Sfx.unlock) Sfx.unlock();
             if (Sfx.gate) Sfx.gate();
-            self.scene.start('Play', { levelIndex: i });
+            self.time.delayedCall(60, function () {
+              self.scene.start('Play', { levelIndex: i });
+            });
           });
         } else {
-          hit.on('pointerdown', function () {
+          hit.on('pointerup', function () {
             if (Sfx.wrong) Sfx.wrong();
             self.tweens.add({ targets: node, x: p.x - 5, duration: 50, yoyo: true, repeat: 3, onComplete: function () { node.x = p.x; } });
           });
@@ -359,6 +410,9 @@
       }).setOrigin(0.5).setDepth(9);
 
       sharpenTexts(this);
+    },
+    shutdown: function () {
+      this._mapPickLock = false;
     }
   });
 
@@ -408,6 +462,7 @@
     },
 
     create: function () {
+      setControlsMode('play');
       if (this.hiddenRoom) { this.buildHiddenRoom(); return; }
       var self = this;
       var level = this.level;
@@ -1298,6 +1353,7 @@
     init: function (data) { this.data2 = data || {}; },
     create: function () {
       var self = this;
+      setControlsMode('result');
       var d = this.data2;
       var levels = (global.GameLevels && global.GameLevels.LEVELS) || [];
       var win = !!d.win;
