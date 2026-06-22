@@ -257,3 +257,188 @@
   .page-game.page-scroll{ padding-top:8px; }
   .game-hint{ display:none; }
 }
+
+/* ═══════════════════════════════════════════════════
+   CHẾ ĐỘ NGANG TỰ ĐỘNG (mobile)
+═══════════════════════════════════════════════════ */
+.game-landscape-viewport,
+.game-landscape-inner {
+  width: 100%;
+  position: relative;
+}
+
+.game-exit-btn {
+  display: none;
+}
+
+.page-game.game-force-landscape {
+  overflow: hidden;
+  height: 100dvh;
+  padding: 0 !important;
+  touch-action: none;
+}
+
+.page-game.game-force-landscape .sky,
+.page-game.game-force-landscape .liquid-bg,
+.page-game.game-force-landscape .ground,
+.page-game.game-force-landscape .app-topbar,
+.page-game.game-force-landscape #ttsStatus {
+  display: none !important;
+}
+
+/* Đã xoay ngang thật — full màn hình */
+.page-game.game-force-landscape:not(.game-virt-landscape) .game-landscape-viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #0f172a, #1e293b);
+}
+
+/* Cầm dọc — xoay ảo 90° để game hiển thị ngang full màn */
+.page-game.game-force-landscape.game-virt-landscape {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+}
+
+.page-game.game-force-landscape.game-virt-landscape .game-landscape-viewport {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 100dvh;
+  height: 100vw;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center center;
+  z-index: 8000;
+  background: linear-gradient(180deg, #0f172a, #1e293b);
+}
+
+.page-game.game-force-landscape .game-landscape-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding:
+    max(6px, env(safe-area-inset-top))
+    max(6px, env(safe-area-inset-right))
+    max(6px, env(safe-area-inset-bottom))
+    max(6px, env(safe-area-inset-left));
+}
+
+.page-game.game-force-landscape .game-wrap {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  min-height: 0;
+}
+
+.page-game.game-force-landscape .game-card {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  padding: 6px 8px;
+  min-height: 0;
+  margin: 0;
+}
+
+.page-game.game-force-landscape .game-stage {
+  flex: 1;
+  aspect-ratio: unset;
+  min-height: 0;
+  border-radius: 12px;
+}
+
+.page-game.game-force-landscape .game-hint {
+  display: none;
+}
+
+.page-game.game-force-landscape .game-exit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  left: max(10px, env(safe-area-inset-left));
+  z-index: 8200;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.72);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  color: #fff;
+  font-size: 20px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  touch-action: manipulation;
+}
+
+.page-game.game-force-landscape .game-exit-btn:active {
+  transform: scale(0.94);
+}
+
+.page-game.game-force-landscape .game-ctrl {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+}
+
+.page-game.game-force-landscape .game-tbtn {
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
+}
+
+.page-game.game-force-landscape .game-tbtn-jump {
+  width: 66px;
+  height: 66px;
+  font-size: 28px;
+}
+
+.page-game.game-force-landscape .game-quiz {
+  padding: 12px;
+}
+
+.page-game.game-force-landscape .game-quiz-card {
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Gợi ý xoay máy (chỉ khi chưa vào chế độ ngang) */
+.game-rotate-hint {
+  display: none;
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  .page-game:not(.game-force-landscape) .game-rotate-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 0 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    animation: gameHintPulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes gameHintPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.82; }
+}

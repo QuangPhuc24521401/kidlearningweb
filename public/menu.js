@@ -27,6 +27,7 @@ function goLesson(type){
 /** Mở game phiêu lưu học tập (platformer). */
 function goGame(){
   try{ if(typeof playPop === 'function') playPop(); }catch(e){}
+  try{ sessionStorage.setItem('kidGameLandscape', '1'); }catch(e){}
   window.location.href = 'game.html';
 }
 /** Đăng xuất: xoá cache avatar/role local rồi redirect login. */

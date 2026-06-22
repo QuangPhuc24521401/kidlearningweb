@@ -1371,6 +1371,9 @@
 
     function startPhaser() {
       global.__kidGame = new Phaser.Game(config);
+      if (global.KidGameOrientation && global.KidGameOrientation.refresh) {
+        global.KidGameOrientation.refresh();
+      }
     }
 
     var chain = Promise.resolve();
