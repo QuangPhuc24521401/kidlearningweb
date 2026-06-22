@@ -892,6 +892,14 @@
       if (Sfx.coin) Sfx.coin();
     },
 
+    inPitX: function (x) {
+      if (!this.pits) return false;
+      for (var i = 0; i < this.pits.length; i++) {
+        if (x > this.pits[i].x1 && x < this.pits[i].x2) return true;
+      }
+      return false;
+    },
+
     fallRespawn: function () {
       if (this.finished || this.invuln) return;
       var alive = this.loseHeart();
@@ -1139,7 +1147,9 @@
         }
       }
 
-      // rơi xuống hố → mất tim, hồi sinh ở chỗ an toàn
+      // rơi vào hố nước/dung nham (theo vùng X) → chết ngay, không đứng được dưới đáy
+      if (!this._warping && p.y > this.groundTop + 2 && this.inPitX(p.x)) { this.fallRespawn(); return; }
+      // rơi quá sâu (ngoài hố) → cũng hồi sinh
       if (p.y > this.groundTop + 30) { this.fallRespawn(); return; }
       if (p.body.blocked.down || p.body.touching.down) this.lastSafeX = p.x;
       var left = this.cursors.left.isDown || touch.left;
