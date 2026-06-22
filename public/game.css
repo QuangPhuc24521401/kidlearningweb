@@ -35,6 +35,7 @@
 .game-mount{
   position:absolute;
   inset:0;
+  z-index:1;
 }
 .game-mount canvas{
   display:block;
@@ -184,7 +185,13 @@
   padding:12px 14px 14px;
   pointer-events:none;
 }
-.game-touch[hidden]{ display:none; }
+.game-touch[hidden]{ display:none !important; }
+.game-touch.is-play-active{
+  display:flex !important;
+  visibility:visible !important;
+  pointer-events:none;
+  z-index:28;
+}
 .game-touch:not(.is-play-active){
   display:none !important;
   pointer-events:none !important;

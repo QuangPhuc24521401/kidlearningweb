@@ -129,6 +129,15 @@
     return ('ontouchstart' in global) || (navigator.maxTouchPoints > 0);
   }
 
+  function shouldShowTouchPad() {
+    if (isTouchDevice()) return true;
+    try {
+      if (global.matchMedia('(pointer: coarse)').matches) return true;
+      if (global.matchMedia('(max-width: 900px)').matches) return true;
+    } catch (e) { /* ignore */ }
+    return false;
+  }
+
   function resetTouchState() {
     touch.left = false;
     touch.right = false;
@@ -147,9 +156,13 @@
     if (mode !== 'play') resetTouchState();
 
     if (pad) {
-      var showPad = mode === 'play' && isTouchDevice();
-      pad.hidden = !showPad;
+      var showPad = mode === 'play' && shouldShowTouchPad();
       pad.classList.toggle('is-play-active', showPad);
+      if (showPad) {
+        pad.removeAttribute('hidden');
+      } else {
+        pad.setAttribute('hidden', '');
+      }
     }
     if (replay) replay.hidden = mode !== 'play';
     if (mapBtn) mapBtn.hidden = mode !== 'play';
@@ -159,9 +172,6 @@
   function wireTouchControls() {
     var pad = document.getElementById('gameTouch');
     if (!pad) return;
-    if (!isTouchDevice()) { pad.hidden = true; return; }
-    pad.hidden = true;
-    pad.classList.remove('is-play-active');
 
     function bind(key, onDown, onUp) {
       var btn = pad.querySelector('[data-key="' + key + '"]');
@@ -177,6 +187,7 @@
     bind('right', function () { touch.right = true; }, function () { touch.right = false; });
     bind('down', function () { touch.down = true; }, function () { touch.down = false; });
     bind('jump', function () { touch.jumpQueued = true; touch.jumpHeld = true; }, function () { touch.jumpHeld = false; });
+    setControlsMode('boot');
   }
 
   /* ════════════════ Nút điều khiển DOM (âm thanh / chơi lại / bản đồ) ════════════════ */
@@ -391,6 +402,7 @@
             if (Sfx.unlock) Sfx.unlock();
             if (Sfx.gate) Sfx.gate();
             self.time.delayedCall(60, function () {
+              setControlsMode('play');
               self.scene.start('Play', { levelIndex: i });
             });
           });
@@ -1427,6 +1439,11 @@
 
     function startPhaser() {
       global.__kidGame = new Phaser.Game(config);
+      var modeFromScene = { Play: 'play', LevelSelect: 'map', Result: 'result', Boot: 'boot' };
+      global.__kidGame.events.on(Phaser.Scenes.Events.CREATE, function (scene) {
+        var key = scene.sys.settings.key;
+        if (modeFromScene[key]) setControlsMode(modeFromScene[key]);
+      });
       if (global.KidGameOrientation && global.KidGameOrientation.refresh) {
         global.KidGameOrientation.refresh();
       }
