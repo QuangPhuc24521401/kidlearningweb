@@ -19,6 +19,18 @@
 
   function topicKey(levelId) { return 'Màn ' + levelId; }
 
+  function levelsList() {
+    return (global.GameLevels && global.GameLevels.LEVELS) || [];
+  }
+
+  function levelIndexById(levelId) {
+    var levels = levelsList();
+    for (var i = 0; i < levels.length; i++) {
+      if (levels[i].id === levelId) return i;
+    }
+    return -1;
+  }
+
   function readAll() {
     try { return JSON.parse(localStorage.getItem('learning_progress') || '{}') || {}; }
     catch (e) { return {}; }
@@ -34,16 +46,19 @@
     return t || { total: 0, bestRun: 0, completedRuns: 0, totalStars: 0, lastSessionAt: 0 };
   }
 
-  /* Màn 1 luôn mở; màn N mở khi màn N-1 đã hoàn thành ít nhất 1 lần. */
+  /* Màn đầu luôn mở; màn kế mở khi màn trước đã hoàn thành ít nhất 1 lần. */
   function isLevelUnlocked(levelId) {
-    if (levelId <= 1) return true;
-    var prev = getLevelProgress(levelId - 1);
+    var levels = levelsList();
+    var idx = levelIndexById(levelId);
+    if (idx <= 0) return true;
+    var prevId = levels[idx - 1] ? levels[idx - 1].id : levelId;
+    var prev = getLevelProgress(prevId);
     return (prev.completedRuns || 0) >= 1;
   }
 
   function highestUnlocked() {
-    var levels = (global.GameLevels && global.GameLevels.LEVELS) || [];
-    var top = 1;
+    var levels = levelsList();
+    var top = levels.length ? levels[0].id : 1;
     for (var i = 0; i < levels.length; i++) {
       if (isLevelUnlocked(levels[i].id)) top = levels[i].id;
       else break;

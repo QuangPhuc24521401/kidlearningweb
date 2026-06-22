@@ -50,6 +50,7 @@
       <a href="index.html" class="topbar-link">Trang chủ</a>
       <a href="progress.html" class="topbar-link">Tiến độ &amp; huy hiệu</a>
       <a href="game.html" class="topbar-link">Game</a>
+      <a href="social.html" class="topbar-link">Cộng đồng</a>
       <a href="pvp.html" class="topbar-link">PvP</a>
       <a href="mentor.html" class="topbar-link">Cô giáo AI</a>
     </nav>
@@ -109,6 +110,10 @@
     </div>
     <p class="profile-email" id="profEmail"></p>
     <span class="profile-role-pill" id="profRole">Tài khoản phụ huynh</span>
+    <div id="profSocialActions" class="profile-social-actions" hidden>
+      <button type="button" id="profFollowBtn" class="profile-btn profile-btn-primary profile-btn--sm">👀 Theo dõi</button>
+      <a href="social.html" class="profile-btn profile-btn--sm">🌈 Cộng đồng</a>
+    </div>
   </header>
 
   <div class="profile-stat-grid" id="profStatsGrid" aria-label="Thống kê học tập">
@@ -164,6 +169,7 @@
 
   <div class="profile-actions">
     <a href="progress.html" class="profile-btn profile-btn-primary profile-btn--sm">📊 Tiến độ</a>
+    <a href="social.html" class="profile-btn profile-btn--sm">🌈 Cộng đồng</a>
     <button type="button" class="profile-btn profile-btn--sm" id="profBtnSettings">⚙️ Giọng đọc</button>
     <button type="button" class="profile-btn profile-btn-danger profile-btn--sm" id="profBtnLogout">🚪 Đăng xuất</button>
   </div>
@@ -190,6 +196,7 @@
 <script src="firebase.js"></script>
 <script src="progress-sync.js"></script>
 <script src="class-sync.js?v=20260528g"></script>
+<script src="social-sync.js"></script>
 <script src="lessons/data/lessons-data.js"></script>
 <script src="achievements.js"></script>
 <script src="arena.js"></script>

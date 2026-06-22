@@ -310,6 +310,10 @@
           stroke: unlocked ? '#15803d' : '#64748b', strokeThickness: 3
         }).setOrigin(0.5));
 
+        if (lv.isTeacherLevel) {
+          node.add(self.add.text(0, -52, '👩‍🏫', { fontSize: '16px' }).setOrigin(0.5));
+        }
+
         // tên màn
         node.add(self.add.text(0, 58, lv.name, {
           fontFamily: 'Nunito, sans-serif', fontSize: '11px', fontWeight: '800', color: '#1e293b',
@@ -1364,7 +1368,20 @@
       physics: { default: 'arcade', arcade: { gravity: { y: 1900 }, debug: false } },
       scene: [BootScene, LevelSelectScene, PlayScene, ResultScene]
     };
-    global.__kidGame = new Phaser.Game(config);
+
+    function startPhaser() {
+      global.__kidGame = new Phaser.Game(config);
+    }
+
+    var chain = Promise.resolve();
+    if (global.TeacherGames && global.TeacherGames.loadForCurrentUser) {
+      chain = global.TeacherGames.loadForCurrentUser().then(function (games) {
+        if (global.GameLevels && global.GameLevels.mergeTeacherLevels) {
+          global.GameLevels.mergeTeacherLevels(games || []);
+        }
+      }).catch(function (err) { console.warn('[game-core] teacher games', err); });
+    }
+    chain.finally(startPhaser);
   }
 
   if (document.readyState === 'loading') {

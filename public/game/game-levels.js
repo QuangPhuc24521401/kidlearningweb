@@ -82,8 +82,16 @@
 
   /* Trả về danh sách câu hỏi 2 lựa chọn cho 1 màn (theo số cổng). */
   function buildLevelQuestions(level) {
-    var pool = shuffle(poolForLevel(level));
     var n = Math.max(1, level.gates || 3);
+    if (Array.isArray(level.customQuestions) && level.customQuestions.length) {
+      var custom = shuffle(level.customQuestions.slice());
+      var pickedCustom = custom.slice(0, n);
+      while (pickedCustom.length < n && custom.length) {
+        pickedCustom.push(custom[pickedCustom.length % custom.length]);
+      }
+      return pickedCustom.map(buildBinaryChoice).filter(Boolean);
+    }
+    var pool = shuffle(poolForLevel(level));
     var picked = pool.slice(0, n);
     // nếu pool ít hơn số cổng, cho lặp lại
     while (picked.length < n && pool.length) {
@@ -91,6 +99,18 @@
     }
     return picked.map(buildBinaryChoice).filter(Boolean);
   }
+
+  /** Gộp màn do giáo viên tạo vào cuối danh sách mặc định. */
+  function mergeTeacherLevels(teacherLevels) {
+    if (!Array.isArray(teacherLevels) || !teacherLevels.length) return LEVELS.length;
+    teacherLevels.forEach(function (lv) {
+      var exists = LEVELS.some(function (x) { return x.teacherGameId && x.teacherGameId === lv.teacherGameId; });
+      if (!exists) LEVELS.push(lv);
+    });
+    return LEVELS.length;
+  }
+
+  function getAllLevels() { return LEVELS; }
 
   function totalStarsForLevel(level) {
     return Math.max(1, level.gates || 3);
@@ -101,6 +121,8 @@
     SUBJECT_TITLES: SUBJECT_TITLES,
     buildBinaryChoice: buildBinaryChoice,
     buildLevelQuestions: buildLevelQuestions,
-    totalStarsForLevel: totalStarsForLevel
+    totalStarsForLevel: totalStarsForLevel,
+    mergeTeacherLevels: mergeTeacherLevels,
+    getAllLevels: getAllLevels
   };
 })(window);

@@ -464,12 +464,150 @@ function mountUserBar(){
   }
 }
 
+function _profileViewUid(){
+  try{
+    var p = new URLSearchParams(location.search);
+    return (p.get('uid') || '').trim();
+  }catch(e){ return ''; }
+}
+
+function _applyProfileInfo(info, isOther){
+  var set = function(id, text){
+    var el = document.getElementById(id);
+    if(el) el.textContent = text;
+  };
+  var show = function(id, visible){
+    var el = document.getElementById(id);
+    if(el) el.hidden = !visible;
+  };
+
+  var av = document.getElementById('profAvatar');
+  if(av){
+    if(info.isTeacher){
+      av.className = 'profile-avatar-big';
+      av.style.removeProperty('--avatar-ring');
+      av.innerHTML = '';
+      av.textContent = '👩‍🏫';
+    } else {
+      var sv = info.studentAvatar || _readStudentAvatarFromStorage();
+      if(isOther && info.avatarEmoji){
+        sv = { mode: 'emoji', emoji: info.avatarEmoji, ring: info.avatarRing || '#fbbf24' };
+      }
+      var ringEscProfile = sv.ring;
+      av.style.setProperty('--avatar-ring', ringEscProfile);
+      var ph2 = sv.mode === 'photo' ? _safeDataUrlForAttr(sv.photo) : '';
+      if(ph2){
+        av.className = 'profile-avatar-big profile-avatar-big--photo';
+        av.innerHTML = '<img class="profile-avatar-img" src="' + ph2 + '" alt="" decoding="async" />';
+      } else {
+        av.className = 'profile-avatar-big profile-avatar-big--emoji';
+        av.innerHTML = '<span class="profile-avatar-emoji-txt">' + _escapeHtml(sv.emoji) + '</span>';
+      }
+    }
+  }
+
+  set('profName', info.name);
+  set('profEmail', isOther ? '' : (info.email || ''));
+  set('profRole', info.roleLabel);
+  set('profStars', info.stars);
+  set('profBadges', info.unlocked + '/' + info.totalBadges);
+  set('profStreak', info.streak);
+  set('profHonor', info.honor);
+  set('profJoin', _formatJoinDate(info.createdAt));
+  set('profAge', info.createdAt ? '(' + _formatAccountAge(info.createdAt) + ')' : '');
+
+  show('profNameEditBtn', !info.isTeacher && !isOther);
+  show('profClassBox', !isOther && !info.isTeacher);
+  show('profBtnSettings', !isOther);
+  show('profBtnLogout', !isOther);
+  show('profSocialActions', !!isOther);
+
+  if(isOther && typeof KidSocial !== 'undefined'){
+    var btn = document.getElementById('profFollowBtn');
+    if(btn){
+      KidSocial.isFollowing(info.viewUid).then(function(f){
+        btn.textContent = f ? '✓ Đang theo dõi' : '👀 Theo dõi';
+        btn.disabled = !!f;
+        btn.onclick = function(){
+          if(f) return;
+          KidSocial.follow(info.viewUid).then(function(){
+            btn.textContent = '✓ Đang theo dõi';
+            btn.disabled = true;
+          }).catch(function(e){ alert(e.message); });
+        };
+      });
+    }
+  }
+
+  if(info.isTeacher && info.classRoom){
+    set('profClass', info.classRoom);
+    show('profClassRow', true);
+  } else if(!isOther && !info.isTeacher){
+    show('profClassRow', false);
+  } else if(isOther && info.classRoom){
+    set('profClass', info.classRoom);
+    show('profClassRow', true);
+  } else {
+    show('profClassRow', false);
+  }
+
+  show('profUidRow', false);
+
+  var grid = document.getElementById('profStatsGrid');
+  if(grid){
+    grid.querySelectorAll('.profile-stat-chip').forEach(function(c){ c.style.display = ''; });
+    if(info.isTeacher){
+      ['.profile-stat-badges','.profile-stat-streak','.profile-stat-honor'].forEach(function(sel){
+        var el = grid.querySelector(sel);
+        if(el) el.style.display = 'none';
+      });
+    }
+  }
+}
+
+function renderOtherProfile(uid){
+  var card = document.querySelector('.profile-page-card');
+  if(!card || typeof KidSocial === 'undefined') return;
+  KidSocial.getPublicProfile(uid).then(function(prof){
+    return KidSocial.getUserAchievements(uid).then(function(ach){
+      _applyProfileInfo({
+        viewUid: uid,
+        name: prof.displayName,
+        isTeacher: prof.role === 'teacher',
+        roleLabel: prof.role === 'teacher' ? 'Giáo viên' : 'Học sinh',
+        classRoom: prof.classRoom,
+        stars: ach.stars,
+        unlocked: ach.badges,
+        totalBadges: window.ACHIEVEMENT_DEFS ? window.ACHIEVEMENT_DEFS.length : 0,
+        streak: 0,
+        honor: 0,
+        createdAt: null,
+        avatarEmoji: prof.avatarEmoji,
+        avatarRing: prof.avatarRing
+      }, true);
+    });
+  }).catch(function(err){
+    var set = function(id, text){ var el = document.getElementById(id); if(el) el.textContent = text; };
+    set('profName', 'Không tìm thấy');
+    set('profRole', err.message || 'Lỗi tải hồ sơ');
+  });
+}
+
 /* ───────────── Render trang Hồ sơ (profile.html) ─────────────
    Được gọi mỗi khi SPA mount route 'profile' hoặc khi profile.html
    được load trực tiếp (qua DOMContentLoaded listener bên dưới). */
 function renderProfilePage(){
   var card = document.querySelector('.profile-page-card');
   if(!card) return; // không phải trang hồ sơ → skip
+
+  var viewUid = _profileViewUid();
+  try{
+    var me = firebase.auth && firebase.auth().currentUser;
+    if(viewUid && me && viewUid !== me.uid){
+      renderOtherProfile(viewUid);
+      return;
+    }
+  }catch(e){}
 
   var info = _readProfileInfo();
 

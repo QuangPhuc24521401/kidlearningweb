@@ -946,6 +946,13 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   flex-direction:column;
   gap:6px;
 }
+.profile-social-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:center;
+  margin-top:10px;
+}
 .profile-btn{
   display:flex;
   align-items:center;

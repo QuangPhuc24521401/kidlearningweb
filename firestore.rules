@@ -28,11 +28,18 @@ service cloud.firestore {
         );
     }
 
+    function sameClassAs(userId) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.classRoom
+           == get(/databases/$(database)/documents/users/$(userId)).data.classRoom
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.classRoom is string
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.classRoom.size() >= 3;
+    }
+
     // Hồ sơ user: chỉ chính chủ; giáo viên đọc phụ huynh cùng lớp;
     // mọi user đăng nhập có thể đọc hồ sơ giáo viên (để xác minh mã lớp).
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
-      // Cho phép query giáo viên theo classRoom khi phụ huynh xác minh mã lớp lúc đăng ký (chưa đăng nhập)
       allow read: if resource.data.role == 'teacher'
         && resource.data.keys().hasAll(['classRoom'])
         && resource.data.classRoom is string
@@ -48,10 +55,10 @@ service cloud.firestore {
         && resource.data.keys().hasAll(['classRoom'])
         && resource.data.classRoom is string
         && resource.data.classRoom.size() >= 3;
+      allow read: if sameClassAs(userId);
     }
 
     match /classrooms/{code} {
-      // Tra cứu mã lớp khi đăng ký (chưa đăng nhập) — chỉ đọc 1 doc theo mã, không list cả collection
       allow get: if true;
       allow read: if isSignedIn();
       allow create, update: if isSignedIn()
@@ -68,25 +75,21 @@ service cloud.firestore {
         && request.resource.data.teacherUid == resource.data.teacherUid;
     }
 
-    // Tiến độ học + huy hiệu + lịch sử Cô AI (doc id = uid)
     match /learning_progress/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       allow read: if studentInTeacherClass(userId);
+      allow read: if sameClassAs(userId);
     }
 
-    // Đấu trường nhiều người (doc cố định live, hoặc mở rộng sau)
     match /arena_sessions/{docId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isSignedIn();
     }
 
-    // PvP — phòng 1v1
     match /pvp_rooms/{roomId} {
       allow read: if isSignedIn();
-
       allow create: if isSignedIn()
         && request.resource.data.hostId == request.auth.uid;
-
       allow update: if isSignedIn() && (
         request.auth.uid == resource.data.hostId
         || request.auth.uid == resource.data.guestId
@@ -101,11 +104,55 @@ service cloud.firestore {
           && request.resource.data.hostId == resource.data.hostId
         )
       );
-
       allow delete: if isSignedIn() && (
         request.auth.uid == resource.data.hostId
         || request.auth.uid == resource.data.guestId
       );
+    }
+
+    match /teacher_games/{gameId} {
+      allow read: if isSignedIn() && (
+        resource.data.published == true
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.classRoom
+           == resource.data.classRoom
+      );
+      allow read: if isTeacher()
+        && request.auth.uid == resource.data.teacherUid;
+      allow create: if isTeacher()
+        && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.classRoom == teacherClassRoom();
+      allow update, delete: if isTeacher()
+        && request.auth.uid == resource.data.teacherUid;
+    }
+
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.authorUid == request.auth.uid;
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.authorUid
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likeCount', 'commentCount'])
+      );
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.authorUid;
+
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn()
+          && request.resource.data.authorUid == request.auth.uid;
+        allow delete: if isSignedIn() && request.auth.uid == resource.data.authorUid;
+      }
+    }
+
+    match /follows/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      match /following/{targetId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isSignedIn() && request.auth.uid == userId;
+      }
+      match /followers/{followerId} {
+        allow read: if isSignedIn();
+        allow create, delete: if isSignedIn() && request.auth.uid == followerId;
+      }
     }
 
     match /{document=**} {

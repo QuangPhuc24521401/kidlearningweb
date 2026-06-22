@@ -12,6 +12,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
 <script src="class-sync.js?v=20260528g"></script>
+<script src="teacher-games.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:20px;display:flex;justify-content:center}
@@ -95,6 +96,31 @@ body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(1
 .refresh-btn{border:none;background:#f0e8ff;color:#6c3d9b;border-radius:10px;padding:6px 12px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
 .refresh-btn:hover{background:#e0d0ff}
 .badge-pill{background:#7c3aed;color:white;border-radius:20px;padding:3px 10px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700}
+.builder-hint{font-family:'Nunito',sans-serif;font-size:13px;color:#64748b;margin-bottom:14px;line-height:1.5}
+.builder-form{display:flex;flex-direction:column;gap:10px}
+.bf-label{font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#475569}
+.bf-input,.bf-textarea,.bf-file{width:100%;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-family:'Nunito',sans-serif;font-size:13px}
+.bf-textarea{resize:vertical;min-height:90px}
+.bf-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:560px){.bf-row{grid-template-columns:1fr 1fr}}
+.bf-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.bf-btn{border:none;border-radius:12px;padding:10px 14px;font-family:'Baloo 2',cursive;font-size:14px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#334155}
+.bf-btn:hover{background:#e2e8f0}
+.bf-btn--primary{background:#7c3aed;color:#fff}
+.bf-btn--primary:hover{background:#6d28d9}
+.bf-btn--green{background:#16a34a;color:#fff}
+.bf-btn--green:hover{background:#15803d}
+.tg-preview{margin-top:8px;padding:12px;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1;font-family:'Nunito',sans-serif;font-size:12px;color:#334155;max-height:180px;overflow-y:auto}
+.tg-list{display:flex;flex-direction:column;gap:10px}
+.tg-item{display:flex;align-items:center;gap:10px;padding:12px;background:#f8f9ff;border-radius:14px;border:1.5px solid #e0e7ff;flex-wrap:wrap}
+.tg-item-main{flex:1;min-width:160px}
+.tg-item-title{font-weight:800;color:#312e81;font-size:15px}
+.tg-item-meta{font-family:'Nunito',sans-serif;font-size:12px;color:#64748b;margin-top:2px}
+.tg-item-actions{display:flex;gap:6px;flex-wrap:wrap}
+.tg-mini{border:none;border-radius:10px;padding:6px 10px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer}
+.tg-mini--pub{background:#dcfce7;color:#166534}
+.tg-mini--unpub{background:#fef3c7;color:#92400e}
+.tg-mini--del{background:#fee2e2;color:#991b1b}
 </style>
 </head>
 <body>
@@ -117,6 +143,7 @@ body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(1
     <button class="tab active" id="tab0" onclick="switchTab(0)">📊 Tổng quan</button>
     <button class="tab" id="tab1" onclick="switchTab(1)">📋 Tiến độ học</button>
     <button class="tab" id="tab2" onclick="switchTab(2)">💬 Lịch sử AI</button>
+    <button class="tab" id="tab3" onclick="switchTab(3)">🎮 Tạo game</button>
   </div>
 
   <!-- ══ PANEL 0: TỔNG QUAN ══ -->
@@ -176,6 +203,45 @@ body{min-height:100vh;font-family:'Baloo 2',cursive;background:linear-gradient(1
         <button class="refresh-btn" onclick="refreshClassData()">🔄 Cập nhật</button>
       </div>
       <div class="history-list" id="historyList"><div class="empty">Chưa có lịch sử</div></div>
+    </div>
+  </div>
+
+  <!-- ══ PANEL 3: TẠO GAME ══ -->
+  <div class="panel" id="panel3">
+    <div class="card">
+      <div class="card-title"><span>🎮 Tạo màn chơi từ bài tập</span></div>
+      <p class="builder-hint">Upload file JSON/CSV câu hỏi hoặc dán trực tiếp. Học sinh trong lớp sẽ thấy màn đã <b>Xuất bản</b> trên bản đồ Game.</p>
+      <div class="builder-form">
+        <label class="bf-label">Tên màn chơi</label>
+        <input type="text" id="tgTitle" class="bf-input" placeholder="VD: Ôn tập màu sắc tuần 3" maxlength="80">
+        <div class="bf-row">
+          <div><label class="bf-label">Chủ đề đảo</label>
+            <select id="tgTheme" class="bf-input"></select></div>
+          <div><label class="bf-label">Số cổng</label>
+            <input type="number" id="tgGates" class="bf-input" min="1" max="7" value="3"></div>
+          <div><label class="bf-label">Tốc độ</label>
+            <input type="number" id="tgSpeed" class="bf-input" min="200" max="400" value="280"></div>
+          <div><label class="bf-label">Mạng</label>
+            <input type="number" id="tgHearts" class="bf-input" min="1" max="5" value="3"></div>
+        </div>
+        <label class="bf-label">Upload file bài tập (.json / .csv / .txt)</label>
+        <input type="file" id="tgFile" class="bf-file" accept=".json,.csv,.txt,application/json,text/csv">
+        <label class="bf-label">Hoặc dán JSON câu hỏi</label>
+        <textarea id="tgJson" class="bf-textarea" rows="5" placeholder='[{"question":"Màu nào là đỏ?","answers":["🔴","🔵","🟢","🟡"],"correctAnswer":"🔴"}]'></textarea>
+        <div class="bf-actions">
+          <button type="button" class="bf-btn bf-btn--primary" onclick="teacherGamePreview()">👁 Xem trước</button>
+          <button type="button" class="bf-btn" onclick="teacherGameSave(false)">💾 Lưu nháp</button>
+          <button type="button" class="bf-btn bf-btn--green" onclick="teacherGameSave(true)">🚀 Xuất bản</button>
+        </div>
+        <div id="tgPreview" class="tg-preview"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <span>📚 Game đã tạo</span>
+        <button class="refresh-btn" onclick="loadTeacherGameList()">🔄</button>
+      </div>
+      <div id="tgList" class="tg-list"><div class="empty">Chưa có game nào</div></div>
     </div>
   </div>
 
@@ -465,13 +531,14 @@ function loadStudentsForClass(classRoom, uids){
 }
 
 function switchTab(idx){
-  for(var i = 0; i < 3; i++){
+  for(var i = 0; i < 4; i++){
     document.getElementById('tab'+i).classList.toggle('active', i === idx);
     document.getElementById('panel'+i).classList.toggle('active', i === idx);
   }
   if(idx === 0) loadAll();
   if(idx === 1) loadProgress();
   if(idx === 2) loadHistory();
+  if(idx === 3) initTeacherGameBuilder();
 }
 
 function loadAll(){
@@ -626,6 +693,139 @@ function loadHistory(){
   }).join('');
 }
 
+/* ── Game builder (tab 3) ── */
+var tgBuilderReady = false;
+var tgDraftQuestions = [];
+
+function initTeacherGameBuilder(){
+  if(!tgBuilderReady){
+    tgBuilderReady = true;
+    var sel = document.getElementById('tgTheme');
+    if(sel && window.TeacherGames){
+      sel.innerHTML = TeacherGames.THEMES.map(function(t){
+        return '<option value="'+t+'">'+t+'</option>';
+      }).join('');
+    }
+    var fileIn = document.getElementById('tgFile');
+    if(fileIn){
+      fileIn.addEventListener('change', function(){
+        var f = fileIn.files && fileIn.files[0];
+        if(!f) return;
+        var reader = new FileReader();
+        reader.onload = function(){
+          try{
+            var qs = TeacherGames.parseQuestionFile(reader.result, f.name);
+            tgDraftQuestions = qs;
+            document.getElementById('tgJson').value = JSON.stringify(qs, null, 2);
+            teacherGamePreview();
+          }catch(err){
+            alert(err.message || 'Không đọc được file');
+          }
+        };
+        reader.readAsText(f, 'UTF-8');
+      });
+    }
+  }
+  loadTeacherGameList();
+}
+
+function teacherGameCollectQuestions(){
+  if(tgDraftQuestions && tgDraftQuestions.length) return tgDraftQuestions.slice();
+  var raw = (document.getElementById('tgJson') || {}).value || '';
+  raw = raw.trim();
+  if(!raw) return [];
+  try{
+    return TeacherGames.parseQuestionFile(raw, 'paste.json');
+  }catch(e){
+    alert(e.message || 'JSON không hợp lệ');
+    return [];
+  }
+}
+
+function teacherGamePreview(){
+  var box = document.getElementById('tgPreview');
+  if(!box) return;
+  var qs = teacherGameCollectQuestions();
+  tgDraftQuestions = qs;
+  if(!qs.length){
+    box.innerHTML = '<span style="color:#94a3b8">Chưa có câu hỏi — upload file hoặc dán JSON.</span>';
+    return;
+  }
+  box.innerHTML = '<b>' + qs.length + ' câu</b> — ' + qs.slice(0, 3).map(function(q, i){
+    return (i + 1) + '. ' + escapeHtml(q.question) + ' → <b>' + escapeHtml(q.correctAnswer) + '</b>';
+  }).join('<br>') + (qs.length > 3 ? '<br>…' : '');
+}
+
+function teacherGameSave(publish){
+  var dash = window.__teacherDash || {};
+  if(!dash.uid || !dash.classRoom){
+    alert('Chưa có mã lớp — kiểm tra hồ sơ giáo viên');
+    return;
+  }
+  var qs = teacherGameCollectQuestions();
+  if(!qs.length) return;
+  var payload = {
+    title: (document.getElementById('tgTitle') || {}).value || '',
+    theme: (document.getElementById('tgTheme') || {}).value || 'grass',
+    gates: (document.getElementById('tgGates') || {}).value,
+    speed: (document.getElementById('tgSpeed') || {}).value,
+    hearts: (document.getElementById('tgHearts') || {}).value,
+    questions: qs,
+    published: !!publish
+  };
+  TeacherGames.saveGame(dash.uid, dash.classRoom, dash.name, payload)
+    .then(function(){
+      alert(publish ? 'Đã xuất bản! Học sinh sẽ thấy trên bản đồ Game.' : 'Đã lưu nháp.');
+      loadTeacherGameList();
+    })
+    .catch(function(err){ alert(err.message || 'Lưu thất bại'); });
+}
+
+function loadTeacherGameList(){
+  var list = document.getElementById('tgList');
+  if(!list || !window.TeacherGames) return;
+  var dash = window.__teacherDash || {};
+  if(!dash.uid){
+    list.innerHTML = '<div class="empty">Đang tải…</div>';
+    return;
+  }
+  list.innerHTML = '<div class="empty">Đang tải…</div>';
+  TeacherGames.listMyGames(dash.uid).then(function(games){
+    if(!games.length){
+      list.innerHTML = '<div class="empty">Chưa có game — tạo màn đầu tiên ở trên!</div>';
+      return;
+    }
+    list.innerHTML = games.map(function(g){
+      return '<div class="tg-item">' +
+        '<div class="tg-item-main">' +
+          '<div class="tg-item-title">' + escapeHtml(g.title) + '</div>' +
+          '<div class="tg-item-meta">' + g.questionCount + ' câu · ' + g.gates + ' cổng · ' +
+            (g.published ? '✅ Đã xuất bản' : '📝 Nháp') + '</div>' +
+        '</div>' +
+        '<div class="tg-item-actions">' +
+          (g.published
+            ? '<button class="tg-mini tg-mini--unpub" onclick="teacherGameTogglePub(\'' + g.id + '\',false)">Ẩn</button>'
+            : '<button class="tg-mini tg-mini--pub" onclick="teacherGameTogglePub(\'' + g.id + '\',true)">Xuất bản</button>') +
+          '<button class="tg-mini tg-mini--del" onclick="teacherGameDelete(\'' + g.id + '\')">Xóa</button>' +
+        '</div></div>';
+    }).join('');
+  }).catch(function(){
+    list.innerHTML = '<div class="empty">Không tải được danh sách</div>';
+  });
+}
+
+function teacherGameTogglePub(id, pub){
+  TeacherGames.setPublished(id, pub).then(function(){ loadTeacherGameList(); })
+    .catch(function(e){ alert(e.message || 'Lỗi'); });
+}
+
+function teacherGameDelete(id){
+  if(!confirm('Xóa màn chơi này?')) return;
+  var dash = window.__teacherDash || {};
+  TeacherGames.deleteGame(id, dash.uid).then(function(){ loadTeacherGameList(); })
+    .catch(function(e){ alert(e.message || 'Không xóa được'); });
+}
+
 function handleLogout(){
   localStorage.removeItem('userRole');
   localStorage.removeItem('classRoom');
@@ -690,6 +890,7 @@ function startTeacherDashboard(){
           if(data.classRoom) localStorage.setItem('classRoom', data.classRoom);
           if(data.displayName) localStorage.setItem('userDisplayName', data.displayName);
           setTeacherInfo('Lớp: ' + (data.classRoom || '—'));
+          window.__teacherDash = { uid: user.uid, classRoom: data.classRoom || '', name: data.displayName || 'Giáo viên' };
           startTeacherDashboard();
         } else {
           window.location.replace('index.html');

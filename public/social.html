@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cộng đồng — Kid Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css?v=20260528d">
+<link rel="stylesheet" href="menu.css?v=20260528d">
+<link rel="stylesheet" href="social.css?v=20260622">
+<script>
+  (function(){
+    try{ if(localStorage.getItem('userRole')) return; }catch(e){}
+    document.documentElement.style.visibility='hidden';
+  })();
+</script>
+<script>
+  (function quickRoleGuard(){
+    try{
+      if(localStorage.getItem('userRole') === 'teacher'){
+        window.location.replace('mentor-teacher.html');
+      }
+    }catch(e){}
+  })();
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="page-scroll page-social">
+
+<header class="app-topbar" role="banner">
+  <div class="app-topbar-inner">
+    <a href="index.html" class="topbar-brand">
+      <img src="favicon.svg" alt="Kid Learning" class="topbar-brand-logo" width="36" height="36" decoding="async">
+      <span class="topbar-brand-text">
+        <span class="topbar-brand-name">Kid Learning</span>
+        <span class="topbar-brand-tag">Cộng đồng học tập</span>
+      </span>
+    </a>
+    <nav class="topbar-nav" aria-label="Điều hướng chính">
+      <a href="index.html" class="topbar-link">Trang chủ</a>
+      <a href="progress.html" class="topbar-link">Tiến độ &amp; huy hiệu</a>
+      <a href="game.html" class="topbar-link">Game</a>
+      <a href="social.html" class="topbar-link is-current" aria-current="page">Cộng đồng</a>
+      <a href="pvp.html" class="topbar-link">PvP</a>
+      <a href="mentor.html" class="topbar-link">Cô giáo AI</a>
+    </nav>
+    <div class="topbar-end">
+      <div id="topbarUserSlot" class="topbar-user-slot"></div>
+      <div class="topbar-tools">
+        <button type="button" id="settingsBtn" aria-label="Cài đặt giọng đọc" title="Cài đặt">⚙️</button>
+        <button type="button" class="topbar-logout" onclick="handleLogout()">Đăng xuất</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="sky"><div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="cloud c4"></div></div>
+<div class="liquid-bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="ground"></div>
+
+<main id="page-root" data-page="social">
+  <div class="soc-wrap">
+    <div class="soc-hero">
+      <h1>🌈 Cộng đồng Kid Learning</h1>
+      <p>Chia sẻ thành tích, bình luận và theo dõi bạn cùng lớp!</p>
+    </div>
+
+    <div class="soc-layout">
+      <div class="soc-main">
+        <div class="soc-card soc-compose">
+          <form id="socCompose">
+            <textarea id="socComposeText" maxlength="500" placeholder="Bé vừa học được gì hôm nay? Chia sẻ với mọi người nhé! 🎉"></textarea>
+            <div class="soc-compose-actions">
+              <button type="submit" class="soc-btn-post">📣 Đăng bài</button>
+              <button type="button" id="socShareProgress" class="soc-btn-share">⭐ Chia sẻ thành tích</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="soc-tabs" role="tablist">
+          <button type="button" class="soc-tab is-active" data-feed="class">🏫 Lớp học</button>
+          <button type="button" class="soc-tab" data-feed="following">👀 Theo dõi</button>
+          <button type="button" class="soc-tab" data-feed="all">🌍 Tất cả</button>
+        </div>
+
+        <div class="soc-card" id="socFeed" aria-live="polite"></div>
+      </div>
+
+      <aside class="soc-side">
+        <div class="soc-card" id="socSuggest"></div>
+        <div class="soc-card">
+          <h3 class="soc-side-title">💡 Gợi ý</h3>
+          <p style="font-family:Nunito,sans-serif;font-size:12px;color:#64748b;line-height:1.5;margin:0">
+            Xem hồ sơ bạn bè, bấm <b>Theo dõi</b> để thấy bài đăng của họ ở tab Theo dõi.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<script src="firebase.js"></script>
+<script src="progress-sync.js"></script>
+<script src="class-sync.js?v=20260528g"></script>
+<script src="social-sync.js"></script>
+<script>
+  (function deepRoleGuard(){
+    if(localStorage.getItem('userRole')) return;
+    if(typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore) return;
+    firebase.auth().onAuthStateChanged(function(user){
+      if(!user){ window.location.replace('auth/login.html'); return; }
+      firebase.firestore().collection('users').doc(user.uid).get()
+        .then(function(snap){
+          var data = snap && snap.exists ? snap.data() : null;
+          var role = data?.role || 'parent';
+          localStorage.setItem('userRole', role);
+          if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
+          if(role === 'teacher') window.location.replace('mentor-teacher.html');
+        });
+    });
+  })();
+</script>
+<script src="secrets/tts.config.js"></script>
+<script src="shared.js"></script>
+<script src="menu.js"></script>
+<script src="social.js"></script>
+</body>
+</html>

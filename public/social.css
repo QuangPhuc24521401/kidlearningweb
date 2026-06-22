@@ -1,0 +1,39 @@
+/* SOCIAL.CSS — Cộng đồng Kid Learning */
+.page-social .soc-wrap{max-width:720px;margin:0 auto;padding:24px 16px 80px;position:relative;z-index:2}
+.page-social .soc-hero{text-align:center;margin-bottom:20px}
+.page-social .soc-hero h1{font-family:'Baloo 2',cursive;font-size:clamp(1.6rem,4vw,2.2rem);color:#1e3a8a;margin:0 0 6px}
+.page-social .soc-hero p{font-family:'Nunito',sans-serif;color:#475569;margin:0;font-size:14px}
+.soc-layout{display:grid;grid-template-columns:1fr 220px;gap:16px;align-items:start}
+@media(max-width:760px){.soc-layout{grid-template-columns:1fr}}
+.soc-card{background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-radius:20px;padding:16px 18px;box-shadow:0 8px 32px rgba(30,58,138,.12);border:1px solid rgba(255,255,255,.8);margin-bottom:14px}
+.soc-compose textarea{width:100%;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px;font-family:'Nunito',sans-serif;font-size:14px;resize:vertical;min-height:72px}
+.soc-compose-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.soc-compose-actions button{border:none;border-radius:12px;padding:10px 16px;font-family:'Baloo 2',cursive;font-weight:700;cursor:pointer}
+.soc-btn-post{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.soc-btn-share{background:#fef3c7;color:#92400e}
+.soc-tabs{display:flex;gap:6px;margin-bottom:12px;background:#f1f5f9;padding:5px;border-radius:14px}
+.soc-tab{flex:1;border:none;background:transparent;border-radius:10px;padding:8px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#64748b;cursor:pointer}
+.soc-tab.is-active{background:#fff;color:#4338ca;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.soc-post{padding:14px 0;border-bottom:1px solid #e2e8f0}
+.soc-post:last-child{border-bottom:none}
+.soc-post-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.soc-post-user{display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
+.soc-av{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:18px}
+.soc-name{font-family:'Baloo 2',cursive;font-size:15px;color:#1e293b}
+.soc-time{font-family:'Nunito',sans-serif;font-size:11px;color:#94a3b8}
+.soc-text{font-family:'Nunito',sans-serif;font-size:14px;line-height:1.55;color:#334155;margin:0 0 10px;white-space:pre-wrap}
+.soc-share-badge{display:inline-block;background:#fef9c3;color:#854d0e;border-radius:10px;padding:4px 10px;font-size:12px;font-weight:700;margin-bottom:8px}
+.soc-actions{display:flex;gap:8px;flex-wrap:wrap}
+.soc-act{border:none;background:#f8fafc;border-radius:10px;padding:6px 12px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:#475569;cursor:pointer}
+.soc-act.is-liked{color:#dc2626;background:#fef2f2}
+.soc-comments{margin-top:8px;padding:8px;background:#f8fafc;border-radius:10px;font-size:12px}
+.soc-cmt{padding:4px 0;font-family:'Nunito',sans-serif;color:#334155}
+.soc-cmt em{color:#94a3b8;font-style:normal;font-size:11px}
+.soc-comment-form{display:flex;gap:6px;margin-top:8px}
+.soc-comment-form input{flex:1;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;font-size:13px}
+.soc-comment-form button{border:none;background:#6366f1;color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+.soc-loading,.soc-empty{text-align:center;padding:24px;color:#64748b;font-family:'Nunito',sans-serif}
+.soc-side-title{font-family:'Baloo 2',cursive;font-size:15px;color:#312e81;margin:0 0 10px}
+.soc-suggest-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.soc-suggest-row a{color:#4338ca;text-decoration:none;font-weight:700}
+.soc-follow-mini{border:none;background:#ede9fe;color:#5b21b6;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:800;cursor:pointer}
