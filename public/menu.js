@@ -523,19 +523,56 @@ function _applyProfileInfo(info, isOther){
   show('profSocialActions', !!isOther);
 
   if(isOther && typeof KidSocial !== 'undefined'){
-    var btn = document.getElementById('profFollowBtn');
-    if(btn){
+    var followBtn = document.getElementById('profFollowBtn');
+    if(followBtn){
       KidSocial.isFollowing(info.viewUid).then(function(f){
-        btn.textContent = f ? '✓ Đang theo dõi' : '👀 Theo dõi';
-        btn.disabled = !!f;
-        btn.onclick = function(){
+        followBtn.textContent = f ? '✓ Đang theo dõi' : '👀 Theo dõi';
+        followBtn.disabled = !!f;
+        followBtn.onclick = function(){
           if(f) return;
           KidSocial.follow(info.viewUid).then(function(){
-            btn.textContent = '✓ Đang theo dõi';
-            btn.disabled = true;
+            followBtn.textContent = '✓ Đang theo dõi';
+            followBtn.disabled = true;
           }).catch(function(e){ alert(e.message); });
         };
       });
+    }
+    var friendBtn = document.getElementById('profFriendBtn');
+    if(friendBtn){
+      KidSocial.getFriendStatus(info.viewUid).then(function(st){
+        if(st === 'friends'){
+          friendBtn.textContent = '✓ Bạn bè';
+          friendBtn.disabled = true;
+        } else if(st === 'pending_sent'){
+          friendBtn.textContent = '⏳ Đã gửi lời mời';
+          friendBtn.disabled = true;
+        } else if(st === 'pending_received'){
+          friendBtn.textContent = '✅ Chấp nhận kết bạn';
+          friendBtn.onclick = function(){
+            KidSocial.listIncomingFriendRequests().then(function(reqs){
+              var req = reqs.find(function(r){ return r.fromUid === info.viewUid; });
+              if(!req){ window.location.href = 'messages.html'; return; }
+              KidSocial.acceptFriendRequest(req.id).then(function(){
+                friendBtn.textContent = '✓ Bạn bè';
+                friendBtn.disabled = true;
+              }).catch(function(e){ alert(e.message); });
+            });
+          };
+        } else {
+          friendBtn.textContent = '🤝 Kết bạn';
+          friendBtn.disabled = false;
+          friendBtn.onclick = function(){
+            KidSocial.sendFriendRequest(info.viewUid).then(function(){
+              friendBtn.textContent = '⏳ Đã gửi lời mời';
+              friendBtn.disabled = true;
+            }).catch(function(e){ alert(e.message); });
+          };
+        }
+      });
+    }
+    var msgBtn = document.getElementById('profMsgBtn');
+    if(msgBtn){
+      msgBtn.href = 'messages.html?uid=' + encodeURIComponent(info.viewUid);
     }
   }
 

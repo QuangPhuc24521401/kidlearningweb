@@ -137,26 +137,83 @@
     var box = $('socSuggest');
     if (!box) return;
     KidSocial.suggestClassmates().then(function (list) {
-      if (!list.length) { box.innerHTML = ''; return; }
+      if (!list.length) { box.innerHTML = '<h3 class="soc-side-title">👋 Bạn cùng lớp</h3><p style="font-size:12px;color:#64748b">Lưu mã lớp ở Hồ sơ để thấy bạn học.</p>'; return; }
       box.innerHTML = '<h3 class="soc-side-title">👋 Bạn cùng lớp</h3>' +
         list.slice(0, 8).map(function (u) {
-          return '<div class="soc-suggest-row">' +
-            '<a href="profile.html?uid=' + encodeURIComponent(u.uid) + '">' + KidSocial.esc(u.displayName) + '</a>' +
-            '<button type="button" class="soc-follow-mini" data-follow="' + u.uid + '">Theo dõi</button>' +
-          '</div>';
+          return renderUserRow(u);
         }).join('');
-      box.querySelectorAll('[data-follow]').forEach(function (btn) {
-        var uid = btn.getAttribute('data-follow');
-        KidSocial.isFollowing(uid).then(function (f) {
-          if (f) { btn.textContent = 'Đang theo dõi'; btn.disabled = true; }
-        });
-        btn.onclick = function () {
-          KidSocial.follow(uid).then(function () {
-            btn.textContent = 'Đang theo dõi';
+      wireUserActionButtons(box);
+    });
+  }
+
+  function renderUserRow(u) {
+    return '<div class="soc-search-item" data-uid="' + KidSocial.esc(u.uid) + '">' +
+      '<a href="profile.html?uid=' + encodeURIComponent(u.uid) + '">' + KidSocial.esc(u.displayName) + '</a>' +
+      '<div class="soc-search-actions">' +
+        '<button type="button" data-follow="' + KidSocial.esc(u.uid) + '">Theo dõi</button>' +
+        '<button type="button" data-friend="' + KidSocial.esc(u.uid) + '">Kết bạn</button>' +
+        '<a class="soc-msg-link" href="messages.html?uid=' + encodeURIComponent(u.uid) + '">Nhắn tin</a>' +
+      '</div></div>';
+  }
+
+  function wireUserActionButtons(root) {
+    root.querySelectorAll('[data-follow]').forEach(function (btn) {
+      var uid = btn.getAttribute('data-follow');
+      KidSocial.isFollowing(uid).then(function (f) {
+        if (f) { btn.textContent = '✓ Theo dõi'; btn.disabled = true; }
+      });
+      btn.onclick = function () {
+        KidSocial.follow(uid).then(function () {
+          btn.textContent = '✓ Theo dõi';
+          btn.disabled = true;
+        }).catch(function (e) { alert(e.message); });
+      };
+    });
+    root.querySelectorAll('[data-friend]').forEach(function (btn) {
+      var uid = btn.getAttribute('data-friend');
+      KidSocial.getFriendStatus(uid).then(function (st) {
+        if (st === 'friends') { btn.textContent = '✓ Bạn bè'; btn.disabled = true; }
+        else if (st === 'pending_sent') { btn.textContent = 'Đã gửi'; btn.disabled = true; }
+        else if (st === 'pending_received') { btn.textContent = 'Chấp nhận?'; }
+      });
+      btn.onclick = function () {
+        KidSocial.getFriendStatus(uid).then(function (st) {
+          if (st === 'pending_received') {
+            window.location.href = 'messages.html';
+            return;
+          }
+          KidSocial.sendFriendRequest(uid).then(function () {
+            btn.textContent = 'Đã gửi';
             btn.disabled = true;
           }).catch(function (e) { alert(e.message); });
-        };
-      });
+        });
+      };
+    });
+  }
+
+  var searchTimer = null;
+  function wireSearch() {
+    var inp = $('socSearchInput');
+    var box = $('socSearchResults');
+    if (!inp || !box) return;
+    inp.addEventListener('input', function () {
+      clearTimeout(searchTimer);
+      var q = inp.value.trim();
+      if (q.length < 2) {
+        box.innerHTML = '<div class="soc-empty" style="padding:8px">Gõ ít nhất 2 ký tự</div>';
+        return;
+      }
+      searchTimer = setTimeout(function () {
+        box.innerHTML = '<div class="soc-empty" style="padding:8px">Đang tìm…</div>';
+        KidSocial.searchUsers(q).then(function (list) {
+          if (!list.length) {
+            box.innerHTML = '<div class="soc-empty" style="padding:8px">Không tìm thấy trong lớp của bạn</div>';
+            return;
+          }
+          box.innerHTML = list.map(renderUserRow).join('');
+          wireUserActionButtons(box);
+        });
+      }, 350);
     });
   }
 
@@ -208,6 +265,7 @@
   function init() {
     wireTabs();
     wireComposer();
+    wireSearch();
     var boot = Promise.resolve();
     if (typeof KidSocial !== 'undefined' && KidSocial.whenAuthReady) {
       boot = KidSocial.whenAuthReady().then(function (user) {
