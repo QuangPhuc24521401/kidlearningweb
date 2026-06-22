@@ -318,32 +318,39 @@
     g.fillStyle(0x46a64f, 1); g.fillCircle(bx - 7, by - 54, 16);
   }
 
+  function _fillSkyCanvas(g, th, W, H) {
+    g.fillGradientStyle(th.sky[0], th.sky[0], th.sky[1], th.sky[1], 1);
+    g.fillRect(0, 0, W, H);
+  }
+
   function _drawFar(g, th, W, H) {
-    var horizon = H - 110, c = th.far, x;
+    _fillSkyCanvas(g, th, W, H);
+    var horizon = H - 130, c = th.far, x;
     g.fillStyle(c, 1);
     var t = th.farType;
     if (t === 'hills') {
-      for (x = 0; x <= W; x += 320) g.fillEllipse(x, horizon + 110, 380, 240);
+      for (x = 0; x <= W + 320; x += 320) g.fillEllipse(x, horizon + 100, 380, 220);
     } else if (t === 'mountain') {
-      for (x = 0; x <= W; x += 240) g.fillTriangle(x - 120, horizon + 60, x, horizon - 130, x + 120, horizon + 60);
+      for (x = 0; x <= W + 240; x += 240) g.fillTriangle(x - 120, horizon + 60, x, horizon - 130, x + 120, horizon + 60);
       g.fillStyle(0xffffff, 0.85);
-      for (x = 0; x <= W; x += 240) g.fillTriangle(x - 26, horizon - 86, x, horizon - 130, x + 26, horizon - 86);
+      for (x = 0; x <= W + 240; x += 240) g.fillTriangle(x - 26, horizon - 86, x, horizon - 130, x + 26, horizon - 86);
     } else if (t === 'dune') {
-      for (x = 0; x <= W; x += 320) g.fillEllipse(x, horizon + 170, 470, 340);
+      for (x = 0; x <= W + 320; x += 320) g.fillEllipse(x, horizon + 150, 470, 300);
     } else if (t === 'volcano') {
-      for (x = 0; x <= W; x += 320) g.fillTriangle(x - 160, horizon + 70, x, horizon - 140, x + 160, horizon + 70);
+      for (x = 0; x <= W + 320; x += 320) g.fillTriangle(x - 160, horizon + 70, x, horizon - 140, x + 160, horizon + 70);
       g.fillStyle(0xff7a2a, 0.95);
-      for (x = 0; x <= W; x += 320) g.fillTriangle(x - 22, horizon - 110, x, horizon - 140, x + 22, horizon - 110);
+      for (x = 0; x <= W + 320; x += 320) g.fillTriangle(x - 22, horizon - 110, x, horizon - 140, x + 22, horizon - 110);
     } else if (t === 'cave') {
-      for (x = 0; x <= W; x += 96) g.fillTriangle(x - 48, 0, x, 100, x + 48, 0);
-      g.fillRect(0, horizon + 40, W, H - horizon);
+      g.fillStyle(0x120e22, 0.55); g.fillRect(0, H * 0.42, W, H * 0.58);
+      g.fillStyle(0x2a2440, 0.85);
+      for (x = 0; x <= W + 96; x += 96) g.fillTriangle(x - 40, 0, x, 88, x + 40, 0);
     } else if (t === 'city') {
-      for (x = 0; x <= W; x += 96) { var bh = 120 + (((x / 96) | 0) % 4) * 54; g.fillRect(x - 40, horizon - bh + 130, 80, bh + 40); }
+      for (x = 0; x <= W + 96; x += 96) { var bh = 120 + (((x / 96) | 0) % 4) * 54; g.fillRect(x - 40, horizon - bh + 130, 80, bh + 40); }
       g.fillStyle(0xffe08a, 0.75);
-      for (x = 0; x <= W; x += 96) { for (var wy = horizon - 80; wy < horizon + 110; wy += 28) { g.fillRect(x - 24, wy, 11, 13); g.fillRect(x + 8, wy, 11, 13); } }
+      for (x = 0; x <= W + 96; x += 96) { for (var wy = horizon - 80; wy < horizon + 110; wy += 28) { g.fillRect(x - 24, wy, 11, 13); g.fillRect(x + 8, wy, 11, 13); } }
     } else if (t === 'cloud') {
       g.fillStyle(0xffffff, 0.92);
-      for (x = 0; x <= W; x += 320) { g.fillCircle(x - 62, horizon + 20, 42); g.fillCircle(x, horizon, 56); g.fillCircle(x + 62, horizon + 20, 42); g.fillRoundedRect(x - 96, horizon + 14, 192, 46, 22); }
+      for (x = 0; x <= W + 320; x += 320) { g.fillCircle(x - 62, horizon + 20, 42); g.fillCircle(x, horizon, 56); g.fillCircle(x + 62, horizon + 20, 42); g.fillRoundedRect(x - 96, horizon + 14, 192, 46, 22); }
     }
   }
 
@@ -362,15 +369,14 @@
     g.fillCircle(bx, by - 7, 14);
   }
   function _drawMid(g, th, W, H) {
+    _fillSkyCanvas(g, th, W, H);
     var nc = th.near, baseY = H - 24, x;
-    // đồi gần hai tông + điểm sáng đỉnh
     g.fillStyle(_shadeNum(nc, -0.12), 1);
-    for (x = 0; x <= W; x += 240) g.fillEllipse(x + 120, baseY + 60, 380, 240);
+    for (x = 0; x <= W + 240; x += 240) g.fillEllipse(x + 120, baseY + 56, 380, 220);
     g.fillStyle(nc, 1);
-    for (x = 0; x <= W; x += 240) g.fillEllipse(x, baseY + 48, 340, 200);
+    for (x = 0; x <= W + 240; x += 240) g.fillEllipse(x, baseY + 44, 340, 190);
     g.fillStyle(_shadeNum(nc, 0.16), 0.55);
-    for (x = 0; x <= W; x += 240) g.fillEllipse(x, baseY + 28, 230, 84);
-    // cây xen bụi cho sinh động
+    for (x = 0; x <= W + 240; x += 240) g.fillEllipse(x, baseY + 26, 230, 80);
     for (x = 120; x < W + 120; x += 240) {
       _drawBush(g, th, x - 96, baseY + 8);
       _drawTree(g, th.tree, x, baseY - 2);
@@ -379,68 +385,71 @@
 
   function _ensureSceneryTex(scene, name, th) {
     var W = 960, H = 540;
-    if (!scene.textures.exists('far_' + name)) {
-      var g = scene.make.graphics({ x: 0, y: 0, add: false });
-      _drawFar(g, th, W, H);
-      g.generateTexture('far_' + name, W, H); g.destroy();
-    }
-    if (!scene.textures.exists('mid_' + name)) {
-      var m = scene.make.graphics({ x: 0, y: 0, add: false });
-      _drawMid(m, th, W, H);
-      m.generateTexture('mid_' + name, W, H); m.destroy();
-    }
+    var fk = 'scnFar_' + name, mk = 'scnMid_' + name;
+    if (scene.textures.exists(fk)) scene.textures.remove(fk);
+    if (scene.textures.exists(mk)) scene.textures.remove(mk);
+    var g = scene.make.graphics({ x: 0, y: 0, add: false });
+    _drawFar(g, th, W, H);
+    g.generateTexture(fk, W, H); g.destroy();
+    var m = scene.make.graphics({ x: 0, y: 0, add: false });
+    _drawMid(m, th, W, H);
+    m.generateTexture(mk, W, H); m.destroy();
   }
 
-  /* Tạo cảnh nền nhiều lớp (tilesprite phủ toàn thế giới + parallax theo scrollFactor) */
+  /* Tạo cảnh nền liền mạch (2 lớp parallax, không còn dải ngang lỗi) */
   function buildScenery(scene, themeName, worldW, groundTop) {
     var th = THEMES[themeName] || THEMES.grass;
     ensureTheme(scene, themeName);
     _ensureSceneryTex(scene, themeName, th);
     var W = 960, H = 540, objs = [], ww = worldW + 600;
+    var fk = 'scnFar_' + themeName, mk = 'scnMid_' + themeName;
 
-    // Trời: phủ cả thế giới, cuộn rất chậm
-    objs.push(scene.add.tileSprite(0, 0, ww, H, 'sky_' + themeName).setOrigin(0, 0).setScrollFactor(0.06).setDepth(-30));
-
-    // Mặt trời/trăng (vật trong thế giới, cuộn chậm → luôn ở phía xa) + nhịp sáng nhẹ
     if (th.sun) {
-      var s = scene.add.graphics().setScrollFactor(0.06).setDepth(-28);
-      s.fillStyle(th.sun, 0.22); s.fillCircle(772, 118, 78);
+      var s = scene.add.graphics().setScrollFactor(0.08).setDepth(-28);
+      s.fillStyle(th.sun, 0.18); s.fillCircle(772, 118, 78);
       s.fillStyle(th.sun, 0.95); s.fillCircle(772, 118, 48);
       objs.push(s);
-      var glow = scene.add.circle(772, 118, 86, th.sun, 0.16).setScrollFactor(0.06).setDepth(-29);
+      var glow = scene.add.circle(772, 118, 86, th.sun, 0.14).setScrollFactor(0.08).setDepth(-29);
       objs.push(glow);
-      scene.tweens.add({ targets: glow, scale: { from: 1, to: 1.18 }, alpha: { from: 0.16, to: 0.32 }, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      scene.tweens.add({ targets: glow, scale: { from: 1, to: 1.15 }, alpha: { from: 0.14, to: 0.28 }, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
 
-    // Lớp xa & gần: parallax bằng scrollFactor để hiển thị đúng dưới camera zoom
-    var far = scene.add.tileSprite(0, 0, ww, H, 'far_' + themeName).setOrigin(0, 0).setScrollFactor(0.2).setDepth(-25);
+    var far = scene.add.tileSprite(0, 0, ww, H, fk).setOrigin(0, 0).setScrollFactor(0.18).setDepth(-25);
     objs.push(far);
-    objs.push(scene.add.tileSprite(0, 0, ww, H, 'mid_' + themeName).setOrigin(0, 0).setScrollFactor(0.5).setDepth(-18));
+    objs.push(scene.add.tileSprite(0, 0, ww, H, mk).setOrigin(0, 0).setScrollFactor(0.42).setDepth(-18));
 
-    // Mây trôi cho theme sáng → nền sinh động
     if (!th.dark && scene.textures.exists('cloud')) {
-      for (var ci = 0; ci < 5; ci++) {
-        var cy = 60 + ci * 26 + Math.random() * 20;
-        var cw = 70 + Math.random() * 60;
+      for (var ci = 0; ci < 4; ci++) {
+        var cy = 50 + ci * 32 + Math.random() * 16;
+        var cw = 70 + Math.random() * 50;
         var cl = scene.add.image(Math.random() * W, cy, 'cloud')
-          .setScrollFactor(0.12).setDepth(-23)
-          .setDisplaySize(cw, cw * 0.62).setAlpha(0.55 + Math.random() * 0.25);
+          .setScrollFactor(0.1).setDepth(-22)
+          .setDisplaySize(cw, cw * 0.62).setAlpha(0.45 + Math.random() * 0.2);
         objs.push(cl);
-        scene.tweens.add({
-          targets: cl, x: cl.x + 220 + Math.random() * 160,
-          duration: 9000 + Math.random() * 8000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-        });
+        scene.tweens.add({ targets: cl, x: cl.x + 180 + Math.random() * 120, duration: 10000 + Math.random() * 6000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       }
     }
 
-    // Lớp "sương mờ" nhẹ giúp nền lùi lại, chướng ngại vật nổi bật hơn
-    var veil = scene.add.graphics().setScrollFactor(0).setDepth(-9);
-    if (th.dark) { veil.fillStyle(0x0a0a16, 0.46); }
-    else { veil.fillStyle(0xeaf2ff, 0.14); }
-    veil.fillRect(-W, -H, W * 3, H * 3);
-    objs.push(veil);
+    // làm mờ nhẹ sát mặt đất (không phủ cả màn → tránh dải đen)
+    var fade = scene.add.graphics().setScrollFactor(0).setDepth(-7);
+    var gt = groundTop || H - 56;
+    fade.fillStyle(0x000000, th.dark ? 0.22 : 0.08);
+    fade.fillRect(-W, gt - 60, W * 4, 90);
+    objs.push(fade);
 
-    return { objects: objs, drift: [{ obj: far, dx: 0.12 }] };
+    return { objects: objs, drift: [{ obj: far, dx: 0.08 }] };
+  }
+
+  /** Nền màn bí mật — gradient tối liền mạch, không parallax lỗi */
+  function buildHiddenBg(scene, W, H) {
+    var objs = [];
+    var bg = scene.add.graphics().setScrollFactor(0).setDepth(-30);
+    bg.fillGradientStyle(0x120e22, 0x120e22, 0x2a1f42, 0x2a1f42, 1);
+    bg.fillRect(-W, 0, W * 3, H);
+    bg.fillStyle(0x6fd6f5, 0.12);
+    for (var i = 0; i < 6; i++) bg.fillTriangle(80 + i * 140, H - 120, 100 + i * 140, H - 200, 120 + i * 140, H - 120);
+    objs.push(bg);
+    return objs;
   }
 
   /* Nền trời gradient + texture đồi cho parallax */
@@ -781,15 +790,18 @@
   var MAP_TREASURE = { x: 868, y: 168 };
 
   function drawMapOcean(g, W, H) {
-    g.fillStyle(0x2b8fd4, 1); g.fillRect(0, 0, W, H);
-    g.fillStyle(0x5ec4f0, 1);
-    for (var wx = 0; wx < W + 80; wx += 80) {
-      g.fillEllipse(wx, H - 18, 90, 36);
-      g.fillEllipse(wx + 40, 12, 70, 28);
+    g.fillGradientStyle(0x1e6fa8, 0x1e6fa8, 0x3ba8e0, 0x3ba8e0, 1);
+    g.fillRect(0, 0, W, H);
+    g.fillStyle(0x5ec4f0, 0.35);
+    for (var wx = 0; wx < W + 100; wx += 100) {
+      g.fillEllipse(wx, H - 22, 110, 40);
+      g.fillEllipse(wx + 50, 16, 80, 32);
     }
+    g.fillStyle(0xffffff, 0.25);
+    for (var r = 0; r < 8; r++) g.fillCircle(60 + r * 118, 200 + (r % 3) * 80, 3 + (r % 2));
     g.fillStyle(0xffffff, 0.92);
-    g.fillRect(0, 0, W, 14); g.fillRect(0, H - 14, W, 14);
-    g.fillRect(0, 0, 14, H); g.fillRect(W - 14, 0, 14, H);
+    g.fillRect(0, 0, W, 12); g.fillRect(0, H - 12, W, 12);
+    g.fillRect(0, 0, 12, H); g.fillRect(W - 12, 0, 12, H);
   }
 
   function drawMapCompass(g, cx, cy) {
@@ -801,46 +813,59 @@
     g.fillRect(cx - 1, cy - 26, 2, 52); g.fillRect(cx - 26, cy - 1, 52, 2);
   }
 
-  /** Vẽ đảo theo chủ đề màn chơi (cx,cy = tâm đảo) */
+  /** Vẽ đảo theo chủ đề màn chơi — sinh động, nhiều chi tiết */
   function drawMapIsland(g, theme, cx, cy, locked) {
-    var alpha = locked ? 0.45 : 1;
-    g.fillStyle(0x000000, 0.15 * alpha); g.fillEllipse(cx, cy + 28, 88, 22);
-    g.fillStyle(0xf0d498, alpha); g.fillEllipse(cx, cy + 22, 82, 26);
-    g.fillStyle(0xfaebd0, alpha); g.fillEllipse(cx, cy + 18, 68, 20);
+    var alpha = locked ? 0.5 : 1;
+    // sóng nước quanh đảo
+    g.fillStyle(0x5ec4f0, 0.35 * alpha);
+    g.fillEllipse(cx, cy + 34, 102, 18); g.fillEllipse(cx, cy + 38, 88, 12);
+    g.fillStyle(0x000000, 0.12 * alpha); g.fillEllipse(cx, cy + 30, 94, 24);
+    // bãi cát
+    g.fillStyle(0xf0d498, alpha); g.fillEllipse(cx, cy + 24, 88, 28);
+    g.fillStyle(0xfaebd0, alpha); g.fillEllipse(cx, cy + 20, 72, 22);
+    g.fillStyle(0xffffff, 0.35 * alpha); g.fillEllipse(cx - 12, cy + 14, 28, 10);
     var th = theme || 'grass';
     if (th === 'grass') {
-      g.fillStyle(0x2e7d32, alpha); g.fillCircle(cx - 8, cy - 2, 18);
-      g.fillCircle(cx + 14, cy + 2, 14); g.fillStyle(0x6b4423, alpha); g.fillRect(cx - 2, cy + 8, 5, 14);
+      g.fillStyle(0x6b4423, alpha); g.fillRect(cx - 3, cy + 6, 6, 18);
+      g.fillStyle(0x1b5e20, alpha); g.fillCircle(cx - 10, cy - 4, 16); g.fillCircle(cx + 12, cy, 14);
+      g.fillStyle(0x4caf50, alpha); g.fillCircle(cx, cy - 10, 20); g.fillCircle(cx - 8, cy - 16, 12);
+      g.fillStyle(0xffeb3b, alpha); g.fillCircle(cx + 18, cy + 2, 4);
     } else if (th === 'jungle') {
-      g.fillStyle(0x7a4a23, alpha); g.fillRect(cx - 3, cy - 8, 6, 28);
-      g.fillStyle(0x2e8b3a, alpha);
-      g.fillEllipse(cx - 22, cy - 10, 50, 18); g.fillEllipse(cx + 22, cy - 10, 50, 18);
-      g.fillEllipse(cx, cy - 18, 36, 22);
+      g.fillStyle(0x7a4a23, alpha); g.fillRect(cx - 4, cy - 6, 8, 32);
+      g.fillStyle(0x1b5e20, alpha);
+      g.fillEllipse(cx - 26, cy - 8, 54, 20); g.fillEllipse(cx + 26, cy - 8, 54, 20);
+      g.fillEllipse(cx, cy - 20, 40, 26); g.fillStyle(0xff9800, alpha); g.fillCircle(cx + 22, cy - 4, 5);
     } else if (th === 'valley') {
-      g.fillStyle(0x7e57c2, alpha); g.fillTriangle(cx - 28, cy + 14, cx, cy - 22, cx + 28, cy + 14);
-      g.fillStyle(0xffffff, alpha * 0.9); g.fillTriangle(cx - 10, cy + 2, cx, cy - 14, cx + 10, cy + 2);
-      g.fillStyle(0xfbbf24, alpha); g.fillCircle(cx - 18, cy + 4, 5); g.fillCircle(cx + 16, cy - 2, 4);
+      g.fillStyle(0x5e35b1, alpha); g.fillTriangle(cx - 32, cy + 16, cx, cy - 26, cx + 32, cy + 16);
+      g.fillStyle(0xffffff, alpha * 0.9); g.fillTriangle(cx - 12, cy + 2, cx, cy - 16, cx + 12, cy + 2);
+      g.fillStyle(0xfbbf24, alpha); g.fillCircle(cx - 20, cy + 6, 6); g.fillCircle(cx + 18, cy, 5);
+      g.fillStyle(0xe879f9, alpha); g.fillRect(cx - 18, cy - 28, 4, 14); g.fillRect(cx + 14, cy - 32, 4, 14);
     } else if (th === 'desert') {
-      g.fillStyle(0xe6c068, alpha); g.fillEllipse(cx, cy + 8, 56, 16);
-      g.fillStyle(0x3f8f4a, alpha); g.fillRoundedRect(cx - 6, cy - 18, 12, 32, 4);
-      g.fillRoundedRect(cx - 22, cy - 6, 10, 18, 3); g.fillRoundedRect(cx + 14, cy - 10, 10, 18, 3);
+      g.fillStyle(0xf0c87e, alpha); g.fillEllipse(cx, cy + 10, 60, 18);
+      g.fillStyle(0x2e7d32, alpha); g.fillRoundedRect(cx - 7, cy - 22, 14, 36, 5);
+      g.fillRoundedRect(cx - 26, cy - 8, 12, 22, 4); g.fillRoundedRect(cx + 16, cy - 12, 12, 22, 4);
+      g.fillStyle(0xff7043, alpha); g.fillCircle(cx + 24, cy + 4, 5);
     } else if (th === 'cave') {
-      g.fillStyle(0x4a3570, alpha); g.fillRoundedRect(cx - 32, cy - 8, 64, 28, 8);
-      g.fillStyle(0x6fd6f5, alpha); g.fillTriangle(cx - 14, cy + 12, cx - 4, cy - 16, cx + 6, cy + 12);
-      g.fillStyle(0xa7ecff, alpha); g.fillTriangle(cx + 4, cy + 12, cx + 12, cy - 8, cx + 20, cy + 12);
+      g.fillStyle(0x3a2a55, alpha); g.fillRoundedRect(cx - 36, cy - 6, 72, 32, 10);
+      g.fillStyle(0x6fd6f5, alpha); g.fillTriangle(cx - 16, cy + 14, cx - 4, cy - 20, cx + 8, cy + 14);
+      g.fillStyle(0xa7ecff, alpha); g.fillTriangle(cx + 6, cy + 14, cx + 14, cy - 10, cx + 22, cy + 14);
+      g.fillStyle(0xc4b5fd, alpha * 0.8); g.fillCircle(cx - 24, cy + 2, 4);
     } else if (th === 'inferno') {
-      g.fillStyle(0x6b2410, alpha); g.fillTriangle(cx - 34, cy + 16, cx, cy - 28, cx + 34, cy + 16);
-      g.fillStyle(0xff7a2a, alpha); g.fillTriangle(cx - 14, cy + 4, cx, cy - 18, cx + 14, cy + 4);
-      g.fillStyle(0xfde047, alpha); g.fillCircle(cx, cy - 8, 6);
+      g.fillStyle(0x4a1508, alpha); g.fillTriangle(cx - 38, cy + 18, cx, cy - 32, cx + 38, cy + 18);
+      g.fillStyle(0xff5722, alpha); g.fillTriangle(cx - 16, cy + 6, cx, cy - 20, cx + 16, cy + 6);
+      g.fillStyle(0xffeb3b, alpha); g.fillCircle(cx, cy - 10, 8);
+      g.fillStyle(0xff7043, alpha * 0.7); g.fillCircle(cx - 12, cy - 18, 4); g.fillCircle(cx + 10, cy - 22, 3);
     } else if (th === 'city') {
-      g.fillStyle(0x57658c, alpha); g.fillRect(cx - 28, cy - 8, 18, 28); g.fillRect(cx - 4, cy - 18, 22, 38); g.fillRect(cx + 22, cy - 4, 16, 24);
-      g.fillStyle(0xffe08a, alpha * 0.85);
-      g.fillRect(cx - 24, cy - 2, 6, 7); g.fillRect(cx + 2, cy - 12, 6, 7); g.fillRect(cx + 26, cy + 2, 5, 6);
+      g.fillStyle(0x455a64, alpha); g.fillRect(cx - 30, cy - 6, 20, 32); g.fillRect(cx - 6, cy - 18, 26, 44); g.fillRect(cx + 24, cy - 2, 18, 28);
+      g.fillStyle(0xffe082, alpha);
+      g.fillRect(cx - 26, cy, 6, 8); g.fillRect(cx, cy - 10, 6, 8); g.fillRect(cx + 28, cy + 4, 5, 7);
+      g.fillStyle(0x90caf9, alpha * 0.6); g.fillRect(cx - 4, cy - 28, 18, 6);
     } else if (th === 'heaven') {
-      g.fillStyle(0xfde7a8, alpha); g.fillEllipse(cx, cy + 10, 58, 18);
-      g.fillStyle(0xffffff, alpha * 0.95);
-      g.fillCircle(cx - 20, cy - 4, 14); g.fillCircle(cx + 18, cy - 6, 16); g.fillCircle(cx, cy - 10, 18);
-      g.fillStyle(0xffd54a, alpha); g.fillCircle(cx + 2, cy - 22, 10);
+      g.fillStyle(0xfde7a8, alpha); g.fillEllipse(cx, cy + 12, 62, 20);
+      g.fillStyle(0xffffff, alpha);
+      g.fillCircle(cx - 22, cy - 2, 16); g.fillCircle(cx + 20, cy - 4, 18); g.fillCircle(cx, cy - 12, 20);
+      g.fillStyle(0xffd54a, alpha); g.fillCircle(cx + 4, cy - 26, 12);
+      g.fillStyle(0xffffff, alpha * 0.8); g.fillCircle(cx - 6, cy - 30, 3); g.fillCircle(cx + 12, cy - 32, 2);
     }
   }
 
@@ -849,6 +874,7 @@
     getStudentAvatar: getStudentAvatar,
     ensureTheme: ensureTheme,
     buildScenery: buildScenery,
+    buildHiddenBg: buildHiddenBg,
     drawMapOcean: drawMapOcean,
     drawMapCompass: drawMapCompass,
     drawMapIsland: drawMapIsland,

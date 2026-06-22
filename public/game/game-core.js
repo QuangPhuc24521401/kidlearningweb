@@ -298,7 +298,7 @@
         var unlocked = unlockedArr[i];
         var prog = progArr[i];
         var done = (prog.completedRuns || 0) > 0;
-        var node = self.add.container(p.x, p.y).setDepth(5);
+        var node = self.add.container(p.x, p.y).setDepth(5).setScale(1.08);
 
         var isl = self.add.graphics();
         if (GA.drawMapIsland) GA.drawMapIsland(isl, lv.theme, 0, 0, !unlocked);
@@ -346,6 +346,8 @@
           });
         }
         node.add(hit);
+        // đảo trôi nhẹ trên mặt nước
+        self.tweens.add({ targets: node, y: p.y - 5, duration: 1400 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       });
 
       this.add.text(W / 2, H - 22, '⭐ Tổng sao: ' + totalStars + '  ·  Chọn đảo để bắt đầu phiêu lưu!', {
@@ -557,10 +559,7 @@
             p._pipeId = pid;
             p._exitX = opts.exitX;
             self2.pipeWarps.push(p);
-            var mark = self2.add.text(cx, groundTop - ph - 18, '★', {
-              fontSize: '16px', color: '#fde047', stroke: '#b45309', strokeThickness: 3
-            }).setOrigin(0.5).setDepth(6);
-            self2._terrainDecor.push(mark);
+            p.setTint(0xc8f5c8); // ống bí mật: màu xanh nhạt hơn (không dùng chữ/sao)
           }
         }
         return p;
@@ -888,10 +887,8 @@
         ? global.GameAssets.ensureTheme(this, 'cave')
         : { skyKey: 'sky', groundKey: 'ground', platKey: 'platform', fluid: 'water', dark: true };
       this.theme = TH;
-      if (global.GameAssets && global.GameAssets.buildScenery) {
-        var scn = global.GameAssets.buildScenery(this, 'cave', worldW, groundTop);
-        this._bgObjects = scn.objects;
-        this._bgDrift = scn.drift || [];
+      if (global.GameAssets && global.GameAssets.buildHiddenBg) {
+        this._bgObjects = global.GameAssets.buildHiddenBg(this, W, H);
       }
 
       this.solids = this.physics.add.staticGroup();
@@ -947,13 +944,6 @@
       exitPipe.setDisplaySize(64, 88).refreshBody().setDepth(4);
       exitPipe._hiddenExit = true;
       this.pipeWarps.push(exitPipe);
-      this.add.text(580, groundTop - 100, '▼ Thoát', {
-        fontFamily: 'Baloo 2, cursive', fontSize: '14px', color: '#fde047', stroke: '#1e293b', strokeThickness: 3
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(50);
-
-      this.add.text(W / 2, 80, '🌟 MÀN BÍ MẬT 🌟', {
-        fontFamily: 'Baloo 2, cursive', fontSize: '28px', color: '#fde047', stroke: '#1e293b', strokeThickness: 5
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(50);
 
       this.tweens.add({
         targets: this.coinsGrp.getChildren(),
