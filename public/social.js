@@ -208,9 +208,21 @@
   function init() {
     wireTabs();
     wireComposer();
-    loadFeed();
-    loadSuggestions();
-    if (typeof mountUserBar === 'function') mountUserBar();
+    var boot = Promise.resolve();
+    if (typeof KidSocial !== 'undefined' && KidSocial.whenAuthReady) {
+      boot = KidSocial.whenAuthReady().then(function (user) {
+        if (!user) {
+          window.location.replace('auth/login.html');
+          return;
+        }
+        if (KidSocial.ensureUserDoc) return KidSocial.ensureUserDoc();
+      });
+    }
+    boot.then(function () {
+      loadFeed();
+      loadSuggestions();
+      if (typeof mountUserBar === 'function') mountUserBar();
+    });
   }
 
   if (document.readyState === 'loading') {

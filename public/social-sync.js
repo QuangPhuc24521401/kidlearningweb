@@ -12,6 +12,33 @@
     return global.firebase && global.firebase.auth ? global.firebase.auth().currentUser : null;
   }
 
+  function whenAuthReady() {
+    return new Promise(function (resolve) {
+      if (!global.firebase || !global.firebase.auth) {
+        resolve(null);
+        return;
+      }
+      var user = firebase.auth().currentUser;
+      if (user) {
+        resolve(user);
+        return;
+      }
+      var unsub = firebase.auth().onAuthStateChanged(function (u) {
+        if (typeof unsub === 'function') unsub();
+        resolve(u || null);
+      });
+    });
+  }
+
+  function friendlyFirestoreError(err) {
+    var code = err && err.code ? String(err.code) : '';
+    var msg = err && err.message ? String(err.message) : 'Lỗi không xác định';
+    if (code === 'permission-denied' || /insufficient permissions/i.test(msg)) {
+      return 'Firestore chưa cho phép Cộng đồng. Vào Firebase Console → Firestore → Rules, dán file firestore.rules rồi bấm Publish (hoặc chạy: npm run deploy:rules).';
+    }
+    return msg;
+  }
+
   function ts() {
     return firebase.firestore.FieldValue.serverTimestamp();
   }
@@ -36,22 +63,66 @@
     return 0;
   }
 
+  function profileFromLocal(uid) {
+    var user = authUser();
+    var name = '';
+    try { name = (localStorage.getItem('userDisplayName') || '').trim(); } catch (e) {}
+    if (!name && user && user.displayName) name = user.displayName;
+    if (!name) name = 'Bé học sinh';
+    var role = 'parent';
+    try { role = localStorage.getItem('userRole') || 'parent'; } catch (e) {}
+    var classRoom = '';
+    try { classRoom = localStorage.getItem('classRoom') || ''; } catch (e) {}
+    return {
+      uid: uid,
+      displayName: name,
+      role: role,
+      classRoom: classRoom,
+      avatarEmoji: '',
+      avatarMode: 'emoji',
+      avatarRing: '#fbbf24'
+    };
+  }
+
   /** Hồ sơ công khai (cùng lớp hoặc đã đăng nhập). */
   function getPublicProfile(uid) {
     var firestore = db();
     if (!firestore || !uid) return Promise.reject(new Error('Thiếu uid'));
     return firestore.collection('users').doc(uid).get().then(function (snap) {
-      if (!snap.exists) throw new Error('Không tìm thấy người dùng');
+      if (!snap.exists) return profileFromLocal(uid);
       var d = snap.data();
+      var local = profileFromLocal(uid);
       return {
         uid: uid,
-        displayName: d.displayName || d.nickname || d.childName || 'Bé học sinh',
-        role: d.role || 'parent',
-        classRoom: d.classRoom || '',
+        displayName: d.displayName || d.nickname || d.childName || local.displayName,
+        role: d.role || local.role,
+        classRoom: d.classRoom || local.classRoom,
         avatarEmoji: d.avatarEmoji || '',
         avatarMode: d.avatarMode || 'emoji',
         avatarRing: d.avatarRing || '#fbbf24'
       };
+    }).catch(function () {
+      return profileFromLocal(uid);
+    });
+  }
+
+  /** Tạo doc users tối thiểu nếu chưa có (tránh lỗi khi mới đăng ký). */
+  function ensureUserDoc() {
+    return whenAuthReady().then(function (user) {
+      if (!user) return null;
+      var ref = db().collection('users').doc(user.uid);
+      return ref.get().then(function (snap) {
+        if (snap.exists) return snap.data();
+        var prof = profileFromLocal(user.uid);
+        var patch = {
+          displayName: prof.displayName,
+          nickname: prof.displayName,
+          role: prof.role,
+          classRoom: prof.classRoom || '',
+          updatedAt: ts()
+        };
+        return ref.set(patch, { merge: true }).then(function () { return patch; });
+      });
     });
   }
 
@@ -113,25 +184,31 @@
   }
 
   function createPost(opts) {
-    var user = authUser();
-    if (!user) return Promise.reject(new Error('Cần đăng nhập'));
-    opts = opts || {};
-    var text = String(opts.text || '').trim();
-    if (!text) return Promise.reject(new Error('Nhập nội dung bài đăng'));
-    return getPublicProfile(user.uid).then(function (prof) {
-      return db().collection('posts').add({
-        authorUid: user.uid,
-        authorName: prof.displayName,
-        authorRole: prof.role,
-        classRoom: prof.classRoom || '',
-        text: text.slice(0, 500),
-        type: opts.type || 'text',
-        shareMeta: opts.shareMeta || null,
-        likes: [],
-        likeCount: 0,
-        commentCount: 0,
-        createdAt: ts()
+    return whenAuthReady().then(function (user) {
+      if (!user) return Promise.reject(new Error('Cần đăng nhập'));
+      opts = opts || {};
+      var text = String(opts.text || '').trim();
+      if (!text) return Promise.reject(new Error('Nhập nội dung bài đăng'));
+      return ensureUserDoc().then(function () {
+        return getPublicProfile(user.uid);
+      }).then(function (prof) {
+        var payload = {
+          authorUid: user.uid,
+          authorName: prof.displayName,
+          authorRole: prof.role,
+          classRoom: prof.classRoom || '',
+          text: text.slice(0, 500),
+          type: opts.type || 'text',
+          likes: [],
+          likeCount: 0,
+          commentCount: 0,
+          createdAt: ts()
+        };
+        if (opts.shareMeta) payload.shareMeta = opts.shareMeta;
+        return db().collection('posts').add(payload);
       });
+    }).catch(function (err) {
+      return Promise.reject(new Error(friendlyFirestoreError(err)));
     });
   }
 
@@ -192,9 +269,17 @@
 
   /** feed: 'class' | 'following' | 'all' */
   function listPosts(feed) {
-    var user = authUser();
-    if (!user) return Promise.resolve([]);
-    feed = feed || 'class';
+    return whenAuthReady().then(function (user) {
+      if (!user) return [];
+      feed = feed || 'class';
+      return listPostsInner(user, feed);
+    }).catch(function (err) {
+      console.warn('[KidSocial] listPosts', err);
+      return [];
+    });
+  }
+
+  function listPostsInner(user, feed) {
 
     function mapDocs(docs) {
       return docs.map(function (d) {
@@ -235,7 +320,7 @@
 
     if (feed === 'class') {
       return getPublicProfile(user.uid).then(function (prof) {
-        if (!prof.classRoom) return listPosts('all');
+        if (!prof.classRoom) return listPostsInner(user, 'all');
         return db().collection('posts')
           .where('classRoom', '==', prof.classRoom)
           .limit(40).get()
@@ -272,6 +357,9 @@
   global.KidSocial = {
     esc: esc,
     timeAgo: timeAgo,
+    whenAuthReady: whenAuthReady,
+    ensureUserDoc: ensureUserDoc,
+    friendlyFirestoreError: friendlyFirestoreError,
     getPublicProfile: getPublicProfile,
     getUserAchievements: getUserAchievements,
     isFollowing: isFollowing,
