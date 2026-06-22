@@ -773,11 +773,87 @@
     toggleMute: function () { return Sfx.setMuted(!_muted); }
   };
 
+  /* ─────────── Bản đồ kho báu (LevelSelect) ─────────── */
+  var MAP_PATH = [
+    { x: 108, y: 428 }, { x: 248, y: 358 }, { x: 392, y: 292 }, { x: 528, y: 362 },
+    { x: 668, y: 302 }, { x: 792, y: 388 }, { x: 658, y: 458 }, { x: 468, y: 428 }
+  ];
+  var MAP_TREASURE = { x: 868, y: 168 };
+
+  function drawMapOcean(g, W, H) {
+    g.fillStyle(0x2b8fd4, 1); g.fillRect(0, 0, W, H);
+    g.fillStyle(0x5ec4f0, 1);
+    for (var wx = 0; wx < W + 80; wx += 80) {
+      g.fillEllipse(wx, H - 18, 90, 36);
+      g.fillEllipse(wx + 40, 12, 70, 28);
+    }
+    g.fillStyle(0xffffff, 0.92);
+    g.fillRect(0, 0, W, 14); g.fillRect(0, H - 14, W, 14);
+    g.fillRect(0, 0, 14, H); g.fillRect(W - 14, 0, 14, H);
+  }
+
+  function drawMapCompass(g, cx, cy) {
+    g.fillStyle(0xf5e6c8, 1); g.fillCircle(cx, cy, 34);
+    g.lineStyle(2, 0x7c4a1e, 1); g.strokeCircle(cx, cy, 34);
+    g.fillStyle(0xdc2626, 1); g.fillTriangle(cx, cy - 22, cx - 8, cy + 4, cx + 8, cy + 4);
+    g.fillStyle(0x334155, 1); g.fillTriangle(cx, cy + 22, cx - 8, cy - 4, cx + 8, cy - 4);
+    g.fillStyle(0x7c4a1e, 1);
+    g.fillRect(cx - 1, cy - 26, 2, 52); g.fillRect(cx - 26, cy - 1, 52, 2);
+  }
+
+  /** Vẽ đảo theo chủ đề màn chơi (cx,cy = tâm đảo) */
+  function drawMapIsland(g, theme, cx, cy, locked) {
+    var alpha = locked ? 0.45 : 1;
+    g.fillStyle(0x000000, 0.15 * alpha); g.fillEllipse(cx, cy + 28, 88, 22);
+    g.fillStyle(0xf0d498, alpha); g.fillEllipse(cx, cy + 22, 82, 26);
+    g.fillStyle(0xfaebd0, alpha); g.fillEllipse(cx, cy + 18, 68, 20);
+    var th = theme || 'grass';
+    if (th === 'grass') {
+      g.fillStyle(0x2e7d32, alpha); g.fillCircle(cx - 8, cy - 2, 18);
+      g.fillCircle(cx + 14, cy + 2, 14); g.fillStyle(0x6b4423, alpha); g.fillRect(cx - 2, cy + 8, 5, 14);
+    } else if (th === 'jungle') {
+      g.fillStyle(0x7a4a23, alpha); g.fillRect(cx - 3, cy - 8, 6, 28);
+      g.fillStyle(0x2e8b3a, alpha);
+      g.fillEllipse(cx - 22, cy - 10, 50, 18); g.fillEllipse(cx + 22, cy - 10, 50, 18);
+      g.fillEllipse(cx, cy - 18, 36, 22);
+    } else if (th === 'valley') {
+      g.fillStyle(0x7e57c2, alpha); g.fillTriangle(cx - 28, cy + 14, cx, cy - 22, cx + 28, cy + 14);
+      g.fillStyle(0xffffff, alpha * 0.9); g.fillTriangle(cx - 10, cy + 2, cx, cy - 14, cx + 10, cy + 2);
+      g.fillStyle(0xfbbf24, alpha); g.fillCircle(cx - 18, cy + 4, 5); g.fillCircle(cx + 16, cy - 2, 4);
+    } else if (th === 'desert') {
+      g.fillStyle(0xe6c068, alpha); g.fillEllipse(cx, cy + 8, 56, 16);
+      g.fillStyle(0x3f8f4a, alpha); g.fillRoundedRect(cx - 6, cy - 18, 12, 32, 4);
+      g.fillRoundedRect(cx - 22, cy - 6, 10, 18, 3); g.fillRoundedRect(cx + 14, cy - 10, 10, 18, 3);
+    } else if (th === 'cave') {
+      g.fillStyle(0x4a3570, alpha); g.fillRoundedRect(cx - 32, cy - 8, 64, 28, 8);
+      g.fillStyle(0x6fd6f5, alpha); g.fillTriangle(cx - 14, cy + 12, cx - 4, cy - 16, cx + 6, cy + 12);
+      g.fillStyle(0xa7ecff, alpha); g.fillTriangle(cx + 4, cy + 12, cx + 12, cy - 8, cx + 20, cy + 12);
+    } else if (th === 'inferno') {
+      g.fillStyle(0x6b2410, alpha); g.fillTriangle(cx - 34, cy + 16, cx, cy - 28, cx + 34, cy + 16);
+      g.fillStyle(0xff7a2a, alpha); g.fillTriangle(cx - 14, cy + 4, cx, cy - 18, cx + 14, cy + 4);
+      g.fillStyle(0xfde047, alpha); g.fillCircle(cx, cy - 8, 6);
+    } else if (th === 'city') {
+      g.fillStyle(0x57658c, alpha); g.fillRect(cx - 28, cy - 8, 18, 28); g.fillRect(cx - 4, cy - 18, 22, 38); g.fillRect(cx + 22, cy - 4, 16, 24);
+      g.fillStyle(0xffe08a, alpha * 0.85);
+      g.fillRect(cx - 24, cy - 2, 6, 7); g.fillRect(cx + 2, cy - 12, 6, 7); g.fillRect(cx + 26, cy + 2, 5, 6);
+    } else if (th === 'heaven') {
+      g.fillStyle(0xfde7a8, alpha); g.fillEllipse(cx, cy + 10, 58, 18);
+      g.fillStyle(0xffffff, alpha * 0.95);
+      g.fillCircle(cx - 20, cy - 4, 14); g.fillCircle(cx + 18, cy - 6, 16); g.fillCircle(cx, cy - 10, 18);
+      g.fillStyle(0xffd54a, alpha); g.fillCircle(cx + 2, cy - 22, 10);
+    }
+  }
+
   global.GameAssets = {
     createTextures: createTextures,
     getStudentAvatar: getStudentAvatar,
     ensureTheme: ensureTheme,
     buildScenery: buildScenery,
+    drawMapOcean: drawMapOcean,
+    drawMapCompass: drawMapCompass,
+    drawMapIsland: drawMapIsland,
+    MAP_PATH: MAP_PATH,
+    MAP_TREASURE: MAP_TREASURE,
     THEMES: THEMES,
     HERO: { w: HERO_W, h: HERO_H, ss: HERO_SS },
     Sfx: Sfx
