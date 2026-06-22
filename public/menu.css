@@ -23,7 +23,8 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
 }
 
 .page-profile.page-scroll,
-.page-pvp.page-scroll{
+.page-pvp.page-scroll,
+.page-social.page-scroll{
   padding-top:calc(var(--topbar-h) + 28px);
   padding-bottom:48px;
 }
@@ -576,7 +577,8 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   .page-progress.page-scroll,
   .page-profile.page-scroll,
   .page-pvp.page-scroll,
-  .page-mentor.page-scroll{
+  .page-mentor.page-scroll,
+  .page-social.page-scroll{
     padding-top:calc(var(--topbar-h) + 60px);
   }
 }
@@ -952,6 +954,19 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   gap:8px;
   justify-content:center;
   margin-top:10px;
+}
+@media (max-width:640px){
+  .profile-social-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    width:100%;
+  }
+  .profile-social-actions .profile-btn{
+    min-height:44px;
+    font-size:12px;
+    padding:10px 8px;
+  }
 }
 .profile-btn{
   display:flex;

@@ -115,12 +115,6 @@
   justify-content: center;
 }
 
-@media (max-width: 520px) {
-  .soc-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; margin: 0; border-radius: 18px 18px 0 0; padding-bottom: max(6px, env(safe-area-inset-bottom)); }
-  .page-social .soc-shell { padding-bottom: 90px; }
-  .soc-nav-label { font-size: 10px; }
-}
-
 /* ── Panels ── */
 .soc-panel { display: none; animation: socFadeIn .25s ease; }
 .soc-panel.is-active { display: block; }
@@ -439,11 +433,6 @@
   gap: 12px;
   min-height: 420px;
 }
-@media (max-width: 720px) {
-  .soc-chat-layout { grid-template-columns: 1fr; }
-  .soc-chat-inbox.is-collapsed { display: none; }
-  .soc-chat-main.is-open .soc-chat-inbox { display: none; }
-}
 .soc-chat-inbox, .soc-chat-main {
   background: rgba(255,255,255,.94);
   border-radius: 20px;
@@ -536,9 +525,6 @@
   cursor: pointer;
   font-size: 14px;
 }
-@media (max-width: 720px) {
-  .soc-chat-back { display: inline-flex; }
-}
 .soc-chat-placeholder {
   text-align: center;
   width: 100%;
@@ -605,3 +591,324 @@
 
 /* messages.html redirect page uses same classes */
 .page-messages .soc-shell { max-width: 880px; margin: 0 auto; padding: 20px; }
+
+/* ═══════════════════════════════════════════════════
+   MOBILE OPTIMIZATION
+═══════════════════════════════════════════════════ */
+.page-social {
+  --soc-bottom-nav: 72px;
+  -webkit-tap-highlight-color: transparent;
+}
+.page-social.soc-no-scroll {
+  overflow: hidden;
+  height: 100dvh;
+  touch-action: none;
+}
+.page-social .soc-shell {
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+
+/* Touch-friendly controls */
+.soc-nav-btn,
+.soc-feed-tab,
+.soc-btn,
+.soc-act,
+.soc-inbox-item {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+@media (max-width: 768px) {
+  .page-social .soc-shell {
+    padding-bottom: calc(var(--soc-bottom-nav) + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+
+  .soc-banner {
+    padding: 16px 18px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .soc-banner-deco { display: none; }
+  .soc-banner h1 { font-size: 1.25rem; }
+  .soc-banner p { font-size: 13px; }
+
+  .soc-card {
+    padding: 14px 16px;
+    border-radius: 18px;
+    margin-bottom: 12px;
+  }
+  .soc-feed-card { padding: 6px 14px 10px; }
+
+  .soc-compose-actions {
+    flex-direction: column;
+  }
+  .soc-compose-actions .soc-btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 15px;
+  }
+
+  .soc-feed-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .soc-feed-tabs::-webkit-scrollbar { display: none; }
+  .soc-feed-tab {
+    flex: 0 0 auto;
+    min-width: 88px;
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
+  .soc-post-head {
+    flex-wrap: wrap;
+  }
+  .soc-name {
+    font-size: 15px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .soc-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .soc-act {
+    min-height: 42px;
+    padding: 8px 6px;
+    font-size: 12px;
+    justify-content: center;
+  }
+  .soc-comment-form {
+    flex-direction: column;
+  }
+  .soc-comment-form input {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .soc-comment-form button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* User cards — stack on mobile */
+  .soc-user-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+  }
+  .soc-user-card-body {
+    flex: 1 1 calc(100% - 62px);
+  }
+  .soc-user-card-actions {
+    flex: 1 1 100%;
+    align-items: stretch;
+  }
+  .soc-user-card-actions .soc-btn-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .soc-user-card-actions .soc-btn {
+    min-height: 40px;
+    padding: 8px 4px;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .soc-req-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .soc-req-actions {
+    width: 100%;
+  }
+  .soc-req-actions .soc-btn {
+    flex: 1;
+    min-height: 42px;
+  }
+
+  .soc-search-input {
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  /* Tab Tin nhắn: ẩn banner cho thêm không gian */
+  .page-social.soc-panel-chat .soc-banner {
+    display: none;
+  }
+
+  /* Chat — mobile master-detail */
+  .soc-chat-layout {
+    grid-template-columns: 1fr;
+    min-height: calc(100dvh - var(--topbar-h) - var(--soc-bottom-nav) - 120px);
+  }
+  .page-social.soc-chat-open .soc-chat-inbox {
+    display: none;
+  }
+  .soc-chat-main {
+    display: none;
+    min-height: calc(100dvh - var(--topbar-h) - var(--soc-bottom-nav) - 100px);
+  }
+  .soc-chat-main.is-open {
+    display: flex;
+  }
+  .soc-chat-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .soc-chat-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(8px);
+    padding: 10px 12px;
+  }
+  .soc-chat-head-name {
+    font-size: 15px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .soc-chat-head-link {
+    padding: 8px 10px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .soc-inbox-list {
+    max-height: none;
+    flex: 1;
+  }
+  .soc-inbox-item {
+    min-height: 64px;
+    padding: 12px 14px;
+  }
+  .soc-chat-messages {
+    flex: 1;
+    min-height: 200px;
+    max-height: none;
+    padding: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .soc-bubble {
+    max-width: 88%;
+    font-size: 15px;
+  }
+  .soc-chat-form {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -4px 20px rgba(15,23,42,.06);
+  }
+  .soc-chat-form input {
+    font-size: 16px;
+    min-height: 46px;
+  }
+  .soc-chat-form .soc-btn {
+    min-width: 64px;
+    min-height: 46px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-social { --soc-bottom-nav: 64px; }
+
+  /* Mở cuộc chat: ẩn tab bar dưới để form nhắn không bị che */
+  .page-social.soc-chat-open .soc-nav {
+    transform: translateY(110%);
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .page-social.soc-chat-open .soc-shell {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .page-social.soc-chat-open .soc-chat-layout {
+    min-height: calc(100dvh - var(--topbar-h) - 72px);
+  }
+  .page-social.soc-chat-open .soc-chat-main.is-open {
+    min-height: calc(100dvh - var(--topbar-h) - 64px);
+    border-radius: 16px;
+  }
+
+  .soc-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    margin: 0;
+    border-radius: 18px 18px 0 0;
+    padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 32px rgba(30,58,138,.15);
+    border: 1px solid rgba(255,255,255,.9);
+    border-bottom: none;
+    gap: 4px;
+    transition: transform .22s ease, opacity .18s ease;
+  }
+  .soc-nav-btn {
+    min-height: 52px;
+    padding: 6px 4px;
+  }
+  .soc-nav-icon { font-size: 20px; }
+  .soc-nav-label { font-size: 9px; letter-spacing: -.02em; }
+
+  .page-social .soc-shell {
+    padding-top: 8px;
+    padding-bottom: calc(var(--soc-bottom-nav) + env(safe-area-inset-bottom, 0px) + 20px);
+  }
+
+  /* Hide decorative background layers on small screens for performance */
+  .page-social .sky,
+  .page-social .liquid-bg,
+  .page-social .ground {
+    opacity: .65;
+  }
+
+  .soc-compose-card textarea {
+    min-height: 72px;
+    font-size: 16px;
+  }
+
+  .soc-empty, .soc-loading {
+    padding: 24px 16px;
+    font-size: 13px;
+  }
+  .soc-empty-icon { font-size: 32px; }
+}
+
+@media (max-width: 380px) {
+  .soc-user-card-actions .soc-btn-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .soc-user-card-actions .soc-btn-row .soc-btn:last-child {
+    grid-column: 1 / -1;
+  }
+  .soc-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+  .soc-actions .soc-act:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Chat form — safe area (tab bar ẩn khi đang chat trên mobile) */
+.page-social.soc-chat-open .soc-chat-form {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+

@@ -11,8 +11,27 @@
   var activeChatId = '';
   var unsubMessages = null;
   var searchTimer = null;
+  var isMobile = false;
 
   function $(id) { return document.getElementById(id); }
+
+  function checkMobile() {
+    isMobile = window.matchMedia('(max-width: 768px)').matches;
+    document.body.classList.toggle('soc-is-mobile', isMobile);
+    syncScrollLock();
+  }
+
+  function syncScrollLock() {
+    var lock = isMobile && document.body.classList.contains('soc-chat-open');
+    document.body.classList.toggle('soc-no-scroll', lock);
+  }
+
+  function updateBodyPanelClass(panel) {
+    document.body.classList.toggle('soc-panel-chat', panel === 'chat');
+    if (panel !== 'chat') {
+      document.body.classList.remove('soc-chat-open');
+    }
+  }
 
   function getTabFromUrl() {
     try {
@@ -46,11 +65,27 @@
       p.classList.toggle('is-active', on);
       p.hidden = !on;
     });
-    setUrlTab(panel, panel === 'chat' ? activeOtherUid() : '');
+    updateBodyPanelClass(panel);
+    if (panel !== 'chat') resetChatView();
+    setUrlTab(panel, panel === 'chat' && activeChatId ? activeOtherUid() : '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (panel === 'feed') loadFeed();
     if (panel === 'search') renderSearchHint();
     if (panel === 'friends') loadFriendsPanel();
     if (panel === 'chat') loadChatPanel();
+  }
+
+  function resetChatView() {
+    var main = $('socChatMain');
+    if (main) main.classList.remove('is-open');
+    document.body.classList.remove('soc-chat-open');
+    syncScrollLock();
+    if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+    activeChatId = '';
+    var inp = $('msgInput');
+    var sendBtn = $('msgSendBtn');
+    if (inp) { inp.disabled = true; inp.value = ''; }
+    if (sendBtn) sendBtn.disabled = true;
   }
 
   function wireMainNav() {
@@ -449,31 +484,50 @@
     if (head) {
       head.dataset.otherUid = otherUid;
       head.innerHTML =
-        '<button type="button" class="soc-chat-back" id="socChatBack">←</button>' +
+        '<button type="button" class="soc-chat-back" id="socChatBack" aria-label="Quay lại danh sách">←</button>' +
         '<a class="soc-chat-head-user" href="profile.html?uid=' + encodeURIComponent(otherUid) + '">' +
           '<span class="soc-inbox-av">' + (otherName.charAt(0) || '?') + '</span>' +
           '<span class="soc-chat-head-name">' + KidSocial.esc(otherName) + '</span></a>' +
         '<a class="soc-chat-head-link" href="profile.html?uid=' + encodeURIComponent(otherUid) + '">Hồ sơ</a>';
       var back = $('socChatBack');
-      if (back) back.onclick = function () {
-        if (main) main.classList.remove('is-open');
-        activeChatId = '';
-        if (unsubMessages) { unsubMessages(); unsubMessages = null; }
-        head.innerHTML = '<div class="soc-chat-placeholder"><span class="soc-chat-placeholder-icon">💬</span><p>Chọn cuộc trò chuyện</p></div>';
-        if (inp) { inp.disabled = true; inp.value = ''; }
-        if (sendBtn) sendBtn.disabled = true;
-        $('msgList').innerHTML = '';
-        setUrlTab('chat', '');
-      };
+      if (back) back.onclick = function () { closeChatView(); };
     }
-    if (inp) inp.disabled = false;
+    if (inp) {
+      inp.disabled = false;
+      if (isMobile) setTimeout(function () { inp.focus(); }, 280);
+    }
     if (sendBtn) sendBtn.disabled = false;
     if (main) main.classList.add('is-open');
+    document.body.classList.add('soc-chat-open');
+    syncScrollLock();
     document.querySelectorAll('.soc-inbox-item').forEach(function (el) {
       el.classList.toggle('is-active', el.getAttribute('data-chat') === chatId);
     });
     setUrlTab('chat', otherUid);
     unsubMessages = KidSocial.subscribeMessages(chatId, renderMessages);
+    KidSocial.listConversations().then(renderInbox);
+  }
+
+  function closeChatView() {
+    var main = $('socChatMain');
+    var head = $('msgHeader');
+    if (main) main.classList.remove('is-open');
+    document.body.classList.remove('soc-chat-open');
+    syncScrollLock();
+    activeChatId = '';
+    if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+    if (head) {
+      delete head.dataset.otherUid;
+      head.innerHTML = '<div class="soc-chat-placeholder"><span class="soc-chat-placeholder-icon">💬</span><p>Chọn cuộc trò chuyện bên trái<br>hoặc nhắn tin từ hồ sơ bạn bè</p></div>';
+    }
+    var inp = $('msgInput');
+    var sendBtn = $('msgSendBtn');
+    var list = $('msgList');
+    if (inp) { inp.disabled = true; inp.value = ''; inp.blur(); }
+    if (sendBtn) sendBtn.disabled = true;
+    if (list) list.innerHTML = '';
+    document.querySelectorAll('.soc-inbox-item').forEach(function (el) { el.classList.remove('is-active'); });
+    setUrlTab('chat', '');
     KidSocial.listConversations().then(renderInbox);
   }
 
@@ -507,6 +561,8 @@
 
   /* ── Init ── */
   function init() {
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
     wireMainNav();
     wireFeedTabs();
     wireComposer();
