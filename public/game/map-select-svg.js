@@ -51,12 +51,14 @@
   function loadMapAssets(scene, done) {
     var jobs = [
       loadOne(scene, 'map_ocean', 'ocean', 960, 540),
-      loadOne(scene, 'map_compass', 'compass', 72, 72),
-      loadOne(scene, 'map_treasure', 'treasure', 96, 96),
-      loadOne(scene, 'map_boat', 'boat', 64, 64)
+      loadOne(scene, 'map_ship', 'pirate-ship', 120, 120),
+      loadOne(scene, 'map_treasure', 'treasure', 110, 110),
+      loadOne(scene, 'map_monster', 'sea-monster', 140, 90),
+      loadOne(scene, 'map_bottle', 'bottle', 48, 48),
+      loadOne(scene, 'map_rock', 'rock', 56, 48)
     ];
     THEMES.forEach(function (t) {
-      jobs.push(loadOne(scene, 'map_island_' + t, 'island-' + t, 140, 140));
+      jobs.push(loadOne(scene, 'map_island_' + t, 'island-' + t, 120, 120));
     });
     Promise.all(jobs).then(function () { done(); }).catch(function (e) {
       console.warn('[map-select-svg]', e);

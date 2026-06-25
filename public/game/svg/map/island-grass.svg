@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140">
-  <ellipse cx="70" cy="108" rx="62" ry="18" fill="#5EC4F0" opacity="0.35"/>
-  <ellipse cx="70" cy="100" rx="54" ry="16" fill="#000" opacity="0.12"/>
-  <ellipse cx="70" cy="96" rx="50" ry="14" fill="#F0D498"/>
-  <ellipse cx="70" cy="90" rx="42" ry="12" fill="#FAEBD0"/>
-  <rect x="64" y="52" width="12" height="28" fill="#6B4423" rx="2"/>
-  <circle cx="58" cy="44" r="18" fill="#1B5E20"/>
-  <circle cx="82" cy="48" r="16" fill="#2E7D32"/>
-  <circle cx="70" cy="32" r="22" fill="#43A047"/>
-  <circle cx="88" cy="58" r="5" fill="#FFEB3B"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <ellipse cx="60" cy="98" rx="50" ry="14" fill="#E8B84A"/>
+  <ellipse cx="60" cy="92" rx="44" ry="12" fill="#FFD54F"/>
+  <ellipse cx="60" cy="88" rx="38" ry="8" fill="#B3E5FC" opacity="0.7"/>
+  <rect x="56" y="58" width="8" height="22" fill="#6B4423" rx="1"/>
+  <circle cx="48" cy="52" r="14" fill="#2E7D32"/>
+  <circle cx="72" cy="56" r="12" fill="#388E3C"/>
+  <circle cx="60" cy="42" r="16" fill="#43A047"/>
 </svg>

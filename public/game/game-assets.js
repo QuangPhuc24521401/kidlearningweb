@@ -784,10 +784,18 @@
 
   /* ─────────── Bản đồ kho báu (LevelSelect) ─────────── */
   var MAP_PATH = [
-    { x: 108, y: 428 }, { x: 248, y: 358 }, { x: 392, y: 292 }, { x: 528, y: 362 },
-    { x: 668, y: 302 }, { x: 792, y: 388 }, { x: 658, y: 458 }, { x: 468, y: 428 }
+    { x: 148, y: 388 }, { x: 298, y: 308 }, { x: 448, y: 252 }, { x: 588, y: 322 },
+    { x: 728, y: 272 }, { x: 848, y: 352 }, { x: 688, y: 428 }, { x: 468, y: 402 }
   ];
-  var MAP_TREASURE = { x: 868, y: 168 };
+  var MAP_TREASURE = { x: 138, y: 468 };
+  var MAP_SHIP = { x: 78, y: 348 };
+  var MAP_DECOR = [
+    { key: 'map_rock', x: 820, y: 468, w: 48, h: 40, depth: 2, alpha: 0.9 },
+    { key: 'map_rock', x: 340, y: 468, w: 40, h: 34, depth: 2, alpha: 0.85 },
+    { key: 'map_rock', x: 620, y: 178, w: 44, h: 36, depth: 2, alpha: 0.8 },
+    { key: 'map_bottle', x: 378, y: 368, w: 40, h: 40, depth: 2, alpha: 0.95 },
+    { key: 'map_monster', x: 520, y: 478, w: 120, h: 76, depth: 2, alpha: 0.92 }
+  ];
 
   function drawMapOcean(g, W, H) {
     g.fillGradientStyle(0x1e6fa8, 0x1e6fa8, 0x3ba8e0, 0x3ba8e0, 1);
@@ -880,6 +888,8 @@
     drawMapIsland: drawMapIsland,
     MAP_PATH: MAP_PATH,
     MAP_TREASURE: MAP_TREASURE,
+    MAP_SHIP: MAP_SHIP,
+    MAP_DECOR: MAP_DECOR,
     THEMES: THEMES,
     HERO: { w: HERO_W, h: HERO_H, ss: HERO_SS },
     Sfx: Sfx

@@ -229,19 +229,21 @@
       this.input.topOnly = true;
       var GA = global.GameAssets || {};
       var MAP_PATH = GA.MAP_PATH || [];
-      var MAP_TREASURE = GA.MAP_TREASURE || { x: 868, y: 168 };
+      var MAP_TREASURE = GA.MAP_TREASURE || { x: 138, y: 468 };
+
+      var MAP_SHIP = GA.MAP_SHIP || { x: 78, y: 348 };
+      var MAP_DECOR = GA.MAP_DECOR || [];
 
       var MS = global.MapSelectSvg;
-      // ───── đại dương + viền sóng ─────
+      // ───── đại dương ─────
       if (MS && MS.has(this, 'map_ocean')) {
         this.add.image(W / 2, H / 2, 'map_ocean').setDisplaySize(W, H).setDepth(-10);
       } else {
         var ocean = this.add.graphics().setDepth(-10);
         if (GA.drawMapOcean) GA.drawMapOcean(ocean, W, H);
-        else { this.cameras.main.setBackgroundColor('#2b8fd4'); ocean.fillStyle(0x2b8fd4, 1); ocean.fillRect(0, 0, W, H); }
+        else { this.cameras.main.setBackgroundColor('#1E88E5'); ocean.fillStyle(0x1E88E5, 1); ocean.fillRect(0, 0, W, H); }
       }
 
-      // ───── tiện ích vẽ đường đứt nét ─────
       function dashLine(g, x1, y1, x2, y2, dash, gap, color, width, alpha) {
         g.lineStyle(width, color, alpha == null ? 1 : alpha);
         var dx = x2 - x1, dy = y2 - y1, dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -252,30 +254,20 @@
         }
       }
 
-      // ───── banner tiêu đề ─────
+      // ───── banner tiêu đề (giấy cũ) ─────
       var banner = this.add.graphics().setDepth(8);
-      banner.fillStyle(0xfbbf24, 1); banner.fillRoundedRect(W / 2 - 200, 18, 400, 52, 10);
-      banner.lineStyle(4, 0xb45309, 1); banner.strokeRoundedRect(W / 2 - 200, 18, 400, 52, 10);
-      this.add.text(W / 2, 44, '🏴‍☠️ BẢN ĐỒ KHO BÁU', {
-        fontFamily: 'Baloo 2, cursive', fontSize: '26px', color: '#7c2d12', stroke: '#fff7e6', strokeThickness: 4
+      banner.fillStyle(0xf5e6c8, 1); banner.fillRoundedRect(W / 2 - 210, 14, 420, 48, 8);
+      banner.lineStyle(3, 0x7c4a1e, 0.6); banner.strokeRoundedRect(W / 2 - 210, 14, 420, 48, 8);
+      this.add.text(W / 2, 38, '🏴‍☠️ BẢN ĐỒ KHO BÁU', {
+        fontFamily: 'Baloo 2, cursive', fontSize: '24px', color: '#5d4037', stroke: '#fff7e6', strokeThickness: 3
       }).setOrigin(0.5).setDepth(9);
 
-      // ───── la bàn ─────
-      if (MS && MS.has(this, 'map_compass')) {
-        this.add.image(52, 52, 'map_compass').setDisplaySize(72, 72).setDepth(6);
-      } else {
-        var compass = this.add.graphics().setDepth(6);
-        if (GA.drawMapCompass) GA.drawMapCompass(compass, 52, 52);
-      }
-      this.add.text(52, 92, 'N', { fontFamily: 'Baloo 2, cursive', fontSize: '12px', color: '#7c4a1e' }).setOrigin(0.5).setDepth(7);
-
-      // ───── thuyền xuất phát ─────
-      var boatY = MAP_PATH[0] ? MAP_PATH[0].y - 36 : 390;
-      if (MS && MS.has(this, 'map_boat')) {
-        this.add.image(52, boatY, 'map_boat').setDisplaySize(64, 64).setOrigin(0.5).setDepth(4);
-      } else {
-        this.add.text(52, boatY, '⛵', { fontSize: '38px' }).setOrigin(0.5).setDepth(4);
-      }
+      // ───── trang trí: đá, chai, quái vật biển ─────
+      MAP_DECOR.forEach(function (d) {
+        if (MS && MS.has(self, d.key)) {
+          self.add.image(d.x, d.y, d.key).setDisplaySize(d.w, d.h).setDepth(d.depth || 2).setAlpha(d.alpha == null ? 1 : d.alpha);
+        }
+      });
 
       var levels = (global.GameLevels && global.GameLevels.LEVELS) || [];
       var GP = global.GameProgress;
@@ -290,46 +282,51 @@
         totalStars += (pr.totalStars || 0);
       }
 
-      // ───── đường mòn đứt nét nối các đảo ─────
+      var allDone = n > 0 && progArr.every(function (p) { return (p.completedRuns || 0) > 0; });
+
+      // ───── đường mòn trắng (kiểu bản đồ hải tặc) ─────
+      var trailShadow = this.add.graphics().setDepth(0);
       var trail = this.add.graphics().setDepth(1);
+      function mapTrail(x1, y1, x2, y2, lit) {
+        dashLine(trailShadow, x1 + 2, y1 + 2, x2 + 2, y2 + 2, lit ? 5 : 14, lit ? 12 : 10, 0x1565c0, 5, 0.35);
+        dashLine(trail, x1, y1, x2, y2, lit ? 6 : 16, lit ? 12 : 10, lit ? 0xffffff : 0xe2e8f0, lit ? 5 : 4, lit ? 0.98 : 0.88);
+      }
+      if (pos[0]) mapTrail(MAP_SHIP.x + 28, MAP_SHIP.y + 10, pos[0].x - 20, pos[0].y - 8, unlockedArr[0]);
       for (var t = 0; t < n - 1; t++) {
         var a = pos[t], b = pos[t + 1];
         var done = unlockedArr[t + 1] && (progArr[t].completedRuns || 0) > 0;
-        dashLine(trail, a.x, a.y, b.x, b.y, done ? 4 : 14, done ? 18 : 12, done ? 0x1e293b : 0x334155, done ? 5 : 6, done ? 0.85 : 0.7);
+        mapTrail(a.x, a.y, b.x, b.y, done);
       }
       var last = pos[n - 1];
-      var allDone = n > 0 && progArr.every(function (p) { return (p.completedRuns || 0) > 0; });
       if (last) {
-        dashLine(trail, last.x, last.y, MAP_TREASURE.x - 20, MAP_TREASURE.y + 30, allDone ? 4 : 14, allDone ? 18 : 12, 0x334155, 5, 0.75);
+        mapTrail(last.x, last.y, MAP_TREASURE.x + 10, MAP_TREASURE.y - 28, allDone);
       }
 
-      // ───── cá voi / cá mập trang trí ─────
-      this.add.text(820, 260, '🦈', { fontSize: '22px' }).setOrigin(0.5).setDepth(2).setAlpha(0.7);
-      this.add.text(180, 480, '🐋', { fontSize: '28px' }).setOrigin(0.5).setDepth(2).setAlpha(0.65);
-      this.add.text(720, 480, '🦜', { fontSize: '24px' }).setOrigin(0.5).setDepth(2).setAlpha(0.8);
+      // ───── tàu hải tặc xuất phát ─────
+      if (MS && MS.has(this, 'map_ship')) {
+        this.add.image(MAP_SHIP.x, MAP_SHIP.y, 'map_ship').setDisplaySize(100, 100).setDepth(3);
+      } else {
+        this.add.text(MAP_SHIP.x, MAP_SHIP.y, '⛵', { fontSize: '42px' }).setOrigin(0.5).setDepth(3);
+      }
 
-      // ───── rương kho báu ─────
+      // ───── rương kho báu (đích cuối) ─────
       var tx = MAP_TREASURE.x, ty = MAP_TREASURE.y;
       var chest;
       if (MS && MS.has(this, 'map_treasure')) {
-        chest = this.add.image(tx, ty, 'map_treasure').setDisplaySize(88, 88).setOrigin(0.5).setDepth(4);
-        if (allDone) chest.setTint(0xffd54f);
+        chest = this.add.image(tx, ty, 'map_treasure').setDisplaySize(96, 96).setOrigin(0.5).setDepth(4);
+        if (allDone) chest.setTint(0xffe082);
       } else {
-        var xg = this.add.graphics().setDepth(3);
-        xg.lineStyle(5, 0xdc2626, 0.9);
-        xg.lineBetween(tx - 14, ty - 12, tx + 14, ty + 12);
-        xg.lineBetween(tx + 14, ty - 12, tx - 14, ty + 12);
         chest = this.add.text(tx, ty, allDone ? '🏆' : '💰', { fontSize: '48px' }).setOrigin(0.5).setDepth(4);
       }
-      this.add.text(tx, ty + 36, 'KHO BÁU', {
-        fontFamily: 'Baloo 2, cursive', fontSize: '14px', color: '#7c2d12', stroke: '#fff7e6', strokeThickness: 3
-      }).setOrigin(0.5).setDepth(4);
-      this.tweens.add({ targets: chest, y: ty - 6, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.add.text(tx, ty + 42, 'KHO BÁU', {
+        fontFamily: 'Baloo 2, cursive', fontSize: '13px', color: '#fff7e6', stroke: '#5d4037', strokeThickness: 3
+      }).setOrigin(0.5).setDepth(12);
+      this.tweens.add({ targets: chest, y: ty - 4, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-      // ───── các đảo theo chủ đề ─────
+      // ───── các đảo / màn chơi ─────
       var coarsePointer = global.matchMedia && global.matchMedia('(pointer: coarse)').matches;
-      var hitW = coarsePointer ? 156 : 136;
-      var hitH = coarsePointer ? 150 : 132;
+      var hitW = coarsePointer ? 158 : 140;
+      var hitH = coarsePointer ? 168 : 152;
       var dragMax = coarsePointer ? 52 : 36;
       self._mapHitZones = [];
 
@@ -338,51 +335,63 @@
         var unlocked = unlockedArr[i];
         var prog = progArr[i];
         var done = (prog.completedRuns || 0) > 0;
-        var node = self.add.container(p.x, p.y).setDepth(5).setScale(1.08);
+        var node = self.add.container(p.x, p.y).setDepth(5);
 
         var iKey = MS && MS.islandKey ? MS.islandKey(lv.theme) : null;
         if (MS && iKey && MS.has(self, iKey)) {
-          var islImg = self.add.image(0, 0, iKey).setDisplaySize(118, 118);
-          if (!unlocked) islImg.setTint(0x94a3b8).setAlpha(0.72);
+          var islImg = self.add.image(0, 6, iKey).setDisplaySize(108, 108);
+          if (!unlocked) islImg.setTint(0x94a3b8).setAlpha(0.78);
           node.add(islImg);
         } else {
           var isl = self.add.graphics();
-          if (GA.drawMapIsland) GA.drawMapIsland(isl, lv.theme, 0, 0, !unlocked);
+          if (GA.drawMapIsland) GA.drawMapIsland(isl, lv.theme, 0, 6, !unlocked);
           node.add(isl);
         }
 
-        // số màn
-        node.add(self.add.text(0, 32, String(lv.id), {
-          fontFamily: 'Baloo 2, cursive', fontSize: '18px', color: '#ffffff',
-          stroke: unlocked ? '#15803d' : '#64748b', strokeThickness: 3
-        }).setOrigin(0.5));
+        // huy hiệu số màn (luôn đọc được)
+        var badge = self.add.graphics();
+        badge.fillStyle(unlocked ? 0x15803d : 0x64748b, 1);
+        badge.lineStyle(2, 0xffffff, 0.9);
+        badge.fillCircle(0, -18, 15);
+        badge.strokeCircle(0, -18, 15);
+        node.add(badge);
+        node.add(self.add.text(0, -18, String(lv.id), {
+          fontFamily: 'Baloo 2, cursive', fontSize: '16px', color: '#ffffff',
+          stroke: '#1e293b', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(11));
 
         if (lv.isTeacherLevel) {
-          node.add(self.add.text(0, -52, '👩‍🏫', { fontSize: '16px' }).setOrigin(0.5));
+          node.add(self.add.text(0, -42, '👩‍🏫', { fontSize: '16px' }).setOrigin(0.5).setDepth(11));
         }
 
-        // tên màn
-        node.add(self.add.text(0, 58, lv.name, {
+        // tên màn — nền giấy trắng, không ghi trong SVG
+        var nameW = Math.min(118, Math.max(88, lv.name.length * 7 + 14));
+        var nameBg = self.add.graphics().setDepth(10);
+        nameBg.fillStyle(0xffffff, 0.94);
+        nameBg.lineStyle(2, 0x7c4a1e, 0.35);
+        nameBg.fillRoundedRect(-nameW / 2, 54, nameW, 28, 8);
+        nameBg.strokeRoundedRect(-nameW / 2, 54, nameW, 28, 8);
+        node.add(nameBg);
+        node.add(self.add.text(0, 68, lv.name, {
           fontFamily: 'Nunito, sans-serif', fontSize: '11px', fontWeight: '800', color: '#1e293b',
-          stroke: '#ffffff', strokeThickness: 2, align: 'center', wordWrap: { width: 100 }
-        }).setOrigin(0.5, 0));
+          align: 'center', wordWrap: { width: nameW - 8 }
+        }).setOrigin(0.5, 0.5).setDepth(11));
 
         if (done) {
-          node.add(self.add.text(0, -38, '⭐' + (prog.bestRun || 0), {
-            fontFamily: 'Baloo 2, cursive', fontSize: '14px', color: '#b45309', stroke: '#fff7e6', strokeThickness: 3
-          }).setOrigin(0.5));
+          node.add(self.add.text(0, -40, '⭐' + (prog.bestRun || 0), {
+            fontFamily: 'Baloo 2, cursive', fontSize: '13px', color: '#b45309', stroke: '#fff7e6', strokeThickness: 3
+          }).setOrigin(0.5).setDepth(11));
         }
         if (!unlocked) {
-          node.add(self.add.image(0, -4, 'lock').setDisplaySize(28, 28));
+          node.add(self.add.image(0, 8, 'lock').setDisplaySize(30, 30).setDepth(11));
         } else if (!done) {
           var glow = self.add.graphics();
-          glow.lineStyle(4, 0x22c55e, 0.75); glow.strokeCircle(0, 4, 46);
+          glow.lineStyle(3, 0x22c55e, 0.8); glow.strokeCircle(0, 8, 50);
           node.add(glow);
-          self.tweens.add({ targets: glow, alpha: 0.15, scaleX: 1.1, scaleY: 1.1, duration: 800, yoyo: true, repeat: -1 });
+          self.tweens.add({ targets: glow, alpha: 0.2, scaleX: 1.08, scaleY: 1.08, duration: 800, yoyo: true, repeat: -1 });
         }
 
-        // Vùng bấm đặt ở scene (không trong container) — Phaser hay lỗi hit test trong container
-        var hit = self.add.zone(p.x, p.y + 10, hitW, hitH).setDepth(30);
+        var hit = self.add.zone(p.x, p.y + 12, hitW, hitH).setDepth(30);
         hit.setInteractive({ useHandCursor: unlocked });
         self._mapHitZones.push(hit);
 
@@ -390,7 +399,7 @@
           if (self._mapPickLock) return;
           if (pointer && pointer.getDistance && pointer.getDistance() > dragMax) return;
           self._mapPickLock = true;
-          self.tweens.add({ targets: node, scaleX: 0.9, scaleY: 0.9, duration: 70, yoyo: true });
+          self.tweens.add({ targets: node, scaleX: 0.92, scaleY: 0.92, duration: 70, yoyo: true });
           if (Sfx.unlock) Sfx.unlock();
           if (Sfx.gate) Sfx.gate();
           self.time.delayedCall(60, function () {
@@ -400,8 +409,8 @@
         }
 
         if (unlocked) {
-          hit.on('pointerover', function () { self.tweens.add({ targets: node, scaleX: 1.12, scaleY: 1.12, duration: 100 }); });
-          hit.on('pointerout', function () { self.tweens.add({ targets: node, scaleX: 1.08, scaleY: 1.08, duration: 100 }); });
+          hit.on('pointerover', function () { self.tweens.add({ targets: node, scaleX: 1.06, scaleY: 1.06, duration: 100 }); });
+          hit.on('pointerout', function () { self.tweens.add({ targets: node, scaleX: 1, scaleY: 1, duration: 100 }); });
           hit.on('pointerup', pickIsland);
           hit.on('pointerdown', function (pointer) {
             if (pointer && pointer.event && pointer.event.preventDefault) pointer.event.preventDefault();
@@ -413,13 +422,12 @@
           });
         }
 
-        // đảo trôi nhẹ trên mặt nước
-        self.tweens.add({ targets: node, y: p.y - 5, duration: 1400 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        self.tweens.add({ targets: node, y: p.y - 4, duration: 1400 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       });
 
-      this.add.text(W / 2, H - 22, '⭐ Tổng sao: ' + totalStars + '  ·  Chọn đảo để bắt đầu phiêu lưu!', {
-        fontFamily: 'Baloo 2, cursive', fontSize: '15px', color: '#ffffff', stroke: '#1e3a8a', strokeThickness: 4
-      }).setOrigin(0.5).setDepth(9);
+      this.add.text(W / 2, H - 20, '⭐ Tổng sao: ' + totalStars + '  ·  Chọn đảo để bắt đầu phiêu lưu!', {
+        fontFamily: 'Baloo 2, cursive', fontSize: '14px', color: '#ffffff', stroke: '#1565c0', strokeThickness: 4
+      }).setOrigin(0.5).setDepth(12);
 
       sharpenTexts(this);
 
