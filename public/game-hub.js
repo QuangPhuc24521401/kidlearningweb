@@ -15,11 +15,26 @@
       try { global.__kidGame.destroy(true); } catch (e) {}
       global.__kidGame = null;
     }
-    if (global.__kidMaze) {
+    if (global.GameMaze && global.GameMaze.shutdown) {
+      global.GameMaze.shutdown();
+    } else if (global.__kidMaze) {
       try { global.__kidMaze.destroy(true); } catch (e) {}
       global.__kidMaze = null;
     }
+    var mount = $('gameMount');
+    if (mount) mount.innerHTML = '';
     if (global.GameQuizUI) global.GameQuizUI.hide();
+  }
+
+  function bootGame(which) {
+    if (which === 'maze') {
+      if (global.GameMaze && global.GameMaze.boot) global.GameMaze.boot();
+    } else {
+      if (global.GamePlatformer && global.GamePlatformer.boot) global.GamePlatformer.boot();
+    }
+    if (global.KidGameOrientation && global.KidGameOrientation.enter) {
+      global.KidGameOrientation.enter({ userGesture: true });
+    }
   }
 
   function showHub() {
@@ -45,11 +60,19 @@
     var hub = $('gameHub');
     var area = $('gamePlayArea');
     if (hub) hub.hidden = true;
-    if (area) area.hidden = false;
+    if (area) {
+      area.hidden = false;
+      area.removeAttribute('hidden');
+    }
     document.body.classList.remove('game-hub-visible');
     document.body.classList.remove('game-pick-platformer', 'game-pick-maze');
     document.body.classList.add(which === 'maze' ? 'game-pick-maze' : 'game-pick-platformer');
 
+    if (which === 'maze') {
+      /* jump label set in maze-canvas */
+    } else {
+      restorePlatformerTouchLabels();
+    }
     var hint = $('gameHintText');
     if (hint) {
       hint.innerHTML = which === 'maze'
@@ -62,16 +85,12 @@
     try { sessionStorage.setItem('kidGameLandscape', '1'); } catch (e) {}
     try { history.replaceState(null, '', 'game.html?play=' + encodeURIComponent(which)); } catch (e) {}
 
-    if (which === 'maze') {
-      if (global.GameMaze && global.GameMaze.boot) global.GameMaze.boot();
-    } else {
-      restorePlatformerTouchLabels();
-      if (global.GamePlatformer && global.GamePlatformer.boot) global.GamePlatformer.boot();
-    }
-
-    if (global.KidGameOrientation && global.KidGameOrientation.enter) {
-      global.KidGameOrientation.enter({ userGesture: false });
-    }
+    /* Đợi layout xong sau khi bỏ hidden — tránh canvas 0×0 */
+    global.requestAnimationFrame(function () {
+      global.requestAnimationFrame(function () {
+        bootGame(which);
+      });
+    });
   }
 
   function wireHub() {

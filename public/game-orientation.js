@@ -80,6 +80,7 @@
 
   function enterGameMode(opts) {
     opts = opts || {};
+    if (!isMobileGame()) return;
     enableLandscapeMode();
     if (!opts.userGesture) return;
     var vp = document.querySelector('.game-landscape-viewport');

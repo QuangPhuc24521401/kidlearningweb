@@ -196,6 +196,18 @@
   visibility:visible !important;
   pointer-events:none;
 }
+/* Desktop: ẩn hoàn toàn nút cảm ứng — dùng bàn phím */
+@media (min-width: 901px) and (pointer: fine) {
+  .game-touch,
+  .game-touch.is-play-active {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+body:not(.game-mobile-input) .game-touch {
+  display: none !important;
+}
 .game-card:not([data-game-ui="play"]) .game-touch,
 .game-touch:not(.is-play-active){
   display:none !important;
@@ -629,6 +641,144 @@
 
 .page-game.game-pick-maze .game-hint {
   display: none;
+}
+
+/* ── Mê cung Canvas UI ── */
+.maze-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background: #0f172a;
+  touch-action: none;
+}
+
+.maze-ui {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #1e3a5f, #0f172a);
+  border-radius: 12px;
+  overflow-y: auto;
+}
+
+.maze-ui--select .maze-select-head {
+  text-align: center;
+  margin-bottom: 14px;
+}
+.maze-ui--select .maze-select-head h2 {
+  font-family: 'Baloo 2', cursive;
+  color: #fef08a;
+  margin: 0 0 6px;
+  font-size: 1.4rem;
+}
+.maze-ui--select .maze-select-head p {
+  font-family: 'Nunito', sans-serif;
+  color: #bae6fd;
+  margin: 0;
+  font-size: 13px;
+}
+
+.maze-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.maze-lvl-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  border: 2px solid rgba(255,255,255,.2);
+  border-radius: 14px;
+  background: rgba(79, 70, 229, 0.85);
+  color: #fff;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  touch-action: manipulation;
+}
+.maze-lvl-btn.is-done { border-color: #fbbf24; }
+.maze-lvl-btn.is-locked {
+  background: rgba(100, 116, 139, 0.6);
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+.maze-lvl-icon { font-size: 28px; }
+.maze-lvl-name { font-size: 12px; font-weight: 800; text-align: center; }
+.maze-lvl-meta { font-size: 10px; opacity: 0.9; }
+
+.maze-hub-link {
+  margin-top: 14px;
+  border: none;
+  background: rgba(255,255,255,.12);
+  color: #93c5fd;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.maze-result-card {
+  text-align: center;
+  padding: 24px 20px;
+  max-width: 400px;
+}
+.maze-result-card h2 {
+  font-family: 'Baloo 2', cursive;
+  color: #fef08a;
+  margin: 0 0 12px;
+}
+.maze-result-stars { font-size: 1.2rem; font-weight: 800; color: #fde68a; }
+.maze-result-badge { font-size: 12px; color: #94a3b8; }
+.maze-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.maze-act-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: 'Baloo 2', cursive;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  min-height: 44px;
+}
+.maze-act-btn--green { background: #10b981; }
+.maze-act-btn--blue { background: #3b82f6; }
+.maze-act-btn--pink { background: #ec4899; }
+.maze-act-btn--purple { background: #8b5cf6; }
+
+.page-game.game-pick-maze .game-stage {
+  min-height: min(70vh, 520px);
+  aspect-ratio: unset;
+}
+
+.page-game.game-pick-maze .game-mount,
+.page-game.game-pick-maze .maze-ui,
+.page-game.game-pick-maze .maze-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.page-game.game-pick-maze:not(.game-force-landscape) .game-wrap {
+  max-width: 880px;
 }
 
 @media (max-width: 640px) {

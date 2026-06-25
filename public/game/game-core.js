@@ -33,7 +33,7 @@
     }
   }
   function fitStaticCamera(scene) {
-    scene.cameras.main.setZoom(DPR);
+    scene.cameras.main.setZoom(1);
     scene.cameras.main.centerOn(W / 2, H / 2);
   }
 
@@ -57,13 +57,8 @@
 
   function shouldShowTouchPad(mode) {
     if (mode !== 'play') return false;
-    if (document.body.classList.contains('game-force-landscape')) return true;
-    if (isTouchDevice()) return true;
-    try {
-      if (global.matchMedia('(pointer: coarse)').matches) return true;
-      if (global.matchMedia('(max-width: 900px)').matches) return true;
-    } catch (e) { /* ignore */ }
-    return false;
+    if (global.GameInput && global.GameInput.isMobile) return global.GameInput.isMobile();
+    return isTouchDevice();
   }
 
   function resetTouchState() {
@@ -76,20 +71,24 @@
 
   /** mode: 'play' | 'map' | 'result' | 'boot' */
   function setControlsMode(mode) {
-    var pad = document.getElementById('gameTouch');
     var replay = document.getElementById('btnReplay');
     var mapBtn = document.getElementById('btnMap');
     var ctrls = document.getElementById('gameControls');
     var card = document.getElementById('gameCard');
 
-    if (mode !== 'play') resetTouchState();
+    if (mode !== 'play' && global.GameInput) global.GameInput.resetTouchState(touch);
+    else if (mode !== 'play') resetTouchState();
 
     if (card) card.setAttribute('data-game-ui', mode);
 
-    if (pad) {
-      var showPad = shouldShowTouchPad(mode);
-      pad.classList.toggle('is-play-active', showPad);
-      pad.setAttribute('aria-hidden', showPad ? 'false' : 'true');
+    if (global.GameInput) {
+      global.GameInput.setTouchPad(mode);
+    } else {
+      var pad = document.getElementById('gameTouch');
+      if (pad) {
+        var showPad = shouldShowTouchPad(mode);
+        pad.classList.toggle('is-play-active', showPad);
+      }
     }
     if (replay) replay.hidden = mode !== 'play';
     if (mapBtn) mapBtn.hidden = mode !== 'play';
@@ -121,6 +120,11 @@
   };
 
   function wireTouchControls() {
+    if (global.GameInput) {
+      global.GameInput.bindTouchPad(touch, { left: 'left', right: 'right', down: 'down', jump: 'jump' });
+      setControlsMode('boot');
+      return;
+    }
     var pad = document.getElementById('gameTouch');
     if (!pad) return;
 
@@ -1392,6 +1396,8 @@
       try { global.__kidGame.destroy(true); } catch (e) {}
       global.__kidGame = null;
     }
+    var mount = document.getElementById('gameMount');
+    if (mount) mount.innerHTML = '';
     if (quizUI()) quizUI().init();
     wireTouchControls();
     wireGameControls();
@@ -1399,8 +1405,8 @@
     var config = {
       type: Phaser.AUTO,
       parent: 'gameMount',
-      width: W * DPR,
-      height: H * DPR,
+      width: W,
+      height: H,
       backgroundColor: '#7ec0ee',
       pixelArt: false,
       render: { antialias: true, roundPixels: false },
