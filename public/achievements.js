@@ -36,6 +36,8 @@
     { id: "arena_legend",   icon: "👑", title: "Huyền thoại sàn", desc: "Thắng đấu trường 5 lần" },
     { id: "maze_first",     icon: "🧩", title: "Thoát mê cung",   desc: "Hoàn thành mê cung màn đầu tiên" },
     { id: "maze_master",    icon: "🗺️", title: "Bậc thầy mê cung", desc: "Hoàn thành tất cả màn mê cung" },
+    { id: "digger_first",   icon: "⛏️", title: "Thợ đào vàng",    desc: "Hoàn thành màn đào vàng đầu tiên" },
+    { id: "digger_master",  icon: "👑", title: "Vua mỏ vàng",     desc: "Hoàn thành tất cả màn đào vàng" },
     { id: "game_runner",    icon: "🍄", title: "Phiêu lưu gia",   desc: "Hoàn thành màn platformer đầu tiên" }
   ];
 
@@ -108,7 +110,7 @@
         total += entry.totalStars;
       }
     });
-    ['game', 'game_maze'].forEach(function(sub){
+    ['game', 'game_maze', 'game_digger'].forEach(function(sub){
       var entry = progress[sub];
       if(!entry || !entry.topics) return;
       Object.values(entry.topics).forEach(function(t){
@@ -128,6 +130,10 @@
 
   function mazeLevelCount(){
     return (window.MazeLevels && window.MazeLevels.LEVELS) ? window.MazeLevels.LEVELS.length : 6;
+  }
+
+  function diggerLevelCount(){
+    return (window.DiggerLevels && window.DiggerLevels.LEVELS) ? window.DiggerLevels.LEVELS.length : 6;
   }
 
   function subjectsDoneCount(progress){
@@ -158,6 +164,8 @@
       case "streak_7":  return (achState.streak || 0) >= 7;
       case "maze_first": return gameCompletedCount(progress, "game_maze") >= 1;
       case "maze_master": return gameCompletedCount(progress, "game_maze") >= mazeLevelCount();
+      case "digger_first": return gameCompletedCount(progress, "game_digger") >= 1;
+      case "digger_master": return gameCompletedCount(progress, "game_digger") >= diggerLevelCount();
       case "game_runner": return gameCompletedCount(progress, "game") >= 1;
       default: return false;
     }

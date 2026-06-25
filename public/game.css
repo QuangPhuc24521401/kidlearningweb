@@ -615,6 +615,15 @@ body:not(.game-mobile-input) .game-touch {
   color: #b45309;
 }
 
+.game-hub-card--digger {
+  background: linear-gradient(145deg, rgba(255, 251, 235, .96), rgba(254, 243, 199, .92));
+}
+
+.game-hub-card--digger .game-hub-card-tag {
+  background: rgba(234, 179, 8, 0.18);
+  color: #a16207;
+}
+
 .game-switch-btn {
   display: none;
   position: absolute;
@@ -778,6 +787,25 @@ body:not(.game-mobile-input) .game-touch {
 }
 
 .page-game.game-pick-maze:not(.game-force-landscape) .game-wrap {
+  max-width: 880px;
+}
+
+.page-game.game-pick-digger .game-stage {
+  min-height: min(70vh, 520px);
+  aspect-ratio: unset;
+}
+
+.page-game.game-pick-digger .game-mount,
+.page-game.game-pick-digger .maze-ui,
+.page-game.game-pick-digger .digger-canvas,
+.page-game.game-pick-digger .maze-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.page-game.game-pick-digger:not(.game-force-landscape) .game-wrap {
   max-width: 880px;
 }
 
