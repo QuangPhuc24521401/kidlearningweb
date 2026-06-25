@@ -328,7 +328,10 @@
 
       // ───── các đảo theo chủ đề ─────
       var coarsePointer = global.matchMedia && global.matchMedia('(pointer: coarse)').matches;
-      var hitR = coarsePointer ? 68 : 48;
+      var hitW = coarsePointer ? 156 : 136;
+      var hitH = coarsePointer ? 150 : 132;
+      var dragMax = coarsePointer ? 52 : 36;
+      self._mapHitZones = [];
 
       levels.forEach(function (lv, i) {
         var p = pos[i];
@@ -378,26 +381,30 @@
           self.tweens.add({ targets: glow, alpha: 0.15, scaleX: 1.1, scaleY: 1.1, duration: 800, yoyo: true, repeat: -1 });
         }
 
-        var hit = self.add.circle(0, 4, hitR, 0xffffff, 0.0001);
-        hit.setInteractive({
-          useHandCursor: unlocked,
-          hitArea: new Phaser.Geom.Circle(0, 4, hitR),
-          hitAreaCallback: Phaser.Geom.Circle.Contains
-        });
+        // Vùng bấm đặt ở scene (không trong container) — Phaser hay lỗi hit test trong container
+        var hit = self.add.zone(p.x, p.y + 10, hitW, hitH).setDepth(30);
+        hit.setInteractive({ useHandCursor: unlocked });
+        self._mapHitZones.push(hit);
+
+        function pickIsland(pointer) {
+          if (self._mapPickLock) return;
+          if (pointer && pointer.getDistance && pointer.getDistance() > dragMax) return;
+          self._mapPickLock = true;
+          self.tweens.add({ targets: node, scaleX: 0.9, scaleY: 0.9, duration: 70, yoyo: true });
+          if (Sfx.unlock) Sfx.unlock();
+          if (Sfx.gate) Sfx.gate();
+          self.time.delayedCall(60, function () {
+            setControlsMode('play');
+            self.scene.start('Play', { levelIndex: i });
+          });
+        }
+
         if (unlocked) {
           hit.on('pointerover', function () { self.tweens.add({ targets: node, scaleX: 1.12, scaleY: 1.12, duration: 100 }); });
           hit.on('pointerout', function () { self.tweens.add({ targets: node, scaleX: 1.08, scaleY: 1.08, duration: 100 }); });
-          hit.on('pointerup', function (pointer) {
-            if (self._mapPickLock) return;
-            if (pointer.getDistance && pointer.getDistance() > 22) return;
-            self._mapPickLock = true;
-            self.tweens.add({ targets: node, scaleX: 0.9, scaleY: 0.9, duration: 70, yoyo: true });
-            if (Sfx.unlock) Sfx.unlock();
-            if (Sfx.gate) Sfx.gate();
-            self.time.delayedCall(60, function () {
-              setControlsMode('play');
-              self.scene.start('Play', { levelIndex: i });
-            });
+          hit.on('pointerup', pickIsland);
+          hit.on('pointerdown', function (pointer) {
+            if (pointer && pointer.event && pointer.event.preventDefault) pointer.event.preventDefault();
           });
         } else {
           hit.on('pointerup', function () {
@@ -405,7 +412,7 @@
             self.tweens.add({ targets: node, x: p.x - 5, duration: 50, yoyo: true, repeat: 3, onComplete: function () { node.x = p.x; } });
           });
         }
-        node.add(hit);
+
         // đảo trôi nhẹ trên mặt nước
         self.tweens.add({ targets: node, y: p.y - 5, duration: 1400 + i * 120, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       });
@@ -418,14 +425,19 @@
 
       var hubBtn = this.add.text(24, H - 28, '← Chọn game', {
         fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '800', color: '#93c5fd',
-        backgroundColor: '#1e293b', padding: { x: 10, y: 6 }
-      }).setInteractive({ useHandCursor: true }).setDepth(20);
+        backgroundColor: '#1e293b', padding: { x: 14, y: 10 }
+      }).setInteractive({
+        useHandCursor: true,
+        hitArea: new Phaser.Geom.Rectangle(-8, -8, 148, 44),
+        hitAreaCallback: Phaser.Geom.Rectangle.Contains
+      }).setDepth(35);
       hubBtn.on('pointerup', function () {
         if (global.GameHub && global.GameHub.show) global.GameHub.show();
       });
     },
     shutdown: function () {
       this._mapPickLock = false;
+      this._mapHitZones = null;
     }
   });
 
