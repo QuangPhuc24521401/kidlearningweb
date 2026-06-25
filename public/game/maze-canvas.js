@@ -1,15 +1,21 @@
 /* ═══════════════════════════════════════════════════
-   MAZE-CANVAS.JS — Mê cung 2D (Canvas thuần, sắc nét)
-   Không dùng Phaser → tránh xung đột với platformer
+   MAZE-CANVAS.JS — Mê cung 2D di chuyển mượt + theme
 ═══════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
 
-  var TILE = 36;
   var touch = { left: false, right: false, up: false, down: false };
   var Sfx = {};
   var loopId = null;
   var state = null;
+
+  function tileSize() {
+    return (global.MazeLevels && global.MazeLevels.TILE) || 28;
+  }
+
+  function playerRadius(tile) {
+    return tile * 0.32;
+  }
 
   function $(id) { return document.getElementById(id); }
 
@@ -91,7 +97,6 @@
     }
   }
 
-  /* ── Level select (DOM) ── */
   function showLevelSelect() {
     stopLoop();
     state = { view: 'select' };
@@ -106,7 +111,7 @@
     wrap.innerHTML =
       '<div class="maze-select-head">' +
         '<h2>🧩 Chọn mê cung</h2>' +
-        '<p>Tìm 🚪 lối ra · tránh ⚠️ và 👾 · trả lời đúng để qua</p>' +
+        '<p>Giữ phím/nút để chạy · tránh ⚠️ và 👾 · tìm 🚪 lối ra</p>' +
       '</div>' +
       '<div class="maze-select-grid" id="mazeSelectGrid"></div>' +
       '<button type="button" class="maze-hub-link" id="mazeHubLink">← Chọn game khác</button>';
@@ -144,7 +149,6 @@
     });
   }
 
-  /* ── Play (Canvas) ── */
   function startLevel(levelIndex) {
     stopLoop();
     var levels = (global.MazeLevels && global.MazeLevels.LEVELS) || [];
@@ -160,7 +164,8 @@
     canvas.setAttribute('aria-label', 'Mê cung ' + level.name);
     mount.appendChild(canvas);
 
-    var parsed = global.MazeLevels.parseGrid(level.grid);
+    var tile = tileSize();
+    var parsed = global.MazeLevels.parseGrid(level.grid, tile);
     var questions = global.MazeLevels.buildLevelQuestions(level);
 
     state = {
@@ -168,26 +173,40 @@
       levelIndex: levelIndex,
       level: level,
       parsed: parsed,
+      tile: tile,
       questions: questions,
       qIndex: 0,
       hearts: level.hearts || 3,
       starsGot: 0,
       quizActive: false,
       finished: false,
-      moveLock: false,
       disabledTraps: {},
       disabledMonsters: {},
       timeLeft: level.timeLimit || 0,
-      gridX: parsed.start.x,
-      gridY: parsed.start.y,
+      px: parsed.start.px,
+      py: parsed.start.py,
+      camX: parsed.start.px,
+      camY: parsed.start.py,
+      speed: level.speed || 155,
       monsterData: parsed.monsters.map(function (m) {
-        return { id: m.id, x: m.x, y: m.y };
+        return {
+          id: m.id,
+          px: m.px,
+          py: m.py,
+          tx: m.px,
+          ty: m.py,
+          speed: (level.speed || 155) * 0.55,
+          wait: 0
+        };
       }),
       canvas: canvas,
       ctx: canvas.getContext('2d'),
       lastTick: 0,
-      keys: {}
+      keys: {},
+      themeSeed: level.id * 7919 + 17
     };
+
+    state.monsterData.forEach(function (m) { pickMonsterTarget(m); });
 
     global.__kidMazeActive = true;
     setUiMode('play');
@@ -201,7 +220,7 @@
 
     function onKeyDown(e) {
       state.keys[e.code] = true;
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].indexOf(e.code) >= 0) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].indexOf(e.code) >= 0) {
         e.preventDefault();
       }
     }
@@ -211,17 +230,17 @@
     global.addEventListener('keydown', onKeyDown);
     global.addEventListener('keyup', onKeyUp);
 
-    state._resize = function () { resizeAndDraw(); };
+    state._resize = function () { resizeCanvas(); };
     global.addEventListener('resize', state._resize);
     if (global.visualViewport) {
       global.visualViewport.addEventListener('resize', state._resize);
     }
 
-    resizeAndDraw();
+    resizeCanvas();
     loopId = requestAnimationFrame(gameLoop);
   }
 
-  function resizeAndDraw() {
+  function resizeCanvas() {
     if (!state || state.view !== 'play' || !state.canvas) return;
     var canvas = state.canvas;
     var stage = $('gameStage');
@@ -238,10 +257,189 @@
     state.viewW = w;
     state.viewH = h;
     state.dpr = dpr;
-    drawFrame(0);
   }
 
-  function drawFrame(dt) {
+  function isHeld(code) {
+    return !!(state && state.keys[code]);
+  }
+
+  function readMoveInput() {
+    var rev = !!state.level.reverseControls;
+    var mx = 0;
+    var my = 0;
+    if (isHeld('ArrowLeft') || isHeld('KeyA') || touch.left) mx += rev ? 1 : -1;
+    if (isHeld('ArrowRight') || isHeld('KeyD') || touch.right) mx += rev ? -1 : 1;
+    if (isHeld('ArrowUp') || isHeld('KeyW') || touch.up) my += rev ? 1 : -1;
+    if (isHeld('ArrowDown') || isHeld('KeyS') || touch.down) my += rev ? -1 : 1;
+    return { mx: mx, my: my };
+  }
+
+  function resolveCircleWalls(px, py, radius) {
+    var p = state.parsed;
+    var tile = state.tile;
+    var minGx = Math.floor((px - radius) / tile) - 1;
+    var maxGx = Math.floor((px + radius) / tile) + 1;
+    var minGy = Math.floor((py - radius) / tile) - 1;
+    var maxGy = Math.floor((py + radius) / tile) + 1;
+
+    for (var gy = minGy; gy <= maxGy; gy++) {
+      for (var gx = minGx; gx <= maxGx; gx++) {
+        if (gy < 0 || gx < 0 || gy >= p.rows || gx >= p.cols) continue;
+        if (!p.wallMap[gy][gx]) continue;
+
+        var left = gx * tile;
+        var top = gy * tile;
+        var right = left + tile;
+        var bottom = top + tile;
+        var closestX = Math.max(left, Math.min(px, right));
+        var closestY = Math.max(top, Math.min(py, bottom));
+        var dx = px - closestX;
+        var dy = py - closestY;
+        var distSq = dx * dx + dy * dy;
+
+        if (distSq < radius * radius) {
+          if (distSq < 0.0001) {
+            px += tile * 0.5;
+            continue;
+          }
+          var dist = Math.sqrt(distSq);
+          var push = radius - dist;
+          px += (dx / dist) * push;
+          py += (dy / dist) * push;
+        }
+      }
+    }
+    return { px: px, py: py };
+  }
+
+  function dist(ax, ay, bx, by) {
+    var dx = ax - bx;
+    var dy = ay - by;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function pickMonsterTarget(m) {
+    var p = state.parsed;
+    var dirs = [
+      { dx: 1, dy: 0 }, { dx: -1, dy: 0 },
+      { dx: 0, dy: 1 }, { dx: 0, dy: -1 }
+    ];
+    var shuffled = dirs.slice();
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = t;
+    }
+    var gx = Math.round(m.px / state.tile - 0.5);
+    var gy = Math.round(m.py / state.tile - 0.5);
+    for (var d = 0; d < shuffled.length; d++) {
+      var nx = gx + shuffled[d].dx;
+      var ny = gy + shuffled[d].dy;
+      if (nx < 0 || ny < 0 || nx >= p.cols || ny >= p.rows) continue;
+      if (p.wallMap[ny][nx]) continue;
+      if (nx === p.exit.x && ny === p.exit.y) continue;
+      m.tx = nx * state.tile + state.tile / 2;
+      m.ty = ny * state.tile + state.tile / 2;
+      return;
+    }
+    m.tx = m.px;
+    m.ty = m.py;
+  }
+
+  function updateMonsters(dt) {
+    var sec = dt / 1000;
+    state.monsterData.forEach(function (m) {
+      if (state.disabledMonsters[m.id]) return;
+
+      if (m.wait > 0) {
+        m.wait -= dt;
+        return;
+      }
+
+      var d = dist(m.px, m.py, m.tx, m.ty);
+      if (d < 4) {
+        pickMonsterTarget(m);
+        m.wait = 400 + Math.random() * 600;
+        return;
+      }
+
+      var vx = (m.tx - m.px) / d;
+      var vy = (m.ty - m.py) / d;
+      var step = m.speed * sec;
+      if (step > d) step = d;
+      m.px += vx * step;
+      m.py += vy * step;
+
+      var r = playerRadius(state.tile) * 0.9;
+      var resolved = resolveCircleWalls(m.px, m.py, r);
+      m.px = resolved.px;
+      m.py = resolved.py;
+
+      if (dist(m.px, m.py, state.px, state.py) < state.tile * 0.55) {
+        triggerQuiz('monster', m.id);
+      }
+    });
+  }
+
+  function checkEntityCollisions() {
+    var hitR = state.tile * 0.42;
+
+    if (dist(state.px, state.py, state.parsed.exit.px, state.parsed.exit.py) < hitR) {
+      winLevel();
+      return;
+    }
+
+    state.parsed.traps.forEach(function (t) {
+      if (state.disabledTraps[t.id]) return;
+      if (dist(state.px, state.py, t.px, t.py) < hitR) {
+        triggerQuiz('trap', t.id);
+      }
+    });
+  }
+
+  function updatePlayer(dt) {
+    if (state.quizActive) return;
+
+    var inp = readMoveInput();
+    if (!inp.mx && !inp.my) return;
+
+    var len = Math.sqrt(inp.mx * inp.mx + inp.my * inp.my);
+    var nx = inp.mx / len;
+    var ny = inp.my / len;
+    var step = state.speed * (dt / 1000);
+
+    state.px += nx * step;
+    state.py += ny * step;
+
+    var r = playerRadius(state.tile);
+    var resolved = resolveCircleWalls(state.px, state.py, r);
+    state.px = resolved.px;
+    state.py = resolved.py;
+
+    checkEntityCollisions();
+  }
+
+  function updateCamera(dt) {
+    var p = state.parsed;
+    var tile = state.tile;
+    var mapW = p.cols * tile;
+    var mapH = p.rows * tile;
+    var viewTiles = 13;
+    var scale = Math.min(state.viewW, state.viewH) / (viewTiles * tile);
+    var viewWorldW = state.viewW / scale;
+    var viewWorldH = state.viewH / scale;
+
+    var targetX = state.px - viewWorldW / 2;
+    var targetY = state.py - viewWorldH / 2;
+    targetX = Math.max(0, Math.min(targetX, Math.max(0, mapW - viewWorldW)));
+    targetY = Math.max(0, Math.min(targetY, Math.max(0, mapH - viewWorldH)));
+
+    var lerp = Math.min(1, dt / 120);
+    state.camX += (targetX - state.camX) * lerp;
+    state.camY += (targetY - state.camY) * lerp;
+    state.scale = scale;
+  }
+
+  function drawFrame() {
     var s = state;
     if (!s || s.view !== 'play') return;
     var ctx = s.ctx;
@@ -250,57 +448,41 @@
     ctx.imageSmoothingEnabled = true;
 
     var p = s.parsed;
-    var mapW = p.cols * TILE;
-    var mapH = p.rows * TILE;
-    var scale = Math.min(s.viewW / mapW, s.viewH / mapH) * 0.92;
-    var offX = (s.viewW - mapW * scale) / 2;
-    var offY = (s.viewH - mapH * scale) / 2;
-
-    s.scale = scale;
-    s.offX = offX;
-    s.offY = offY;
+    var tile = s.tile;
+    var mapW = p.cols * tile;
+    var mapH = p.rows * tile;
+    var scale = s.scale || 1;
 
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, s.viewW, s.viewH);
 
     ctx.save();
-    ctx.translate(offX, offY);
     ctx.scale(scale, scale);
+    ctx.translate(-s.camX, -s.camY);
 
-    for (var y = 0; y < p.rows; y++) {
-      for (var x = 0; x < p.cols; x++) {
-        var ch = s.level.grid[y][x];
-        var px = x * TILE;
-        var py = y * TILE;
-        if (ch === '#') {
-          ctx.fillStyle = '#334155';
-          ctx.fillRect(px, py, TILE, TILE);
-          ctx.strokeStyle = '#1e293b';
-          ctx.strokeRect(px + 0.5, py + 0.5, TILE - 1, TILE - 1);
-        } else {
-          ctx.fillStyle = ch === 'E' ? 'rgba(34,197,94,0.35)' : '#1e3a5f';
-          ctx.fillRect(px + 1, py + 1, TILE - 2, TILE - 2);
-        }
-      }
+    if (global.MazeThemes && global.MazeThemes.drawWorld) {
+      global.MazeThemes.drawWorld(ctx, s.level, p, tile, s.themeSeed);
+    } else {
+      ctx.fillStyle = '#1e3a5f';
+      ctx.fillRect(0, 0, mapW, mapH);
     }
 
-    ctx.font = 'bold ' + Math.floor(TILE * 0.55) + 'px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+    ctx.font = 'bold ' + Math.floor(tile * 0.5) + 'px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    ctx.fillText('🚪', p.exit.x * TILE + TILE / 2, p.exit.y * TILE + TILE / 2);
-
     p.traps.forEach(function (t) {
       if (s.disabledTraps[t.id]) return;
-      ctx.fillText('⚠️', t.x * TILE + TILE / 2, t.y * TILE + TILE / 2);
+      ctx.fillText('⚠️', t.px, t.py);
     });
 
     s.monsterData.forEach(function (m) {
       if (s.disabledMonsters[m.id]) return;
-      ctx.fillText('👾', m.x * TILE + TILE / 2, m.y * TILE + TILE / 2);
+      ctx.fillText('👾', m.px, m.py);
     });
 
-    ctx.fillText('🧒', s.gridX * TILE + TILE / 2, s.gridY * TILE + TILE / 2);
+    ctx.font = 'bold ' + Math.floor(tile * 0.58) + 'px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+    ctx.fillText('🧒', s.px, s.py);
 
     ctx.restore();
 
@@ -326,11 +508,11 @@
 
   function gameLoop(ts) {
     if (!state || state.view !== 'play' || state.finished) return;
-    var dt = state.lastTick ? ts - state.lastTick : 0;
+    var dt = state.lastTick ? Math.min(50, ts - state.lastTick) : 16;
     state.lastTick = ts;
 
     if (!state.quizActive) {
-      if (state.timeLeft > 0 && dt > 0) {
+      if (state.timeLeft > 0) {
         state._timeAcc = (state._timeAcc || 0) + dt;
         if (state._timeAcc >= 1000) {
           state._timeAcc -= 1000;
@@ -341,78 +523,20 @@
           }
         }
       }
-      handleInput();
-      updateMonsters();
+      updatePlayer(dt);
+      updateMonsters(dt);
     }
 
-    drawFrame(dt);
+    updateCamera(dt);
+    drawFrame();
     loopId = requestAnimationFrame(gameLoop);
   }
 
-  function handleInput() {
-    if (state.moveLock || state.quizActive) return;
-    var rev = !!state.level.reverseControls;
-    var dx = 0;
-    var dy = 0;
-    var k = state.keys;
-
-    if (edgeKey('ArrowLeft') || edgeKey('KeyA') || edgeTouch('left')) dx = rev ? 1 : -1;
-    else if (edgeKey('ArrowRight') || edgeKey('KeyD') || edgeTouch('right')) dx = rev ? -1 : 1;
-    else if (edgeKey('ArrowUp') || edgeKey('KeyW') || edgeTouch('up')) dy = rev ? 1 : -1;
-    else if (edgeKey('ArrowDown') || edgeKey('KeyS') || edgeTouch('down')) dy = rev ? -1 : 1;
-
-    if (dx || dy) tryMove(dx, dy);
-
-    state._prevKeys = {};
-    Object.keys(k).forEach(function (code) { state._prevKeys[code] = k[code]; });
-    state._prevTouch = { left: touch.left, right: touch.right, up: touch.up, down: touch.down };
-  }
-
-  function edgeKey(code) {
-    return state.keys[code] && !(state._prevKeys && state._prevKeys[code]);
-  }
-
-  function edgeTouch(key) {
-    return touch[key] && !(state._prevTouch && state._prevTouch[key]);
-  }
-
-  function isWall(gx, gy) {
-    var p = state.parsed;
-    if (gx < 0 || gy < 0 || gx >= p.cols || gy >= p.rows) return true;
-    return state.level.grid[gy][gx] === '#';
-  }
-
-  function tryMove(dx, dy) {
-    var ngx = state.gridX + dx;
-    var ngy = state.gridY + dy;
-    if (isWall(ngx, ngy)) return;
-
-    state.gridX = ngx;
-    state.gridY = ngy;
-    state.moveLock = true;
-    global.setTimeout(function () {
-      state.moveLock = false;
-      afterMove();
-    }, 80);
-  }
-
-  function afterMove() {
-    if (state.gridX === state.parsed.exit.x && state.gridY === state.parsed.exit.y) {
-      winLevel();
-      return;
-    }
-    var trap = state.parsed.traps.find(function (t) {
-      return t.x === state.gridX && t.y === state.gridY && !state.disabledTraps[t.id];
-    });
-    if (trap) { triggerQuiz('trap', trap.id); return; }
-    var mon = state.monsterData.find(function (m) {
-      return m.x === state.gridX && m.y === state.gridY && !state.disabledMonsters[m.id];
-    });
-    if (mon) triggerQuiz('monster', mon.id);
-  }
-
   function triggerQuiz(type, entityId) {
-    if (state.quizActive) return;
+    if (state.quizActive || state.finished) return;
+    if (type === 'trap' && state.disabledTraps[entityId]) return;
+    if (type === 'monster' && state.disabledMonsters[entityId]) return;
+
     var q = state.questions[state.qIndex % state.questions.length];
     if (!q) return;
     state.quizActive = true;
@@ -432,24 +556,6 @@
           return false;
         }
         return true;
-      }
-    });
-  }
-
-  function updateMonsters() {
-    if (Math.random() > 0.03) return;
-    var dirs = [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 }];
-    state.monsterData.forEach(function (m) {
-      if (state.disabledMonsters[m.id]) return;
-      var d = dirs[Math.floor(Math.random() * dirs.length)];
-      var nx = m.x + d.dx;
-      var ny = m.y + d.dy;
-      if (!isWall(nx, ny) && !(nx === state.parsed.exit.x && ny === state.parsed.exit.y)) {
-        m.x = nx;
-        m.y = ny;
-        if (m.x === state.gridX && m.y === state.gridY) {
-          triggerQuiz('monster', m.id);
-        }
       }
     });
   }
@@ -522,6 +628,7 @@
       global.removeEventListener('resize', state._resize);
       if (global.visualViewport) global.visualViewport.removeEventListener('resize', state._resize);
     }
+    if (global.GameInput) global.GameInput.resetTouchState(touch);
   }
 
   function shutdown() {
