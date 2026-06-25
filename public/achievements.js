@@ -33,7 +33,10 @@
     { id: "streak_3",       icon: "🔥", title: "Lửa học tập",    desc: "Học 3 ngày liên tiếp" },
     { id: "streak_7",       icon: "🌈", title: "Tuần vàng",      desc: "Học 7 ngày liên tiếp" },
     { id: "arena_champion", icon: "🏟️", title: "Bá chủ sàn đấu", desc: "Thắng một phiên đấu trường trực tuyến" },
-    { id: "arena_legend",   icon: "👑", title: "Huyền thoại sàn", desc: "Thắng đấu trường 5 lần" }
+    { id: "arena_legend",   icon: "👑", title: "Huyền thoại sàn", desc: "Thắng đấu trường 5 lần" },
+    { id: "maze_first",     icon: "🧩", title: "Thoát mê cung",   desc: "Hoàn thành mê cung màn đầu tiên" },
+    { id: "maze_master",    icon: "🗺️", title: "Bậc thầy mê cung", desc: "Hoàn thành tất cả màn mê cung" },
+    { id: "game_runner",    icon: "🍄", title: "Phiêu lưu gia",   desc: "Hoàn thành màn platformer đầu tiên" }
   ];
 
   function _pad2(n){ return (n < 10 ? "0" : "") + n; }
@@ -105,7 +108,26 @@
         total += entry.totalStars;
       }
     });
+    ['game', 'game_maze'].forEach(function(sub){
+      var entry = progress[sub];
+      if(!entry || !entry.topics) return;
+      Object.values(entry.topics).forEach(function(t){
+        total += (t.totalStars || 0);
+      });
+    });
     return total;
+  }
+
+  function gameCompletedCount(progress, subjectKey){
+    var entry = progress[subjectKey];
+    if(!entry || !entry.topics) return 0;
+    return Object.values(entry.topics).filter(function(t){
+      return (t.completedRuns || 0) >= 1;
+    }).length;
+  }
+
+  function mazeLevelCount(){
+    return (window.MazeLevels && window.MazeLevels.LEVELS) ? window.MazeLevels.LEVELS.length : 6;
   }
 
   function subjectsDoneCount(progress){
@@ -134,6 +156,9 @@
       case "stars_150": return stars >= 150;
       case "streak_3":  return (achState.streak || 0) >= 3;
       case "streak_7":  return (achState.streak || 0) >= 7;
+      case "maze_first": return gameCompletedCount(progress, "game_maze") >= 1;
+      case "maze_master": return gameCompletedCount(progress, "game_maze") >= mazeLevelCount();
+      case "game_runner": return gameCompletedCount(progress, "game") >= 1;
       default: return false;
     }
   }
@@ -303,12 +328,20 @@
     return { wins: n, honor: honor };
   }
 
+  function syncAchievementsAfterGameSave(){
+    var progress = readProgress();
+    recordStudyDay();
+    unlockEligibleBadges(progress, { silent: false });
+    flushAchievementsToCloud();
+  }
+
   window.readAchievements = readAchievements;
   window.recordStudyDay = recordStudyDay;
   window.renderAchievementsPanel = renderAchievementsPanel;
   window.mergeAchievementsFromCloud = mergeAchievementsFromCloud;
   window.flushAchievementsToCloud = flushAchievementsToCloud;
   window.syncAchievementsAfterLessonSave = syncAchievementsAfterLessonSave;
+  window.syncAchievementsAfterGameSave = syncAchievementsAfterGameSave;
   window.recomputeAchievementsAfterCloudMerge = recomputeAchievementsAfterCloudMerge;
   window.resetAchievementStorage = resetAchievementStorage;
   window.recordArenaWin = recordArenaWin;

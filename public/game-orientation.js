@@ -57,6 +57,11 @@
     global.setTimeout(refreshPhaser, 80);
     global.setTimeout(refreshPhaser, 280);
     global.setTimeout(refreshPhaser, 600);
+    global.setTimeout(function () {
+      if (global.KidGameControls && global.KidGameControls.syncActiveScene) {
+        global.KidGameControls.syncActiveScene();
+      }
+    }, 100);
   }
 
   function updateVirtClass() {
@@ -67,6 +72,7 @@
 
   function enableLandscapeMode() {
     if (!isMobileGame()) return;
+    if (document.body.classList.contains('game-hub-visible')) return;
     document.body.classList.add('game-force-landscape');
     updateVirtClass();
     try { sessionStorage.setItem(STORAGE_KEY, '1'); } catch (e) { /* ignore */ }
@@ -111,7 +117,10 @@
       if (sessionStorage.getItem(STORAGE_KEY) === '1') shouldEnter = true;
     } catch (e) { /* ignore */ }
 
-    if (shouldEnter) {
+    var urlPlay = null;
+    try { urlPlay = new URLSearchParams(global.location.search).get('play'); } catch (e) {}
+
+    if (shouldEnter && urlPlay) {
       enableLandscapeMode();
       var stage = document.querySelector('.game-stage');
       if (stage) {

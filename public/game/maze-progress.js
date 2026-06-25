@@ -1,26 +1,15 @@
 /* ═══════════════════════════════════════════════════
-   GAME-PROGRESS.JS — Lưu tiến độ game & mở khoá màn
-
-   Dùng chung kho learning_progress với bài học (KidProgressSync).
-   Namespace môn: 'game'. Mỗi màn là 1 "topic": "Màn {id}".
-
-   learning_progress['game'].topics['Màn 1'] = {
-     total, bestRun, completedRuns, totalStars, lastSessionAt
-   }
-
-   Export: window.GameProgress = {
-     getLevelProgress, isLevelUnlocked, highestUnlocked, saveLevelResult
-   }
+   MAZE-PROGRESS.JS — Tiến độ game mê cung (namespace game_maze)
 ═══════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
 
-  var SUBJECT_KEY = 'game';
+  var SUBJECT_KEY = 'game_maze';
 
-  function topicKey(levelId) { return 'Màn ' + levelId; }
+  function topicKey(levelId) { return 'Mê cung ' + levelId; }
 
   function levelsList() {
-    return (global.GameLevels && global.GameLevels.LEVELS) || [];
+    return (global.MazeLevels && global.MazeLevels.LEVELS) || [];
   }
 
   function levelIndexById(levelId) {
@@ -46,7 +35,6 @@
     return t || { total: 0, bestRun: 0, completedRuns: 0, totalStars: 0, lastSessionAt: 0 };
   }
 
-  /* Màn đầu luôn mở; màn kế mở khi màn trước đã hoàn thành ít nhất 1 lần. */
   function isLevelUnlocked(levelId) {
     var levels = levelsList();
     var idx = levelIndexById(levelId);
@@ -66,11 +54,6 @@
     return top;
   }
 
-  /**
-   * Lưu kết quả 1 lượt chơi.
-   * @param {object} level  - object màn từ GameLevels.LEVELS
-   * @param {object} opts   - { stars, finished, total }
-   */
   function saveLevelResult(level, opts) {
     opts = opts || {};
     var all = readAll();
@@ -88,14 +71,13 @@
     if (stars > 0) entry.totalStars = (entry.totalStars || 0) + stars;
     if (opts.finished) {
       entry.completedRuns = (entry.completedRuns || 0) + 1;
-      entry.bestRun = Math.max(entry.bestRun, total);
+      entry.bestRun = Math.max(entry.bestRun, stars);
     }
 
     subj.topics[key] = entry;
     all[SUBJECT_KEY] = subj;
     writeAll(all);
 
-    // Đồng bộ Firestore (cùng pattern lesson.js saveProgress)
     try {
       if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
         var user = firebase.auth && firebase.auth().currentUser;
@@ -105,22 +87,22 @@
           } else {
             firebase.firestore().collection('learning_progress').doc(user.uid)
               .set({ progress: all, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
-              .catch(function (err) { console.warn('[game-progress] firestore', err); });
+              .catch(function (err) { console.warn('[maze-progress]', err); });
           }
         }
       }
-    } catch (e) { console.warn('[game-progress] save', e); }
+    } catch (e) { console.warn('[maze-progress] save', e); }
 
     try {
       if (opts.finished && typeof global.syncAchievementsAfterGameSave === 'function') {
-        global.syncAchievementsAfterGameSave('platformer');
+        global.syncAchievementsAfterGameSave('maze');
       }
     } catch (e) {}
 
     return entry;
   }
 
-  global.GameProgress = {
+  global.MazeProgress = {
     SUBJECT_KEY: SUBJECT_KEY,
     getLevelProgress: getLevelProgress,
     isLevelUnlocked: isLevelUnlocked,

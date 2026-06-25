@@ -47,89 +47,17 @@
     try { if (global.speechSynthesis) global.speechSynthesis.cancel(); } catch (e) {}
   }
 
-  /* ════════════════ Overlay câu hỏi (DOM) ════════════════ */
-  var GameUI = {
-    el: null, meta: null, q: null, ans: null, fb: null, busy: false,
-    init: function () {
-      this.el = document.getElementById('gameQuiz');
-      this.meta = document.getElementById('gameQuizMeta');
-      this.q = document.getElementById('gameQuizQuestion');
-      this.ans = document.getElementById('gameQuizAnswers');
-      this.fb = document.getElementById('gameQuizFeedback');
-    },
-    /** handlers = { onCorrect(), onWrong() -> aliveBool } */
-    show: function (question, handlers) {
-      if (!this.el) this.init();
-      var self = this;
-      this.busy = false;
-      this.meta.textContent = question.topic || 'Câu hỏi';
-      this.q.textContent = question.question || '';
-      this.fb.textContent = '';
-      this.fb.className = 'game-quiz-feedback';
-      this.ans.innerHTML = '';
-
-      question.options.forEach(function (opt) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'game-quiz-ans';
-        b.textContent = opt;
-        b.addEventListener('click', function () { self._choose(b, opt, question, handlers); });
-        self.ans.appendChild(b);
-      });
-
-      this.el.hidden = false;
-      safeSpeak(question.voiceText || question.question);
-    },
-    _buttons: function () { return Array.prototype.slice.call(this.ans.querySelectorAll('.game-quiz-ans')); },
-    _choose: function (btn, opt, question, handlers) {
-      if (this.busy) return;
-      this.busy = true;
-      var self = this;
-      var buttons = this._buttons();
-      buttons.forEach(function (b) { b.disabled = true; });
-
-      if (opt === question.correct) {
-        btn.classList.add('is-correct');
-        this.fb.textContent = 'Đúng rồi! 🎉';
-        this.fb.className = 'game-quiz-feedback ok';
-        if (Sfx.correct) Sfx.correct();
-        stopSpeak();
-        setTimeout(function () {
-          self.hide();
-          if (handlers.onCorrect) handlers.onCorrect();
-        }, 850);
-      } else {
-        btn.classList.add('is-wrong');
-        this.fb.textContent = 'Chưa đúng, thử lại nhé!';
-        this.fb.className = 'game-quiz-feedback no';
-        if (Sfx.wrong) Sfx.wrong();
-        stopSpeak();
-        var alive = handlers.onWrong ? handlers.onWrong() : true;
-        if (!alive) {
-          setTimeout(function () { self.hide(); }, 700);
-        } else {
-          setTimeout(function () {
-            self.busy = false;
-            buttons.forEach(function (b) { b.disabled = false; b.classList.remove('is-wrong', 'is-correct'); });
-            self.fb.textContent = '';
-            self.fb.className = 'game-quiz-feedback';
-          }, 850);
-        }
-      }
-    },
-    hide: function () {
-      if (this.el) this.el.hidden = true;
-      if (this.ans) this.ans.innerHTML = '';
-      this.busy = false;
-    }
-  };
+  /* ════════════════ Overlay câu hỏi (DOM — game-quiz-ui.js) ════════════════ */
+  function quizUI() { return global.GameQuizUI; }
 
   /* ════════════════ Nút cảm ứng (chỉ hiện khi đang chơi Play) ════════════════ */
   function isTouchDevice() {
     return ('ontouchstart' in global) || (navigator.maxTouchPoints > 0);
   }
 
-  function shouldShowTouchPad() {
+  function shouldShowTouchPad(mode) {
+    if (mode !== 'play') return false;
+    if (document.body.classList.contains('game-force-landscape')) return true;
     if (isTouchDevice()) return true;
     try {
       if (global.matchMedia('(pointer: coarse)').matches) return true;
@@ -152,22 +80,45 @@
     var replay = document.getElementById('btnReplay');
     var mapBtn = document.getElementById('btnMap');
     var ctrls = document.getElementById('gameControls');
+    var card = document.getElementById('gameCard');
 
     if (mode !== 'play') resetTouchState();
 
+    if (card) card.setAttribute('data-game-ui', mode);
+
     if (pad) {
-      var showPad = mode === 'play' && shouldShowTouchPad();
+      var showPad = shouldShowTouchPad(mode);
       pad.classList.toggle('is-play-active', showPad);
-      if (showPad) {
-        pad.removeAttribute('hidden');
-      } else {
-        pad.setAttribute('hidden', '');
-      }
+      pad.setAttribute('aria-hidden', showPad ? 'false' : 'true');
     }
     if (replay) replay.hidden = mode !== 'play';
     if (mapBtn) mapBtn.hidden = mode !== 'play';
     if (ctrls) ctrls.classList.toggle('is-map-mode', mode === 'map' || mode === 'result');
   }
+
+  function hookSceneControls(g) {
+    var modes = { Play: 'play', LevelSelect: 'map', Result: 'result', Boot: 'boot' };
+    Object.keys(modes).forEach(function (key) {
+      var sc = g.scene.get(key);
+      if (!sc || !sc.events) return;
+      sc.events.on(Phaser.Scenes.Events.START, function () {
+        setControlsMode(modes[key]);
+      });
+    });
+  }
+
+  function syncControlsFromActiveScene() {
+    var g = global.__kidGame;
+    if (!g || !g.scene) return;
+    if (g.scene.isActive('Play')) setControlsMode('play');
+    else if (g.scene.isActive('LevelSelect')) setControlsMode('map');
+    else if (g.scene.isActive('Result')) setControlsMode('result');
+  }
+
+  global.KidGameControls = {
+    setMode: setControlsMode,
+    syncActiveScene: syncControlsFromActiveScene
+  };
 
   function wireTouchControls() {
     var pad = document.getElementById('gameTouch');
@@ -199,7 +150,7 @@
   }
   function gotoScene(key, data) {
     var g = global.__kidGame; if (!g) return;
-    stopSpeak(); GameUI.hide();
+    stopSpeak(); if (quizUI()) quizUI().hide();
     var modeMap = { Play: 'play', LevelSelect: 'map', Result: 'result' };
     setControlsMode(modeMap[key] || 'boot');
     ['Play', 'Result', 'LevelSelect'].forEach(function (k) {
@@ -224,14 +175,18 @@
     }
     if (replay) {
       replay.addEventListener('click', function () {
-        var g = global.__kidGame; if (!g) return;
+        if (!global.__kidGame) return;
+        var g = global.__kidGame;
         var ps = g.scene.getScene('Play');
         var idx = ps && typeof ps.levelIndex === 'number' ? ps.levelIndex : 0;
         gotoScene('Play', { levelIndex: idx });
       });
     }
     if (map) {
-      map.addEventListener('click', function () { gotoScene('LevelSelect'); });
+      map.addEventListener('click', function () {
+        if (!global.__kidGame) return;
+        gotoScene('LevelSelect');
+      });
     }
   }
 
@@ -422,6 +377,14 @@
       }).setOrigin(0.5).setDepth(9);
 
       sharpenTexts(this);
+
+      var hubBtn = this.add.text(24, H - 28, '← Chọn game', {
+        fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '800', color: '#93c5fd',
+        backgroundColor: '#1e293b', padding: { x: 10, y: 6 }
+      }).setInteractive({ useHandCursor: true }).setDepth(20);
+      hubBtn.on('pointerup', function () {
+        if (global.GameHub && global.GameHub.show) global.GameHub.show();
+      });
     },
     shutdown: function () {
       this._mapPickLock = false;
@@ -474,6 +437,7 @@
     },
 
     create: function () {
+      this._controlsReady = false;
       setControlsMode('play');
       if (this.hiddenRoom) { this.buildHiddenRoom(); return; }
       var self = this;
@@ -896,7 +860,7 @@
       this.cameras.main.ignore(this.hudObjects);
       sharpenTexts(this);
 
-      GameUI.hide();
+      if (quizUI()) quizUI().hide();
     },
 
     buildHud: function () {
@@ -1039,7 +1003,7 @@
       this.hudCam.ignore(worldObjects);
       this.cameras.main.ignore(this.hudObjects);
       sharpenTexts(this);
-      GameUI.hide();
+      if (quizUI()) quizUI().hide();
     },
 
     collectCoin: function (player, coin) {
@@ -1178,7 +1142,7 @@
       if (this.finished) return;
       this.finished = true;
       stopSpeak();
-      GameUI.hide();
+      if (quizUI()) quizUI().hide();
       if (Sfx.lose) Sfx.lose();
       var self = this;
       this.time.delayedCall(400, function () {
@@ -1217,7 +1181,7 @@
       this.player.setVelocityX(0);
       this.scene.pause();
       var self = this;
-      GameUI.show(gate.questionData, {
+      if (quizUI()) quizUI().show(gate.questionData, {
         onCorrect: function () {
           self.quizActive = false;
           self.scene.resume();
@@ -1257,6 +1221,10 @@
     },
 
     update: function () {
+      if (!this._controlsReady) {
+        this._controlsReady = true;
+        setControlsMode('play');
+      }
       // lớp nền xa trôi nhẹ cho sinh động (chạy cả khi đang mở câu hỏi)
       if (this._bgDrift) {
         for (var di = 0; di < this._bgDrift.length; di++) {
@@ -1420,7 +1388,11 @@
   function boot() {
     var mount = document.getElementById('gameMount');
     if (!mount) { console.error('[game-core] thiếu #gameMount'); return; }
-    GameUI.init();
+    if (global.__kidGame) {
+      try { global.__kidGame.destroy(true); } catch (e) {}
+      global.__kidGame = null;
+    }
+    if (quizUI()) quizUI().init();
     wireTouchControls();
     wireGameControls();
 
@@ -1439,11 +1411,7 @@
 
     function startPhaser() {
       global.__kidGame = new Phaser.Game(config);
-      var modeFromScene = { Play: 'play', LevelSelect: 'map', Result: 'result', Boot: 'boot' };
-      global.__kidGame.events.on(Phaser.Scenes.Events.CREATE, function (scene) {
-        var key = scene.sys.settings.key;
-        if (modeFromScene[key]) setControlsMode(modeFromScene[key]);
-      });
+      hookSceneControls(global.__kidGame);
       if (global.KidGameOrientation && global.KidGameOrientation.refresh) {
         global.KidGameOrientation.refresh();
       }
@@ -1460,9 +1428,5 @@
     chain.finally(startPhaser);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
+  global.GamePlatformer = { boot: boot };
 })(window);

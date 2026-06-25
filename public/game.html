@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#1e293b">
-<title>Cuộc phiêu lưu học tập · Kid Learning</title>
+<title>Trò chơi học tập · Kid Learning</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
-<link rel="stylesheet" href="game.css?v=20260622c">
+<link rel="stylesheet" href="game.css?v=20260623">
 <link rel="stylesheet" href="spa.css">
 <script>
   (function(){
@@ -102,10 +102,36 @@
 <main id="page-root" data-page="game">
   <div class="game-landscape-viewport">
     <div class="game-landscape-inner">
+
+      <!-- Hub chọn game -->
+      <section id="gameHub" class="game-hub" aria-label="Chọn trò chơi">
+        <header class="game-hub-head">
+          <a href="index.html" id="gameHubBack" class="game-hub-back">← Trang chủ</a>
+          <h1 class="game-hub-title">🎮 Chọn trò chơi</h1>
+          <p class="game-hub-sub">Học mà chơi — mỗi game đều có câu hỏi và phần thưởng riêng!</p>
+        </header>
+        <div class="game-hub-grid">
+          <button type="button" class="game-hub-card" data-game-pick="platformer">
+            <span class="game-hub-card-icon">🍄</span>
+            <strong class="game-hub-card-name">Phiêu lưu Platformer</strong>
+            <span class="game-hub-card-desc">Nhảy qua chướng ngại, giẫm quái, mở cổng bằng câu hỏi</span>
+            <span class="game-hub-card-tag">Mario học tập</span>
+          </button>
+          <button type="button" class="game-hub-card game-hub-card--maze" data-game-pick="maze">
+            <span class="game-hub-card-icon">🧩</span>
+            <strong class="game-hub-card-name">Mê cung 2D</strong>
+            <span class="game-hub-card-desc">Tìm lối ra · tránh bẫy &amp; quái · giới hạn thời gian</span>
+            <span class="game-hub-card-tag">6 màn · khó dần</span>
+          </button>
+        </div>
+      </section>
+
+      <div id="gamePlayArea" hidden>
       <a href="index.html" class="game-exit-btn" id="gameExitBtn" aria-label="Về trang chủ" title="Về trang chủ">🏠</a>
+      <button type="button" class="game-switch-btn" id="gameSwitchBtn" title="Đổi game">🎮</button>
       <p class="game-rotate-hint" aria-hidden="true">📱 Xoay ngang để chơi full màn — đang tự chuyển…</p>
       <div class="game-wrap">
-        <div class="game-card">
+        <div class="game-card" id="gameCard" data-game-ui="boot">
       <div id="gameStage" class="game-stage">
         <div id="gameMount" class="game-mount"></div>
 
@@ -125,23 +151,24 @@
             <p id="gameQuizFeedback" class="game-quiz-feedback" aria-live="polite"></p>
           </div>
         </div>
+      </div>
 
-        <!-- Nút điều khiển cảm ứng (mobile) -->
-        <div id="gameTouch" class="game-touch">
-          <div class="game-touch-left">
-            <button type="button" class="game-tbtn" data-key="left" aria-label="Trái">◀</button>
-            <button type="button" class="game-tbtn" data-key="right" aria-label="Phải">▶</button>
-            <button type="button" class="game-tbtn" data-key="down" aria-label="Xuống / Cống">▼</button>
-          </div>
-          <div class="game-touch-right">
-            <button type="button" class="game-tbtn game-tbtn-jump" data-key="jump" aria-label="Nhảy">⤴</button>
-          </div>
+      <!-- Nút cảm ứng mobile — nằm ngoài .game-stage để không bị overflow che -->
+      <div id="gameTouch" class="game-touch" aria-label="Điều khiển cảm ứng">
+        <div class="game-touch-left">
+          <button type="button" class="game-tbtn" data-key="left" aria-label="Trái">◀</button>
+          <button type="button" class="game-tbtn" data-key="right" aria-label="Phải">▶</button>
+          <button type="button" class="game-tbtn" data-key="down" aria-label="Xuống / Cống">▼</button>
+        </div>
+        <div class="game-touch-right">
+          <button type="button" class="game-tbtn game-tbtn-jump" data-key="jump" aria-label="Nhảy">⤴</button>
         </div>
       </div>
 
-      <p class="game-hint">Mẹo: <b>← →</b> đi, <b>Space/↑</b> nhảy, <b>↓</b> trên ống xanh nhạt để vào màn bí mật (không phải ống nào cũng chui được). Giẫm quái, ăn 🍄/⭐, trả lời đúng mở cổng!</p>
+      <p class="game-hint" id="gameHintText">Mẹo: <b>← →</b> đi, <b>Space/↑</b> nhảy, <b>↓</b> trên ống xanh nhạt để vào màn bí mật (không phải ống nào cũng chui được). Giẫm quái, ăn 🍄/⭐, trả lời đúng mở cổng!</p>
         </div>
       </div>
+      </div><!-- #gamePlayArea -->
     </div>
   </div>
 </main>
@@ -152,11 +179,17 @@
 <script src="lessons/data/lessons-data.js"></script>
 <script src="teacher-games.js"></script>
 <script src="achievements.js"></script>
+<script src="social-sync.js"></script>
+<script src="game/game-quiz-ui.js"></script>
 <script src="game/game-progress.js"></script>
 <script src="game/game-levels.js"></script>
+<script src="game/maze-levels.js"></script>
+<script src="game/maze-progress.js"></script>
 <script src="game/game-assets.js"></script>
 <script src="game-orientation.js?v=20260622"></script>
 <script src="game/game-core.js"></script>
+<script src="game/maze-core.js"></script>
+<script src="game-hub.js?v=20260623"></script>
 <script>
   (function deepRoleGuard(){
     if(localStorage.getItem('userRole')) return;
