@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 48">
-  <ellipse cx="28" cy="40" rx="22" ry="6" fill="#B3E5FC" opacity="0.55"/>
-  <path d="M12 36 L18 18 L32 14 L44 28 L38 38 Z" fill="#78909C"/>
-  <path d="M18 22 L26 18 L34 24 L28 34 Z" fill="#90A4AE"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 56">
+  <ellipse cx="32" cy="48" rx="24" ry="6" fill="#0EA5E9" opacity="0.28"/>
+  <path d="M14 40 L22 18 L38 14 L50 30 L44 44 Z" fill="#94A3B8" stroke="#475569" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M22 24 L30 20 L38 28 L32 38 Z" fill="#CBD5E1" stroke="#64748B" stroke-width="2"/>
+  <ellipse cx="28" cy="22" rx="5" ry="3" fill="#fff" opacity="0.45"/>
 </svg>

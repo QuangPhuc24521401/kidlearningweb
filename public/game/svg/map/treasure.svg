@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110">
-  <ellipse cx="55" cy="88" rx="46" ry="14" fill="#E8B84A"/>
-  <ellipse cx="55" cy="82" rx="40" ry="12" fill="#FFD54F"/>
-  <ellipse cx="55" cy="78" rx="34" ry="9" fill="#B3E5FC" opacity="0.65"/>
-  <rect x="22" y="78" width="8" height="18" rx="2" fill="#5D4037"/>
-  <ellipse cx="26" cy="72" rx="14" ry="10" fill="#2E7D32"/>
-  <ellipse cx="26" cy="66" rx="10" ry="8" fill="#43A047"/>
-  <rect x="30" y="48" width="50" height="34" rx="6" fill="#B8860B" stroke="#5D4037" stroke-width="2"/>
-  <rect x="34" y="52" width="42" height="26" rx="4" fill="#FFC23C"/>
-  <path d="M30 48 Q55 28 80 48" fill="none" stroke="#9E9E9E" stroke-width="6"/>
-  <circle cx="44" cy="62" r="5" fill="#FFD54F"/>
-  <circle cx="55" cy="58" r="5" fill="#FFD54F"/>
-  <circle cx="66" cy="62" r="5" fill="#FFD54F"/>
-  <circle cx="50" cy="68" r="4" fill="#FFE082"/>
-  <circle cx="60" cy="68" r="4" fill="#FFE082"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130">
+  <ellipse cx="65" cy="112" rx="52" ry="10" fill="#0EA5E9" opacity="0.3"/>
+  <path d="M16 92 Q65 72 114 92 Q106 108 65 114 Q24 108 16 92" fill="#FBBF24" stroke="#B45309" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M22 94 Q65 80 108 94" fill="none" stroke="#E0F2FE" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="42" cy="92" rx="14" ry="5" fill="#FDE68A" opacity="0.65"/>
+  <rect x="24" y="78" width="10" height="18" rx="2" fill="#92400E" stroke="#5C2E0A" stroke-width="2"/>
+  <circle cx="29" cy="68" r="12" fill="#4ADE80" stroke="#15803D" stroke-width="3"/>
+  <circle cx="29" cy="64" r="7" fill="#86EFAC"/>
+  <rect x="52" y="48" width="56" height="40" rx="8" fill="#D97706" stroke="#92400E" stroke-width="3.5"/>
+  <rect x="58" y="54" width="44" height="28" rx="6" fill="#FCD34D" stroke="#B45309" stroke-width="2.5"/>
+  <path d="M48 48 Q65 24 82 48" fill="none" stroke="#9CA3AF" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="62" cy="66" r="6" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+  <circle cx="78" cy="62" r="6" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+  <circle cx="70" cy="72" r="5" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
+  <circle cx="58" cy="72" r="4" fill="#FDE68A"/>
 </svg>

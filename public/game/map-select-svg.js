@@ -5,7 +5,7 @@
   'use strict';
 
   var BASE = 'game/svg/map/';
-  var SS = 2;
+  var SS = 3;
   var THEMES = ['grass', 'jungle', 'valley', 'desert', 'cave', 'inferno', 'city', 'heaven'];
 
   function fetchSvg(file) {
@@ -51,14 +51,14 @@
   function loadMapAssets(scene, done) {
     var jobs = [
       loadOne(scene, 'map_ocean', 'ocean', 960, 540),
-      loadOne(scene, 'map_ship', 'pirate-ship', 120, 120),
-      loadOne(scene, 'map_treasure', 'treasure', 110, 110),
-      loadOne(scene, 'map_monster', 'sea-monster', 140, 90),
-      loadOne(scene, 'map_bottle', 'bottle', 48, 48),
-      loadOne(scene, 'map_rock', 'rock', 56, 48)
+      loadOne(scene, 'map_ship', 'pirate-ship', 140, 140),
+      loadOne(scene, 'map_treasure', 'treasure', 130, 130),
+      loadOne(scene, 'map_monster', 'sea-monster', 160, 100),
+      loadOne(scene, 'map_bottle', 'bottle', 52, 52),
+      loadOne(scene, 'map_rock', 'rock', 64, 56)
     ];
     THEMES.forEach(function (t) {
-      jobs.push(loadOne(scene, 'map_island_' + t, 'island-' + t, 120, 120));
+      jobs.push(loadOne(scene, 'map_island_' + t, 'island-' + t, 130, 130));
     });
     Promise.all(jobs).then(function () { done(); }).catch(function (e) {
       console.warn('[map-select-svg]', e);

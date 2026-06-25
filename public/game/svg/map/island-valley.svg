@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-  <ellipse cx="60" cy="98" rx="50" ry="14" fill="#E8B84A"/>
-  <ellipse cx="60" cy="92" rx="44" ry="12" fill="#FFD54F"/>
-  <ellipse cx="60" cy="88" rx="38" ry="8" fill="#B3E5FC" opacity="0.7"/>
-  <polygon points="34,88 60,36 86,88" fill="#5E35B1"/>
-  <polygon points="48,72 60,52 72,72" fill="#fff" opacity="0.85"/>
-  <circle cx="42" cy="76" r="5" fill="#FBBF24"/>
-  <circle cx="78" cy="72" r="4" fill="#E879F9"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130">
+  <ellipse cx="65" cy="112" rx="52" ry="10" fill="#0EA5E9" opacity="0.32"/>
+  <path d="M16 92 Q65 72 114 92 Q106 108 65 114 Q24 108 16 92" fill="#FBBF24" stroke="#B45309" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M22 94 Q65 80 108 94" fill="none" stroke="#E0F2FE" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="36,92 65,34 94,92" fill="#7C3AED" stroke="#4C1D95" stroke-width="3.5" stroke-linejoin="round"/>
+  <polygon points="52,74 65,52 78,74" fill="#fff" stroke="#C4B5FD" stroke-width="2.5" opacity="0.95"/>
+  <circle cx="44" cy="78" r="7" fill="#FBBF24" stroke="#D97706" stroke-width="2"/>
+  <text x="82" y="62" font-size="14" fill="#F472B6" font-weight="bold">♪</text>
+  <text x="38" y="58" font-size="12" fill="#A78BFA" font-weight="bold">♫</text>
 </svg>

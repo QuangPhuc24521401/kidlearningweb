@@ -790,11 +790,11 @@
   var MAP_TREASURE = { x: 138, y: 468 };
   var MAP_SHIP = { x: 78, y: 348 };
   var MAP_DECOR = [
-    { key: 'map_rock', x: 820, y: 468, w: 48, h: 40, depth: 2, alpha: 0.9 },
-    { key: 'map_rock', x: 340, y: 468, w: 40, h: 34, depth: 2, alpha: 0.85 },
-    { key: 'map_rock', x: 620, y: 178, w: 44, h: 36, depth: 2, alpha: 0.8 },
-    { key: 'map_bottle', x: 378, y: 368, w: 40, h: 40, depth: 2, alpha: 0.95 },
-    { key: 'map_monster', x: 520, y: 478, w: 120, h: 76, depth: 2, alpha: 0.92 }
+    { key: 'map_rock', x: 820, y: 468, w: 52, h: 46, depth: 2, alpha: 0.95 },
+    { key: 'map_rock', x: 340, y: 468, w: 44, h: 38, depth: 2, alpha: 0.9 },
+    { key: 'map_rock', x: 620, y: 178, w: 48, h: 42, depth: 2, alpha: 0.88 },
+    { key: 'map_bottle', x: 378, y: 368, w: 44, h: 44, depth: 2, alpha: 1 },
+    { key: 'map_monster', x: 520, y: 478, w: 130, h: 82, depth: 2, alpha: 1 }
   ];
 
   function drawMapOcean(g, W, H) {

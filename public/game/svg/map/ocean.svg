@@ -1,31 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
   <defs>
-    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#46A2E9"/>
-      <stop offset="100%" stop-color="#1E88E5"/>
+    <linearGradient id="skySea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7DD3FC"/>
+      <stop offset="45%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
     </linearGradient>
+    <radialGradient id="sunGlow" cx="88%" cy="8%" r="28%">
+      <stop offset="0%" stop-color="#FEF08A" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#FEF08A" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="960" height="540" fill="url(#sea)"/>
-  <g fill="#fff" opacity="0.22">
-    <path d="M40 120 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M120 200 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M200 80 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M300 160 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M400 100 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M500 220 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M600 140 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M700 90 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M800 180 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M880 260 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M60 340 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M160 420 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M280 380 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M380 460 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M520 400 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M640 480 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M760 420 l8 6 l-8 6 l8 6 l-8 6"/>
-    <path d="M860 360 l8 6 l-8 6 l8 6 l-8 6"/>
+  <rect width="960" height="540" fill="url(#skySea)"/>
+  <rect width="960" height="540" fill="url(#sunGlow)"/>
+  <circle cx="860" cy="52" r="34" fill="#FDE047" stroke="#CA8A04" stroke-width="4"/>
+  <circle cx="852" cy="46" r="8" fill="#FEF9C3" opacity="0.8"/>
+  <g fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.45">
+    <path d="M0 420 Q40 410 80 420 T160 420 T240 420"/>
+    <path d="M200 360 Q240 350 280 360 T360 360 T440 360"/>
+    <path d="M420 480 Q460 470 500 480 T580 480 T660 480"/>
+    <path d="M620 300 Q660 290 700 300 T780 300 T860 300"/>
+    <path d="M40 260 Q80 250 120 260 T200 260"/>
+    <path d="M700 420 Q740 410 780 420 T860 420"/>
   </g>
-  <ellipse cx="480" cy="520" rx="420" ry="40" fill="#1565C0" opacity="0.18"/>
+  <g fill="#fff" opacity="0.35">
+    <circle cx="120" cy="140" r="3"/><circle cx="280" cy="90" r="2.5"/><circle cx="450" cy="160" r="3"/>
+    <circle cx="620" cy="110" r="2.5"/><circle cx="780" cy="200" r="3"/><circle cx="340" cy="240" r="2"/>
+    <circle cx="540" cy="80" r="2.5"/><circle cx="180" cy="320" r="2"/>
+  </g>
+  <ellipse cx="480" cy="528" rx="460" ry="28" fill="#0369A1" opacity="0.22"/>
 </svg>
