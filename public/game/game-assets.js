@@ -10,7 +10,7 @@
   'use strict';
 
   /* ─────────── Avatar người dùng (đồng bộ với tài khoản) ─────────── */
-  var HERO_W = 46, HERO_H = 56, HERO_SS = 4; // SS: vẽ ở độ phân giải cao cho nét
+  var HERO_W = 46, HERO_H = 56, HERO_SS = 3;
 
   function getStudentAvatar() {
     var def = { mode: 'emoji', emoji: '🧒', ring: '#FF9800', photo: '' };
@@ -151,7 +151,7 @@
   /* Xu vàng có ánh sáng (vẽ tay, sắc nét hơn emoji) */
   function makeCoin(scene) {
     var key = 'coin';
-    if (scene.textures.exists(key) || scene.textures.exists('svg_coin')) return;
+    if (scene.textures.exists(key)) return;
     var s = 34;
     var g = scene.make.graphics({ x: 0, y: 0, add: false });
     g.fillStyle(0xb8860b, 1);
@@ -259,16 +259,6 @@
     var th = THEMES[themeName] || THEMES.grass;
     var sk = 'sky_' + themeName, hf = 'hillFar_' + themeName, hn = 'hillNear_' + themeName;
     var gk = 'ground_' + themeName, pk = 'plat_' + themeName;
-    if (global.PlatformerSvg && scene.textures.exists(global.PlatformerSvg.groundKey(themeName))) {
-      var svgG = global.PlatformerSvg.resolveKey(scene, global.PlatformerSvg.groundKey(themeName), gk);
-      var svgP = global.PlatformerSvg.resolveKey(scene, global.PlatformerSvg.platKey(themeName), pk);
-      var svgS = global.PlatformerSvg.resolveKey(scene, global.PlatformerSvg.bgKey(themeName), sk);
-      return {
-        skyKey: svgS, hillFarKey: hf, hillNearKey: hn,
-        groundKey: svgG, platKey: svgP,
-        fluid: th.fluid || 'water', dark: !!th.dark
-      };
-    }
     if (!scene.textures.exists(sk)) {
       var g = scene.make.graphics({ x: 0, y: 0, add: false });
       g.fillGradientStyle(th.sky[0], th.sky[0], th.sky[1], th.sky[1], 1);

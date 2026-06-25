@@ -21,7 +21,7 @@
   var W = 960, H = 540;
   var GROUND_H = 56;
   // Render ở độ phân giải theo màn hình (chống vỡ chữ / nhòe hình trên màn DPI cao)
-  var DPR = Math.max(1, Math.min(3, Math.round(global.devicePixelRatio || 1)));
+  var DPR = Math.max(1, Math.min(2, Math.round(global.devicePixelRatio || 1)));
   var Sfx = (global.GameAssets && global.GameAssets.Sfx) || {};
 
   /* Tăng độ nét cho mọi Text trong scene + map toạ độ logic cho camera tĩnh */
@@ -209,8 +209,8 @@
           self.scene.start('LevelSelect');
         }
       }
-      if (global.PlatformerSvg && global.PlatformerSvg.loadAll) {
-        global.PlatformerSvg.loadAll(self, startLevels);
+      if (global.MapSelectSvg && global.MapSelectSvg.loadMapAssets) {
+        global.MapSelectSvg.loadMapAssets(self, startLevels);
       } else {
         startLevels();
       }
@@ -231,10 +231,15 @@
       var MAP_PATH = GA.MAP_PATH || [];
       var MAP_TREASURE = GA.MAP_TREASURE || { x: 868, y: 168 };
 
+      var MS = global.MapSelectSvg;
       // ───── đại dương + viền sóng ─────
-      var ocean = this.add.graphics().setDepth(-10);
-      if (GA.drawMapOcean) GA.drawMapOcean(ocean, W, H);
-      else { this.cameras.main.setBackgroundColor('#2b8fd4'); ocean.fillStyle(0x2b8fd4, 1); ocean.fillRect(0, 0, W, H); }
+      if (MS && MS.has(this, 'map_ocean')) {
+        this.add.image(W / 2, H / 2, 'map_ocean').setDisplaySize(W, H).setDepth(-10);
+      } else {
+        var ocean = this.add.graphics().setDepth(-10);
+        if (GA.drawMapOcean) GA.drawMapOcean(ocean, W, H);
+        else { this.cameras.main.setBackgroundColor('#2b8fd4'); ocean.fillStyle(0x2b8fd4, 1); ocean.fillRect(0, 0, W, H); }
+      }
 
       // ───── tiện ích vẽ đường đứt nét ─────
       function dashLine(g, x1, y1, x2, y2, dash, gap, color, width, alpha) {
@@ -256,12 +261,21 @@
       }).setOrigin(0.5).setDepth(9);
 
       // ───── la bàn ─────
-      var compass = this.add.graphics().setDepth(6);
-      if (GA.drawMapCompass) GA.drawMapCompass(compass, 52, 52);
+      if (MS && MS.has(this, 'map_compass')) {
+        this.add.image(52, 52, 'map_compass').setDisplaySize(72, 72).setDepth(6);
+      } else {
+        var compass = this.add.graphics().setDepth(6);
+        if (GA.drawMapCompass) GA.drawMapCompass(compass, 52, 52);
+      }
       this.add.text(52, 92, 'N', { fontFamily: 'Baloo 2, cursive', fontSize: '12px', color: '#7c4a1e' }).setOrigin(0.5).setDepth(7);
 
       // ───── thuyền xuất phát ─────
-      this.add.text(52, MAP_PATH[0] ? MAP_PATH[0].y - 36 : 390, '⛵', { fontSize: '38px' }).setOrigin(0.5).setDepth(4);
+      var boatY = MAP_PATH[0] ? MAP_PATH[0].y - 36 : 390;
+      if (MS && MS.has(this, 'map_boat')) {
+        this.add.image(52, boatY, 'map_boat').setDisplaySize(64, 64).setOrigin(0.5).setDepth(4);
+      } else {
+        this.add.text(52, boatY, '⛵', { fontSize: '38px' }).setOrigin(0.5).setDepth(4);
+      }
 
       var levels = (global.GameLevels && global.GameLevels.LEVELS) || [];
       var GP = global.GameProgress;
@@ -296,11 +310,17 @@
 
       // ───── rương kho báu ─────
       var tx = MAP_TREASURE.x, ty = MAP_TREASURE.y;
-      var xg = this.add.graphics().setDepth(3);
-      xg.lineStyle(5, 0xdc2626, 0.9);
-      xg.lineBetween(tx - 14, ty - 12, tx + 14, ty + 12);
-      xg.lineBetween(tx + 14, ty - 12, tx - 14, ty + 12);
-      var chest = this.add.text(tx, ty, allDone ? '🏆' : '💰', { fontSize: '48px' }).setOrigin(0.5).setDepth(4);
+      var chest;
+      if (MS && MS.has(this, 'map_treasure')) {
+        chest = this.add.image(tx, ty, 'map_treasure').setDisplaySize(88, 88).setOrigin(0.5).setDepth(4);
+        if (allDone) chest.setTint(0xffd54f);
+      } else {
+        var xg = this.add.graphics().setDepth(3);
+        xg.lineStyle(5, 0xdc2626, 0.9);
+        xg.lineBetween(tx - 14, ty - 12, tx + 14, ty + 12);
+        xg.lineBetween(tx + 14, ty - 12, tx - 14, ty + 12);
+        chest = this.add.text(tx, ty, allDone ? '🏆' : '💰', { fontSize: '48px' }).setOrigin(0.5).setDepth(4);
+      }
       this.add.text(tx, ty + 36, 'KHO BÁU', {
         fontFamily: 'Baloo 2, cursive', fontSize: '14px', color: '#7c2d12', stroke: '#fff7e6', strokeThickness: 3
       }).setOrigin(0.5).setDepth(4);
@@ -317,9 +337,16 @@
         var done = (prog.completedRuns || 0) > 0;
         var node = self.add.container(p.x, p.y).setDepth(5).setScale(1.08);
 
-        var isl = self.add.graphics();
-        if (GA.drawMapIsland) GA.drawMapIsland(isl, lv.theme, 0, 0, !unlocked);
-        node.add(isl);
+        var iKey = MS && MS.islandKey ? MS.islandKey(lv.theme) : null;
+        if (MS && iKey && MS.has(self, iKey)) {
+          var islImg = self.add.image(0, 0, iKey).setDisplaySize(118, 118);
+          if (!unlocked) islImg.setTint(0x94a3b8).setAlpha(0.72);
+          node.add(islImg);
+        } else {
+          var isl = self.add.graphics();
+          if (GA.drawMapIsland) GA.drawMapIsland(isl, lv.theme, 0, 0, !unlocked);
+          node.add(isl);
+        }
 
         // số màn
         node.add(self.add.text(0, 32, String(lv.id), {
@@ -470,17 +497,9 @@
       var TH = (global.GameAssets && global.GameAssets.ensureTheme)
         ? global.GameAssets.ensureTheme(this, level.theme)
         : { skyKey: 'sky', groundKey: 'ground', platKey: 'platform', fluid: 'water', dark: false };
-      if (global.PlatformerSvg) {
-        TH.groundKey = global.PlatformerSvg.resolveKey(this, global.PlatformerSvg.groundKey(level.theme), TH.groundKey);
-        TH.platKey = global.PlatformerSvg.resolveKey(this, global.PlatformerSvg.platKey(level.theme), TH.platKey);
-      }
       this.theme = TH;
 
-      if (global.PlatformerSvg && global.PlatformerSvg.buildParallax) {
-        var scn = global.PlatformerSvg.buildParallax(this, level.theme, worldW, groundTop);
-        this._bgObjects = scn.objects;
-        this._bgDrift = scn.drift || [];
-      } else if (global.GameAssets && global.GameAssets.buildScenery) {
+      if (global.GameAssets && global.GameAssets.buildScenery) {
         var scn = global.GameAssets.buildScenery(this, level.theme, worldW, groundTop);
         this._bgObjects = scn.objects;
         this._bgDrift = scn.drift || [];
@@ -540,8 +559,8 @@
 
       var self2 = this;
       var GH = GROUND_H;
-      var coinTex = self2.textures.exists('svg_coin') ? 'svg_coin' : 'coin';
-      var spikeTex = self2.textures.exists('svg_spike') ? 'svg_spike' : 'spike';
+      var coinTex = 'coin';
+      var spikeTex = 'spike';
       function addCoin(cx, cy) {
         var c = self2.coinsGrp.create(cx, cy, coinTex);
         c.setDisplaySize(30, 30);
@@ -779,59 +798,37 @@
         return x > flagX - 150;
       }
 
-      // ───── bản đồ thiết kế tay (SVG + segment) ─────
-      var mapFeatures = {
-        steps: fSteps, crates: fCrates, islands: fIslands, pit: fPit, stairs: fStairs,
-        movers: fMovers, spikes: fSpikes, saw: fSaw, sawair: fSawAir, spikegap: fSpikeGap, tower: fTower,
-        goombas: fGoombas, spring: fSpringJump, pipe: fPipe, piperow: fPipeRow, power: fPower, secretpipe: fSecretPipe,
-        coins: function (x, n, yOff) {
-          n = n || 3;
-          yOff = yOff || -80;
-          for (var ci = 0; ci < n; ci++) addCoin(x - (n - 1) * 22 + ci * 44, groundTop + yOff);
+      // ───── sinh địa hình ngẫu nhiên theo độ khó ─────
+      function spanHitsGate(a, b) {
+        for (var z = 0; z < gateXs.length; z++) if (a < gateXs[z] + GATE_MARGIN && b > gateXs[z] - GATE_MARGIN) return true;
+        return b > flagX - 150;
+      }
+      function jumpPastZone(x) {
+        for (var z = 0; z < gateXs.length; z++) if (x > gateXs[z] - GATE_MARGIN && x < gateXs[z] + GATE_MARGIN) return gateXs[z] + GATE_MARGIN + 30;
+        return x + 90;
+      }
+      var POOL = buildPool(level.id);
+      var bag = [], lastF = null;
+      function nextFeature() {
+        if (!bag.length) bag = shuffleArr(POOL);
+        var f = bag.pop();
+        if (f === lastF && bag.length) { var alt = bag.pop(); bag.push(f); f = alt; }
+        lastF = f;
+        return f;
+      }
+      var fx = 320, guard = 0;
+      while (fx < flagX - 240 && guard++ < 600) {
+        if (inGateZone(fx)) { fx = jumpPastZone(fx); continue; }
+        var fn = nextFeature();
+        var fw = FOOT[fn] || 240;
+        if (spanHitsGate(fx - fw / 2, fx + fw / 2)) { fx = jumpPastZone(fx + fw / 2); continue; }
+        var reps = (STACKABLE[fn] && Math.random() < 0.34) ? (2 + (Math.random() < 0.35 ? 1 : 0)) : 1;
+        for (var r = 0; r < reps; r++) {
+          if (inGateZone(fx) || spanHitsGate(fx - fw / 2, fx + fw / 2)) break;
+          (FEATURES[fn] || fSteps)(fx);
+          fx += fw + (reps > 1 ? 18 : 0);
         }
-      };
-      if (global.PlatformerMaps && global.PlatformerMaps.buildWorld) {
-        global.PlatformerMaps.buildWorld({
-          scene: self2,
-          level: level,
-          theme: level.theme,
-          groundTop: groundTop,
-          gateXs: gateXs,
-          flagX: flagX,
-          F: mapFeatures
-        });
-      } else {
-        function spanHitsGate(a, b) {
-          for (var z = 0; z < gateXs.length; z++) if (a < gateXs[z] + GATE_MARGIN && b > gateXs[z] - GATE_MARGIN) return true;
-          return b > flagX - 150;
-        }
-        function jumpPastZone(x) {
-          for (var z = 0; z < gateXs.length; z++) if (x > gateXs[z] - GATE_MARGIN && x < gateXs[z] + GATE_MARGIN) return gateXs[z] + GATE_MARGIN + 30;
-          return x + 90;
-        }
-        var POOL = buildPool(level.id);
-        var bag = [], lastF = null;
-        function nextFeature() {
-          if (!bag.length) bag = shuffleArr(POOL);
-          var f = bag.pop();
-          if (f === lastF && bag.length) { var alt = bag.pop(); bag.push(f); f = alt; }
-          lastF = f;
-          return f;
-        }
-        var fx = 320, guard = 0;
-        while (fx < flagX - 240 && guard++ < 600) {
-          if (inGateZone(fx)) { fx = jumpPastZone(fx); continue; }
-          var fn = nextFeature();
-          var fw = FOOT[fn] || 240;
-          if (spanHitsGate(fx - fw / 2, fx + fw / 2)) { fx = jumpPastZone(fx + fw / 2); continue; }
-          var reps = (STACKABLE[fn] && Math.random() < 0.34) ? (2 + (Math.random() < 0.35 ? 1 : 0)) : 1;
-          for (var r = 0; r < reps; r++) {
-            if (inGateZone(fx) || spanHitsGate(fx - fw / 2, fx + fw / 2)) break;
-            (FEATURES[fn] || fSteps)(fx);
-            fx += fw + (reps > 1 ? 18 : 0);
-          }
-          fx += 44 + Math.floor(Math.random() * 78);
-        }
+        fx += 44 + Math.floor(Math.random() * 78);
       }
 
       // ───── mặt đất (chừa hố) + nước ─────
@@ -861,8 +858,7 @@
       });
 
       // cờ kết thúc
-      var flagTex = self2.textures.exists('svg_flag') ? 'svg_flag' : 'flag';
-      this.flag = this.physics.add.staticImage(flagX, groundTop - 36, flagTex);
+      this.flag = this.physics.add.staticImage(flagX, groundTop - 36, 'flag');
       this.flag.setDisplaySize(40, 70).refreshBody();
       this.flag.setDepth(3);
 
