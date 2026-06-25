@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4B3B86"/><stop offset="100%" stop-color="#C9B3F0"/></linearGradient></defs>
+  <rect width="960" height="540" fill="url(#s)"/>
+  <polygon points="120,420 240,180 360,420" fill="#6A5AA0"/>
+  <polygon points="500,430 640,160 780,430" fill="#8A72C8"/>
+  <polygon points="260,200 280,160 300,200" fill="#fff" opacity="0.85"/>
+  <polygon points="600,190 625,145 650,190" fill="#fff" opacity="0.85"/>
+</svg>

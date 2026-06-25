@@ -21,7 +21,7 @@
   var W = 960, H = 540;
   var GROUND_H = 56;
   // Render ở độ phân giải theo màn hình (chống vỡ chữ / nhòe hình trên màn DPI cao)
-  var DPR = Math.max(1, Math.min(2, Math.round(global.devicePixelRatio || 1)));
+  var DPR = Math.max(1, Math.min(3, Math.round(global.devicePixelRatio || 1)));
   var Sfx = (global.GameAssets && global.GameAssets.Sfx) || {};
 
   /* Tăng độ nét cho mọi Text trong scene + map toạ độ logic cho camera tĩnh */
@@ -201,11 +201,18 @@
     create: function () {
       var self = this;
       setControlsMode('boot');
-      if (global.GameAssets) {
-        var avatar = global.GameAssets.getStudentAvatar ? global.GameAssets.getStudentAvatar() : null;
-        global.GameAssets.createTextures(this, avatar, function () { self.scene.start('LevelSelect'); });
+      function startLevels() {
+        if (global.GameAssets) {
+          var avatar = global.GameAssets.getStudentAvatar ? global.GameAssets.getStudentAvatar() : null;
+          global.GameAssets.createTextures(self, avatar, function () { self.scene.start('LevelSelect'); });
+        } else {
+          self.scene.start('LevelSelect');
+        }
+      }
+      if (global.PlatformerSvg && global.PlatformerSvg.loadAll) {
+        global.PlatformerSvg.loadAll(self, startLevels);
       } else {
-        this.scene.start('LevelSelect');
+        startLevels();
       }
     }
   });
@@ -463,10 +470,17 @@
       var TH = (global.GameAssets && global.GameAssets.ensureTheme)
         ? global.GameAssets.ensureTheme(this, level.theme)
         : { skyKey: 'sky', groundKey: 'ground', platKey: 'platform', fluid: 'water', dark: false };
+      if (global.PlatformerSvg) {
+        TH.groundKey = global.PlatformerSvg.resolveKey(this, global.PlatformerSvg.groundKey(level.theme), TH.groundKey);
+        TH.platKey = global.PlatformerSvg.resolveKey(this, global.PlatformerSvg.platKey(level.theme), TH.platKey);
+      }
       this.theme = TH;
 
-      // Cảnh nền hoàn chỉnh (bức tranh vẽ theo chủ đề, parallax bằng scrollFactor)
-      if (global.GameAssets && global.GameAssets.buildScenery) {
+      if (global.PlatformerSvg && global.PlatformerSvg.buildParallax) {
+        var scn = global.PlatformerSvg.buildParallax(this, level.theme, worldW, groundTop);
+        this._bgObjects = scn.objects;
+        this._bgDrift = scn.drift || [];
+      } else if (global.GameAssets && global.GameAssets.buildScenery) {
         var scn = global.GameAssets.buildScenery(this, level.theme, worldW, groundTop);
         this._bgObjects = scn.objects;
         this._bgDrift = scn.drift || [];
@@ -526,8 +540,10 @@
 
       var self2 = this;
       var GH = GROUND_H;
+      var coinTex = self2.textures.exists('svg_coin') ? 'svg_coin' : 'coin';
+      var spikeTex = self2.textures.exists('svg_spike') ? 'svg_spike' : 'spike';
       function addCoin(cx, cy) {
-        var c = self2.coinsGrp.create(cx, cy, 'coin');
+        var c = self2.coinsGrp.create(cx, cy, coinTex);
         c.setDisplaySize(30, 30);
         c.setDepth(4); // luôn nổi trên bục/nền (tránh bị cầu thang che)
         c.body.setCircle(13, 2, 2);
@@ -553,7 +569,7 @@
       }
       function addSpikeAt(cx, cy) {
         // chông nổi rõ + hộp va chạm canh giữa → bẫy luôn ăn khi chạm
-        var sp = self2.spikes.create(cx, (cy == null ? groundTop - 18 : cy), 'spike');
+        var sp = self2.spikes.create(cx, (cy == null ? groundTop - 18 : cy), spikeTex);
         sp.setDisplaySize(48, 40).refreshBody();
         sp.body.setSize(44, 32, true);
         sp.setDepth(5);
@@ -738,16 +754,6 @@
         }
         return arr;
       }
-      var POOL = buildPool(level.id);
-      var bag = [], lastF = null;
-      function nextFeature() {
-        if (!bag.length) bag = shuffleArr(POOL);
-        var f = bag.pop();
-        if (f === lastF && bag.length) { var alt = bag.pop(); bag.push(f); f = alt; } // tránh lặp liền nhau
-        lastF = f;
-        return f;
-      }
-
       // ───── cổng câu hỏi + cụm xu thưởng dẫn tới cổng ─────
       var GATE_MARGIN = 178;
       var arcY = [54, 96, 118, 96, 54];
@@ -768,33 +774,64 @@
       this.gateCollider = this.physics.add.collider(this.player, this.gates);
       var flagX = firstGate + this.totalGates * gateSpacing + 200;
 
-      // ───── dòng địa hình liên tục, không lặp mô-típ, né vùng cổng/cờ ─────
       function inGateZone(x) {
         for (var z = 0; z < gateXs.length; z++) if (Math.abs(x - gateXs[z]) < GATE_MARGIN) return true;
         return x > flagX - 150;
       }
-      function spanHitsGate(a, b) {
-        for (var z = 0; z < gateXs.length; z++) if (a < gateXs[z] + GATE_MARGIN && b > gateXs[z] - GATE_MARGIN) return true;
-        return b > flagX - 150;
-      }
-      function jumpPastZone(x) {
-        for (var z = 0; z < gateXs.length; z++) if (x > gateXs[z] - GATE_MARGIN && x < gateXs[z] + GATE_MARGIN) return gateXs[z] + GATE_MARGIN + 30;
-        return x + 90;
-      }
-      var fx = 320, guard = 0;
-      while (fx < flagX - 240 && guard++ < 600) {
-        if (inGateZone(fx)) { fx = jumpPastZone(fx); continue; }
-        var fn = nextFeature();
-        var fw = FOOT[fn] || 240;
-        if (spanHitsGate(fx - fw / 2, fx + fw / 2)) { fx = jumpPastZone(fx + fw / 2); continue; }
-        // đôi khi xếp cùng một loại nhiều lần liền nhau thành cụm
-        var reps = (STACKABLE[fn] && Math.random() < 0.34) ? (2 + (Math.random() < 0.35 ? 1 : 0)) : 1;
-        for (var r = 0; r < reps; r++) {
-          if (inGateZone(fx) || spanHitsGate(fx - fw / 2, fx + fw / 2)) break;
-          (FEATURES[fn] || fSteps)(fx);
-          fx += fw + (reps > 1 ? 18 : 0);
+
+      // ───── bản đồ thiết kế tay (SVG + segment) ─────
+      var mapFeatures = {
+        steps: fSteps, crates: fCrates, islands: fIslands, pit: fPit, stairs: fStairs,
+        movers: fMovers, spikes: fSpikes, saw: fSaw, sawair: fSawAir, spikegap: fSpikeGap, tower: fTower,
+        goombas: fGoombas, spring: fSpringJump, pipe: fPipe, piperow: fPipeRow, power: fPower, secretpipe: fSecretPipe,
+        coins: function (x, n, yOff) {
+          n = n || 3;
+          yOff = yOff || -80;
+          for (var ci = 0; ci < n; ci++) addCoin(x - (n - 1) * 22 + ci * 44, groundTop + yOff);
         }
-        fx += 44 + Math.floor(Math.random() * 78);
+      };
+      if (global.PlatformerMaps && global.PlatformerMaps.buildWorld) {
+        global.PlatformerMaps.buildWorld({
+          scene: self2,
+          level: level,
+          theme: level.theme,
+          groundTop: groundTop,
+          gateXs: gateXs,
+          flagX: flagX,
+          F: mapFeatures
+        });
+      } else {
+        function spanHitsGate(a, b) {
+          for (var z = 0; z < gateXs.length; z++) if (a < gateXs[z] + GATE_MARGIN && b > gateXs[z] - GATE_MARGIN) return true;
+          return b > flagX - 150;
+        }
+        function jumpPastZone(x) {
+          for (var z = 0; z < gateXs.length; z++) if (x > gateXs[z] - GATE_MARGIN && x < gateXs[z] + GATE_MARGIN) return gateXs[z] + GATE_MARGIN + 30;
+          return x + 90;
+        }
+        var POOL = buildPool(level.id);
+        var bag = [], lastF = null;
+        function nextFeature() {
+          if (!bag.length) bag = shuffleArr(POOL);
+          var f = bag.pop();
+          if (f === lastF && bag.length) { var alt = bag.pop(); bag.push(f); f = alt; }
+          lastF = f;
+          return f;
+        }
+        var fx = 320, guard = 0;
+        while (fx < flagX - 240 && guard++ < 600) {
+          if (inGateZone(fx)) { fx = jumpPastZone(fx); continue; }
+          var fn = nextFeature();
+          var fw = FOOT[fn] || 240;
+          if (spanHitsGate(fx - fw / 2, fx + fw / 2)) { fx = jumpPastZone(fx + fw / 2); continue; }
+          var reps = (STACKABLE[fn] && Math.random() < 0.34) ? (2 + (Math.random() < 0.35 ? 1 : 0)) : 1;
+          for (var r = 0; r < reps; r++) {
+            if (inGateZone(fx) || spanHitsGate(fx - fw / 2, fx + fw / 2)) break;
+            (FEATURES[fn] || fSteps)(fx);
+            fx += fw + (reps > 1 ? 18 : 0);
+          }
+          fx += 44 + Math.floor(Math.random() * 78);
+        }
       }
 
       // ───── mặt đất (chừa hố) + nước ─────
@@ -824,7 +861,8 @@
       });
 
       // cờ kết thúc
-      this.flag = this.physics.add.staticImage(flagX, groundTop - 36, 'flag');
+      var flagTex = self2.textures.exists('svg_flag') ? 'svg_flag' : 'flag';
+      this.flag = this.physics.add.staticImage(flagX, groundTop - 36, flagTex);
       this.flag.setDisplaySize(40, 70).refreshBody();
       this.flag.setDepth(3);
 
