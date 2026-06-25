@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   MAZE-LEVELS.JS — Mê cung lớn, bẫy & quái mọi màn
+   MAZE-LEVELS.JS — Mê cung sinh theo cấp (càng sau càng lớn)
    # tường  . đường  S E T bẫy  M quái
 ═══════════════════════════════════════════════════ */
 (function (global) {
@@ -7,7 +7,7 @@
 
   var TILE = 28;
 
-  var LEVELS = [
+  var LEVEL_DEFS = [
     {
       id: 1,
       name: 'Đồng cỏ xanh',
@@ -19,21 +19,8 @@
       reverseControls: false,
       speed: 155,
       badge: '🌿',
-      grid: [
-        '#####################',
-        '#S.....T....M.......#',
-        '#.###.###.###.###.#.#',
-        '#.#...#...#...#...#.#',
-        '#.#.#.#.#.#.#.#.#.#.#',
-        '#...#...T.....M...#.#',
-        '###.#.#####.#####.#.#',
-        '#...#.....#.....#.#.#',
-        '#.###.###.#.###.#.#.#',
-        '#...M...#...T...#...#',
-        '#.#####.#.#####.#.#.#',
-        '#.......#.....#...#E#',
-        '#####################'
-      ]
+      mazeW: 9,
+      mazeH: 7
     },
     {
       id: 2,
@@ -46,23 +33,8 @@
       reverseControls: false,
       speed: 158,
       badge: '🌳',
-      grid: [
-        '#######################',
-        '#S.......T.....M......#',
-        '#.#####.#.#####.#.###.#',
-        '#.#...#.#.#...#.#.#...#',
-        '#.#.#.#.#.#.#.#.#.#.#.#',
-        '#...#...M.....T...#...#',
-        '###.#.#######.#.###.#.#',
-        '#...#.#.....#.#...#.#.#',
-        '#.###.#.###.#.###.#.#.#',
-        '#.#...#...#...#...#.#.#',
-        '#.#.#####.#.#####.#.#.#',
-        '#.T...#...M...#...#...#',
-        '#.###.#.#####.#.###.#.#',
-        '#.....#.......#.....#E#',
-        '#######################'
-      ]
+      mazeW: 11,
+      mazeH: 9
     },
     {
       id: 3,
@@ -75,23 +47,8 @@
       reverseControls: false,
       speed: 152,
       badge: '🪨',
-      grid: [
-        '#########################',
-        '#S........T.....M.......#',
-        '#.#######.#.#######.###.#',
-        '#.#.....#.#.#.....#.#...#',
-        '#.#.###.#.#.#.###.#.#.#.#',
-        '#.#.#...#...#...#.#.T...#',
-        '#.#.#.#####.#####.#.#.#.#',
-        '#...#.....M.....#.#.#...#',
-        '###.#.#######.#.#.#.###.#',
-        '#...#.#.....#.#.#.#...#.#',
-        '#.###.#.###.#.#.###.#.#.#',
-        '#...M...#...T...#...#...#',
-        '#.#####.#.#####.#.###.#.#',
-        '#.......#.......#.....#E#',
-        '#########################'
-      ]
+      mazeW: 13,
+      mazeH: 11
     },
     {
       id: 4,
@@ -104,23 +61,8 @@
       reverseControls: false,
       speed: 160,
       badge: '🏜️',
-      grid: [
-        '###########################',
-        '#S..........T.....M.......#',
-        '#.#######.#.#######.#.###.#',
-        '#.#.....#.#.#.....#.#.#...#',
-        '#.#.###.#.#.#.###.#.#.#.#.#',
-        '#.#.#...#...#...#...#.T...#',
-        '#.#.#.#####.#####.#####.#.#',
-        '#...#.....M.....#.....#.#.#',
-        '###.#.#######.#.#######.#.#',
-        '#...#.#.....#.#.#.....#.#.#',
-        '#.###.#.###.#.#.#.###.#.#.#',
-        '#.#...#...#...M...T...#.#.#',
-        '#.#.#####.#.#####.#.###.#.#',
-        '#.#.......#.......#.....#E#',
-        '###########################'
-      ]
+      mazeW: 15,
+      mazeH: 13
     },
     {
       id: 5,
@@ -133,24 +75,8 @@
       reverseControls: false,
       speed: 162,
       badge: '🏰',
-      grid: [
-        '#############################',
-        '#S............T.....M.......#',
-        '#.#########.#.#########.#.###',
-        '#.#.......#.#.#.......#.#...#',
-        '#.#.#####.#.#.#.#####.#.#.#.#',
-        '#.#.#...#...#...#...#...#.T.#',
-        '#.#.#.#.#####.#####.#####.#.#',
-        '#...#.#.....M.....#.....#.#.#',
-        '###.#.#.#########.#.#####.#.#',
-        '#...#.#.#.......#.#.#.....#.#',
-        '#.###.#.#.#####.#.#.#.###.#.#',
-        '#...M...#...#...T...#...#.#.#',
-        '#.#####.#.#.#.#####.#.#.#.#.#',
-        '#.......#.#.#.......#.#...#.#',
-        '#.#######.#.#########.#.#.#E#',
-        '#############################'
-      ]
+      mazeW: 17,
+      mazeH: 15
     },
     {
       id: 6,
@@ -163,25 +89,113 @@
       reverseControls: true,
       speed: 168,
       badge: '🔥',
-      grid: [
-        '###############################',
-        '#S..........T.......M.........#',
-        '#.#########.#.#########.#.#####',
-        '#.#.......#.#.#.......#.#.....#',
-        '#.#.#####.#.#.#.#####.#.#.###.#',
-        '#.#.#...#...#...#...#...#...#.#',
-        '#.#.#.#.#####.#####.#####.###.#',
-        '#...#.#.....M.....T.....#...#.#',
-        '###.#.#.###########.#.#####.#.#',
-        '#...#.#.#.........#.#.#.....#.#',
-        '#.###.#.#.#######.#.#.#.###.#.#',
-        '#...M...#...#...#...T...#...#.#',
-        '#.#####.#.#.#.#####.#.#.###.#.#',
-        '#.......#.#...#.......#.....#E#',
-        '###############################'
-      ]
+      mazeW: 19,
+      mazeH: 17
     }
   ];
+
+  function seededRandom(seed) {
+    return function () {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+  }
+
+  function shuffleRng(arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function manhattan(ax, ay, bx, by) {
+    return Math.abs(ax - bx) + Math.abs(ay - by);
+  }
+
+  /** Sinh mê cung có lối đi, bẫy T và quái M */
+  function generateMazeGrid(innerW, innerH, trapCount, monsterCount, seed) {
+    innerW = innerW | 1;
+    innerH = innerH | 1;
+    var cols = innerW * 2 + 1;
+    var rows = innerH * 2 + 1;
+    var rng = seededRandom(seed);
+    var grid = [];
+    var y, x;
+
+    for (y = 0; y < rows; y++) {
+      grid[y] = [];
+      for (x = 0; x < cols; x++) grid[y][x] = '#';
+    }
+
+    var visited = {};
+
+    function carve(cx, cy) {
+      visited[cx + ',' + cy] = true;
+      grid[cy][cx] = '.';
+      var dirs = shuffleRng([[0, -2], [0, 2], [-2, 0], [2, 0]], rng);
+      dirs.forEach(function (d) {
+        var nx = cx + d[0];
+        var ny = cy + d[1];
+        if (nx > 0 && ny > 0 && nx < cols - 1 && ny < rows - 1 && !visited[nx + ',' + ny]) {
+          grid[cy + d[1] / 2][cx + d[0] / 2] = '.';
+          carve(nx, ny);
+        }
+      });
+    }
+
+    carve(1, 1);
+
+    var sx = 1, sy = 1;
+    var ex = cols - 2, ey = rows - 2;
+    grid[sy][sx] = 'S';
+    grid[ey][ex] = 'E';
+
+    var paths = [];
+    for (y = 0; y < rows; y++) {
+      for (x = 0; x < cols; x++) {
+        if (grid[y][x] === '.') paths.push({ x: x, y: y });
+      }
+    }
+    paths = shuffleRng(paths, rng);
+
+    function placeMark(mark, count, minDist) {
+      var placed = 0;
+      for (var i = 0; i < paths.length && placed < count; i++) {
+        var p = paths[i];
+        if (manhattan(p.x, p.y, sx, sy) < minDist) continue;
+        if (manhattan(p.x, p.y, ex, ey) < 4) continue;
+        if (grid[p.y][p.x] !== '.') continue;
+        grid[p.y][p.x] = mark;
+        placed++;
+      }
+    }
+
+    placeMark('T', trapCount, 5);
+    placeMark('M', monsterCount, 7);
+
+    var lines = [];
+    for (y = 0; y < rows; y++) {
+      var row = '';
+      for (x = 0; x < cols; x++) row += grid[y][x];
+      lines.push(row);
+    }
+    return lines;
+  }
+
+  function buildLevelGrid(def) {
+    var traps = Math.max(2, def.gates || 3);
+    var monsters = Math.max(2, Math.ceil((def.gates || 3) / 2) + 1);
+    return generateMazeGrid(def.mazeW, def.mazeH, traps, monsters, def.id * 7919 + 17);
+  }
+
+  var LEVELS = LEVEL_DEFS.map(function (def) {
+    var lv = {};
+    Object.keys(def).forEach(function (k) { lv[k] = def[k]; });
+    lv.grid = buildLevelGrid(def);
+    return lv;
+  });
 
   function shuffle(arr) {
     var a = arr.slice();
@@ -266,8 +280,6 @@
         } else if (c === 'M') {
           var m = cellCenter(x, y, tile);
           m.id = 'm' + monsters.length;
-          m.vx = 0;
-          m.vy = 0;
           monsters.push(m);
         }
       }
@@ -290,6 +302,7 @@
     LEVELS: LEVELS,
     buildLevelQuestions: buildLevelQuestions,
     parseGrid: parseGrid,
+    generateMazeGrid: generateMazeGrid,
     totalStarsForLevel: function (level) { return Math.max(1, level.gates || 3); }
   };
 })(window);

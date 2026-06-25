@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   MAZE-THEMES.JS — Vẽ nền & trang trí theo chủ đề màn
+   MAZE-THEMES.JS — Nền tương phản cao + sprite trang trí
 ═══════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
@@ -9,59 +9,54 @@
     return ((n ^ (n >> 13)) * 1274126177) >>> 0;
   }
 
-  function decoPick(x, y, seed, list) {
-    if (!list.length) return '';
-    return list[hash(x, y, seed) % list.length];
-  }
-
   var THEMES = {
     grass: {
-      bg: '#87c95a',
-      path: ['#9fd96d', '#7cb342', '#8bc34a'],
-      wall: ['#2e7d32', '#388e3c', '#1b5e20'],
-      deco: ['🌿', '🍀', '🌸', '🌼', '🦋', '🌱'],
-      wallDeco: ['🌳', '🪨', '🌲'],
-      exitGlow: 'rgba(255,235,59,0.45)'
+      bg: '#6daf3c',
+      path: ['#e8f5c8', '#d4ed9a', '#c5e384'],
+      pathEdge: 'rgba(139,195,74,0.55)',
+      wall: ['#1b4d1a', '#0d3310', '#245c22'],
+      wallEdge: 'rgba(0,0,0,0.45)',
+      exitGlow: 'rgba(255,235,59,0.55)'
     },
     jungle: {
-      bg: '#1b4332',
-      path: ['#2d6a4f', '#40916c', '#52b788'],
-      wall: ['#1b4332', '#081c15', '#2d6a4f'],
-      deco: ['🍃', '🌿', '🌺', '🐸', '🪴', '🌴'],
-      wallDeco: ['🌴', '🪵', '🌳'],
-      exitGlow: 'rgba(129,199,132,0.5)'
+      bg: '#0f2918',
+      path: ['#b8e6c8', '#8fd4a8', '#6bc48a'],
+      pathEdge: 'rgba(46,125,50,0.5)',
+      wall: ['#041208', '#0a1f0f', '#143d20'],
+      wallEdge: 'rgba(0,0,0,0.5)',
+      exitGlow: 'rgba(129,199,132,0.55)'
     },
     cave: {
-      bg: '#1e293b',
-      path: ['#475569', '#64748b', '#94a3b8'],
-      wall: ['#0f172a', '#1e293b', '#334155'],
-      deco: ['💎', '✨', '🪨', '🔦', '💧'],
-      wallDeco: ['🪨', '⛰️', '🧊'],
-      exitGlow: 'rgba(147,197,253,0.45)'
+      bg: '#0c1220',
+      path: ['#d5dde8', '#b8c4d4', '#9aa8bc'],
+      pathEdge: 'rgba(100,116,139,0.45)',
+      wall: ['#020408', '#0a1018', '#1a2432'],
+      wallEdge: 'rgba(0,0,0,0.55)',
+      exitGlow: 'rgba(147,197,253,0.5)'
     },
     desert: {
-      bg: '#eab308',
-      path: ['#fbbf24', '#f59e0b', '#fcd34d'],
-      wall: ['#b45309', '#92400e', '#78350f'],
-      deco: ['🌵', '🏜️', '☀️', '🦎', '🪨', '🐪'],
-      wallDeco: ['🪨', '🌵', '🏜️'],
-      exitGlow: 'rgba(254,243,199,0.55)'
+      bg: '#c8871a',
+      path: ['#fff4cc', '#ffe08a', '#f5c842'],
+      pathEdge: 'rgba(180,83,9,0.4)',
+      wall: ['#5c2e05', '#78350f', '#92400e'],
+      wallEdge: 'rgba(60,20,0,0.45)',
+      exitGlow: 'rgba(254,243,199,0.6)'
     },
     city: {
-      bg: '#64748b',
-      path: ['#94a3b8', '#cbd5e1', '#e2e8f0'],
-      wall: ['#334155', '#475569', '#1e293b'],
-      deco: ['🏮', '🪟', '🚩', '💡', '📜'],
-      wallDeco: ['🧱', '🏰', '🪨'],
-      exitGlow: 'rgba(196,181,253,0.5)'
+      bg: '#3d4f63',
+      path: ['#f1f5f9', '#e2e8f0', '#cbd5e1'],
+      pathEdge: 'rgba(71,85,105,0.4)',
+      wall: ['#0f172a', '#1e293b', '#334155'],
+      wallEdge: 'rgba(0,0,0,0.5)',
+      exitGlow: 'rgba(196,181,253,0.55)'
     },
     inferno: {
-      bg: '#7f1d1d',
-      path: ['#b91c1c', '#dc2626', '#ef4444'],
-      wall: ['#450a0a', '#7f1d1d', '#991b1b'],
-      deco: ['🔥', '💥', '🌋', '⚡', '🔴'],
-      wallDeco: ['🪨', '🔥', '🌋'],
-      exitGlow: 'rgba(251,191,36,0.55)'
+      bg: '#3b0a0a',
+      path: ['#fecaca', '#fca5a5', '#f87171'],
+      pathEdge: 'rgba(127,29,29,0.45)',
+      wall: ['#1a0303', '#450a0a', '#7f1d1d'],
+      wallEdge: 'rgba(0,0,0,0.55)',
+      exitGlow: 'rgba(251,191,36,0.6)'
     }
   };
 
@@ -70,52 +65,55 @@
     var py = gy * tile;
     var th = THEMES[theme] || THEMES.grass;
     var h = hash(gx, gy, seed);
-    var pad = 1;
+    var pad = 2;
+    var inner = tile - pad * 2;
 
     if (isWall) {
       var wci = h % th.wall.length;
       var grad = ctx.createLinearGradient(px, py, px + tile, py + tile);
       grad.addColorStop(0, th.wall[wci]);
-      grad.addColorStop(1, th.wall[(wci + 1) % th.wall.length]);
+      grad.addColorStop(0.55, th.wall[(wci + 1) % th.wall.length]);
+      grad.addColorStop(1, th.wall[(wci + 2) % th.wall.length]);
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.roundRect(px + pad, py + pad, tile - pad * 2, tile - pad * 2, 6);
+      ctx.roundRect(px + pad, py + pad, inner, inner, 7);
       ctx.fill();
-      if (h % 5 === 0) {
-        ctx.font = Math.floor(tile * 0.45) + 'px "Segoe UI Emoji", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(decoPick(gx, gy, seed + 9, th.wallDeco), px + tile / 2, py + tile / 2);
+      ctx.strokeStyle = th.wallEdge;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(px + pad + 0.5, py + pad + 0.5, inner - 1, inner - 1, 7);
+      ctx.stroke();
+      if (global.MazeAssets) {
+        global.MazeAssets.drawWallDeco(ctx, theme, gx, gy, tile, seed);
       }
       return;
     }
 
     var pci = h % th.path.length;
-    var pgrad = ctx.createRadialGradient(
-      px + tile / 2, py + tile / 2, 2,
-      px + tile / 2, py + tile / 2, tile * 0.7
-    );
+    var cx = px + tile / 2;
+    var cy = py + tile / 2;
+    var pgrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, tile * 0.75);
     pgrad.addColorStop(0, th.path[pci]);
     pgrad.addColorStop(1, th.path[(pci + 1) % th.path.length]);
     ctx.fillStyle = pgrad;
     ctx.beginPath();
-    ctx.roundRect(px + pad, py + pad, tile - pad * 2, tile - pad * 2, isExit ? 10 : 8);
+    ctx.roundRect(px + pad, py + pad, inner, inner, isExit ? 11 : 9);
     ctx.fill();
+    ctx.strokeStyle = th.pathEdge;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(px + pad + 0.5, py + pad + 0.5, inner - 1, inner - 1, isExit ? 11 : 9);
+    ctx.stroke();
 
     if (isExit) {
       ctx.fillStyle = th.exitGlow;
       ctx.beginPath();
-      ctx.roundRect(px + 2, py + 2, tile - 4, tile - 4, 10);
+      ctx.roundRect(px + 4, py + 4, tile - 8, tile - 8, 11);
       ctx.fill();
     }
 
-    if (h % 3 === 0 || h % 7 === 0) {
-      ctx.font = Math.floor(tile * 0.38) + 'px "Segoe UI Emoji", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.globalAlpha = 0.85;
-      ctx.fillText(decoPick(gx, gy, seed + 3, th.deco), px + tile / 2, py + tile / 2 + (h % 2 ? 2 : -2));
-      ctx.globalAlpha = 1;
+    if (global.MazeAssets && !isExit) {
+      global.MazeAssets.drawDeco(ctx, theme, gx, gy, tile, seed);
     }
   }
 
@@ -136,11 +134,6 @@
         drawCell(ctx, theme, x, y, tile, wall, isExit, seed);
       }
     }
-
-    ctx.font = 'bold ' + Math.floor(tile * 0.55) + 'px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🚪', p.exit.px, p.exit.py);
   }
 
   global.MazeThemes = { drawWorld: drawWorld, THEMES: THEMES };

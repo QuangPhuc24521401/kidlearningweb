@@ -14,7 +14,7 @@
   }
 
   function playerRadius(tile) {
-    return tile * 0.32;
+    return tile * 0.36;
   }
 
   function $(id) { return document.getElementById(id); }
@@ -111,7 +111,7 @@
     wrap.innerHTML =
       '<div class="maze-select-head">' +
         '<h2>🧩 Chọn mê cung</h2>' +
-        '<p>Giữ phím/nút để chạy · tránh ⚠️ và 👾 · tìm 🚪 lối ra</p>' +
+        '<p>Giữ phím/nút để chạy · tránh bẫy & quái · tìm cửa thoát</p>' +
       '</div>' +
       '<div class="maze-select-grid" id="mazeSelectGrid"></div>' +
       '<button type="button" class="maze-hub-link" id="mazeHubLink">← Chọn game khác</button>';
@@ -131,6 +131,7 @@
       btn.className = 'maze-lvl-btn' + (unlocked ? '' : ' is-locked') + (done ? ' is-done' : '');
       btn.disabled = !unlocked;
       var meta = [];
+      if (lv.grid && lv.grid[0]) meta.push(lv.grid[0].length + '×' + lv.grid.length);
       if (lv.timeLimit) meta.push('⏱' + lv.timeLimit + 's');
       if (lv.reverseControls) meta.push('↔️');
       if (done) meta.push('⭐' + (prog.bestRun || 0));
@@ -467,22 +468,26 @@
       ctx.fillRect(0, 0, mapW, mapH);
     }
 
-    ctx.font = 'bold ' + Math.floor(tile * 0.5) + 'px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    var MA = global.MazeAssets;
+    var theme = s.level.theme || 'grass';
 
-    p.traps.forEach(function (t) {
-      if (s.disabledTraps[t.id]) return;
-      ctx.fillText('⚠️', t.px, t.py);
-    });
-
-    s.monsterData.forEach(function (m) {
-      if (s.disabledMonsters[m.id]) return;
-      ctx.fillText('👾', m.px, m.py);
-    });
-
-    ctx.font = 'bold ' + Math.floor(tile * 0.58) + 'px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-    ctx.fillText('🧒', s.px, s.py);
+    if (MA) {
+      MA.drawExit(ctx, p.exit.px, p.exit.py, tile);
+      p.traps.forEach(function (t) {
+        if (s.disabledTraps[t.id]) return;
+        MA.drawTrap(ctx, theme, t.px, t.py, tile);
+      });
+      s.monsterData.forEach(function (m) {
+        if (s.disabledMonsters[m.id]) return;
+        MA.drawMonsterAt(ctx, m.px, m.py, tile);
+      });
+      MA.drawHero(ctx, s.px, s.py, tile);
+    } else {
+      ctx.font = 'bold ' + Math.floor(tile * 0.58) + 'px "Segoe UI Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🧒', s.px, s.py);
+    }
 
     ctx.restore();
 
@@ -646,13 +651,20 @@
     if (global.GameInput) global.GameInput.bindTouchPad(touch, { left: 'left', right: 'right', down: 'down', jump: 'up' });
     wireDomControls();
 
-    global.__kidMazeActive = true;
-    showLevelSelect();
+    function openSelect() {
+      global.__kidMazeActive = true;
+      showLevelSelect();
+      global.setTimeout(function () {
+        var stage = $('gameStage');
+        if (stage) stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }, 50);
+    }
 
-    global.setTimeout(function () {
-      var stage = $('gameStage');
-      if (stage) stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }, 50);
+    if (global.MazeAssets && global.MazeAssets.init) {
+      global.MazeAssets.init(openSelect);
+    } else {
+      openSelect();
+    }
   }
 
   global.GameMaze = { boot: boot, shutdown: shutdown };
