@@ -44,7 +44,7 @@
         btn.disabled = true;
         btn.classList.add('is-done');
       } else {
-        btn.textContent = 'Nâng cấp Pro ngay';
+        btn.textContent = 'Đăng ký Pro — 300.000đ/năm';
         btn.disabled = false;
         btn.classList.remove('is-done');
       }
@@ -72,7 +72,7 @@
         })
         .catch(function (e) {
           btn.disabled = false;
-          btn.textContent = 'Nâng cấp Pro ngay';
+          btn.textContent = 'Đăng ký Pro — 300.000đ/năm';
           if (msg) {
             msg.hidden = false;
             msg.textContent = e.message || 'Không nâng cấp được. Thử lại sau.';

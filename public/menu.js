@@ -721,7 +721,7 @@ function renderProfilePage(){
     if (proDesc) {
       proDesc.textContent = isPro
         ? 'Bạn đang chơi game không giới hạn lượt!'
-        : 'Gói Basic: 3 lượt chơi / mỗi game. Nâng cấp Pro để học không giới hạn.';
+        : 'Gói Basic: 3 lượt / game. Pro chỉ 300.000đ/năm — chơi không giới hạn.';
     }
     if (proBtn) proBtn.textContent = isPro ? 'Quản lý Pro' : 'Xem gói Pro';
     if (proLink) proLink.textContent = isPro ? '⭐ Pro' : '✨ Nâng Pro';

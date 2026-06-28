@@ -507,7 +507,7 @@ body:not(.game-mobile-input) .game-touch {
 }
 
 .game-hub {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 8px 16px 48px;
   position: relative;
@@ -563,7 +563,7 @@ body:not(.game-mobile-input) .game-touch {
 
 .game-hub-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
@@ -824,6 +824,12 @@ body:not(.game-mobile-input) .game-touch {
 
 .page-game.game-pick-digger:not(.game-force-landscape) .game-wrap {
   max-width: 880px;
+}
+
+@media (max-width: 900px) {
+  .game-hub-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
