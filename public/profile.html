@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="menu.css">
 <link rel="stylesheet" href="arena.css">
 <link rel="stylesheet" href="pvp.css">
+<link rel="stylesheet" href="pro.css">
 <link rel="stylesheet" href="spa.css">
 <script>
   (function(){
@@ -142,6 +143,14 @@
   </div>
 
   <div class="profile-sections">
+    <section class="profile-pro-banner" id="profProBanner">
+      <div class="profile-pro-banner-text">
+        <h2 id="profProTitle">Kid Learning Pro</h2>
+        <p id="profProDesc">Nâng cấp để chơi game không giới hạn lượt.</p>
+      </div>
+      <a href="pro.html" class="profile-btn profile-btn-primary profile-btn--sm" id="profProBtn">✨ Xem gói Pro</a>
+    </section>
+
     <section class="profile-section profile-section--class" id="profClassBox">
       <h2 class="profile-section-title">🏫 Mã lớp</h2>
       <input type="text" id="profClassInput" class="profile-field-input profile-field-input--sm" maxlength="32"
@@ -170,7 +179,8 @@
   </div>
 
   <div class="profile-actions">
-    <a href="progress.html" class="profile-btn profile-btn-primary profile-btn--sm">📊 Tiến độ</a>
+    <a href="pro.html" class="profile-btn profile-btn-primary profile-btn--sm" id="profProLink">✨ Kid Pro</a>
+    <a href="progress.html" class="profile-btn profile-btn--sm">📊 Tiến độ</a>
     <a href="social.html" class="profile-btn profile-btn--sm">🌈 Cộng đồng</a>
     <button type="button" class="profile-btn profile-btn--sm" id="profBtnSettings">⚙️ Giọng đọc</button>
     <button type="button" class="profile-btn profile-btn-danger profile-btn--sm" id="profBtnLogout">🚪 Đăng xuất</button>
@@ -196,6 +206,8 @@
 </div>
 
 <script src="firebase.js"></script>
+<script src="account-plan.js"></script>
+<script src="play-limits.js"></script>
 <script src="progress-sync.js"></script>
 <script src="class-sync.js?v=20260528g"></script>
 <script src="social-sync.js"></script>
@@ -220,6 +232,9 @@
             localStorage.setItem('classRoom', data.classRoom);
           }
           if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
+          if(global.KidAccountPlan && global.KidAccountPlan.syncFromUserDoc) {
+            global.KidAccountPlan.syncFromUserDoc(data);
+          }
           if(role === 'teacher') window.location.replace('mentor-teacher.html');
         })
         .catch(function(err){ console.warn('[deepRoleGuard]', err); });
@@ -229,6 +244,7 @@
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
+<script src="pro.js"></script>
 <script src="spa.js"></script>
 </body>
 </html>

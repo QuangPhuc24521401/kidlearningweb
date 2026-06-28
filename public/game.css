@@ -544,9 +544,26 @@ body:not(.game-mobile-input) .game-touch {
   font-weight: 600;
 }
 
+.game-hub-pro-link {
+  text-align: center;
+  margin: 10px 0 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.game-hub-pro-link a {
+  color: #7c3aed;
+  text-decoration: none;
+}
+
+.game-hub-pro-link a:hover {
+  text-decoration: underline;
+}
+
 .game-hub-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
 }
 

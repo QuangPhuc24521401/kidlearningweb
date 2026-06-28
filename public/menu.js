@@ -40,6 +40,8 @@ function handleLogout(){
   try{ localStorage.removeItem('studentAvatarEmoji'); }catch(e){}
   try{ localStorage.removeItem('studentAvatarRing'); }catch(e){}
   try{ localStorage.removeItem('studentAvatarPhoto'); }catch(e){}
+  try{ localStorage.removeItem('userPlan'); }catch(e){}
+  try{ localStorage.removeItem('kid_game_play_counts'); }catch(e){}
   try{
     firebase.auth().signOut().then(()=>{ window.location.href='auth/login.html'; });
   }
@@ -89,6 +91,12 @@ function handleLogout(){
           if(typeof KidClassSync.mountClassRoomBanner === 'function'){
             KidClassSync.mountClassRoomBanner();
           }
+        }
+        if(typeof KidAccountPlan !== 'undefined' && KidAccountPlan.syncFromUserDoc){
+          KidAccountPlan.syncFromUserDoc(data || {});
+        }
+        if(typeof KidPlayLimits !== 'undefined' && KidPlayLimits.pullFromCloud){
+          KidPlayLimits.pullFromCloud();
         }
         if(role === 'parent' && data && data.studentProfileComplete === false){
           window.location.href = 'auth/student-setup.html';
@@ -403,7 +411,11 @@ function _readProfileInfo(){
   return {
     role:        role,
     isTeacher:   role === 'teacher',
-    roleLabel:   role === 'teacher' ? 'Tài khoản giáo viên' : 'Tài khoản phụ huynh',
+    isPro:       (typeof KidAccountPlan !== 'undefined' && KidAccountPlan.isPro) ? KidAccountPlan.isPro() : false,
+    roleLabel:   role === 'teacher' ? 'Tài khoản giáo viên' : (function(){
+      var pro = (typeof KidAccountPlan !== 'undefined' && KidAccountPlan.isPro) ? KidAccountPlan.isPro() : false;
+      return pro ? 'Tài khoản Pro ✨' : 'Tài khoản Basic';
+    })(),
     name:        displayName || (role === 'teacher' ? 'Giáo viên' : 'Bé học sinh'),
     email:       email,
     classRoom:   classRoom,
@@ -695,6 +707,35 @@ function renderProfilePage(){
   set('profAge',    info.createdAt ? '(' + _formatAccountAge(info.createdAt) + ')' : '');
 
   show('profNameEditBtn', !info.isTeacher);
+
+  var proBanner = document.getElementById('profProBanner');
+  var proTitle = document.getElementById('profProTitle');
+  var proDesc = document.getElementById('profProDesc');
+  var proBtn = document.getElementById('profProBtn');
+  var proLink = document.getElementById('profProLink');
+  if (proBanner && !info.isTeacher) {
+    proBanner.hidden = false;
+    var isPro = info.isPro;
+    proBanner.classList.toggle('is-pro', isPro);
+    if (proTitle) proTitle.textContent = isPro ? '⭐ Kid Learning Pro' : '✨ Nâng cấp Kid Pro';
+    if (proDesc) {
+      proDesc.textContent = isPro
+        ? 'Bạn đang chơi game không giới hạn lượt!'
+        : 'Gói Basic: 3 lượt chơi / mỗi game. Nâng cấp Pro để học không giới hạn.';
+    }
+    if (proBtn) proBtn.textContent = isPro ? 'Quản lý Pro' : 'Xem gói Pro';
+    if (proLink) proLink.textContent = isPro ? '⭐ Pro' : '✨ Nâng Pro';
+  } else if (proBanner) {
+    proBanner.hidden = true;
+  }
+
+  if (typeof KidAccountPlan !== 'undefined' && KidAccountPlan.pullFromCloud) {
+    KidAccountPlan.pullFromCloud().then(function () {
+      if (typeof KidPlayLimits !== 'undefined' && KidPlayLimits.pullFromCloud) {
+        KidPlayLimits.pullFromCloud();
+      }
+    });
+  }
 
   if(info.isTeacher && info.classRoom){
     set('profClass', info.classRoom);

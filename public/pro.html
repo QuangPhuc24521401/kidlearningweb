@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kid Learning Pro — Nâng cấp tài khoản</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="menu.css">
+<link rel="stylesheet" href="pro.css">
+<link rel="stylesheet" href="spa.css">
+<script>
+  (function(){
+    try{ if(localStorage.getItem('userRole')) return; }catch(e){}
+    document.documentElement.style.visibility='hidden';
+  })();
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="page-scroll page-pro">
+
+<header class="app-topbar" role="banner">
+  <div class="app-topbar-inner">
+    <a href="index.html" class="topbar-brand">
+      <img src="favicon.svg" alt="Kid Learning" class="topbar-brand-logo" width="36" height="36" decoding="async">
+      <span class="topbar-brand-text">
+        <span class="topbar-brand-name">Kid Learning</span>
+        <span class="topbar-brand-tag">Pro · Học không giới hạn</span>
+      </span>
+    </a>
+    <nav class="topbar-nav" aria-label="Điều hướng chính">
+      <a href="index.html" class="topbar-link">Trang chủ</a>
+      <a href="progress.html" class="topbar-link">Tiến độ</a>
+      <a href="game.html" class="topbar-link">Game</a>
+      <a href="profile.html" class="topbar-link">Hồ sơ</a>
+      <a href="pro.html" class="topbar-link is-current" aria-current="page">Pro ✨</a>
+    </nav>
+    <div class="topbar-end">
+      <div id="topbarUserSlot" class="topbar-user-slot"></div>
+      <div class="topbar-tools">
+        <button type="button" class="topbar-logout" onclick="handleLogout()">Đăng xuất</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="sky"><div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div></div>
+<div class="liquid-bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="ground"></div>
+
+<main id="page-root" data-page="pro">
+  <div class="pro-wrap">
+    <section class="pro-hero card menu-card">
+      <div class="pro-hero-badge">✨ Kid Learning Pro</div>
+      <h1 class="pro-hero-title">Chơi học <span>không giới hạn</span></h1>
+      <p class="pro-hero-sub">Tài khoản Basic được <strong>3 lượt chơi / mỗi game</strong>. Nâng cấp Pro để bé khám phá mọi trò chơi mọi lúc!</p>
+      <div class="pro-plan-pill" id="proCurrentPlan">Đang tải gói...</div>
+    </section>
+
+    <div class="pro-compare">
+      <article class="pro-plan-card pro-plan-card--basic">
+        <h2>Basic</h2>
+        <p class="pro-plan-price">Miễn phí</p>
+        <ul class="pro-plan-list">
+          <li>✓ 5 game học tập</li>
+          <li>✓ 3 lượt / mỗi game</li>
+          <li>✓ Bài học &amp; tiến độ</li>
+          <li>✓ Cộng đồng &amp; PvP</li>
+        </ul>
+        <span class="pro-plan-note" id="proBasicNote">Gói hiện tại của bạn</span>
+      </article>
+
+      <article class="pro-plan-card pro-plan-card--pro">
+        <div class="pro-plan-ribbon">Đề xuất</div>
+        <h2>Pro ✨</h2>
+        <p class="pro-plan-price">Ưu đãi học sinh</p>
+        <ul class="pro-plan-list">
+          <li>✓ <strong>Không giới hạn</strong> lượt chơi</li>
+          <li>✓ Tất cả game &amp; màn mới</li>
+          <li>✓ Huy hiệu &amp; sao đầy đủ</li>
+          <li>✓ Ưu tiên tính năng mới</li>
+        </ul>
+        <button type="button" class="pro-upgrade-btn" id="proUpgradeBtn">Nâng cấp Pro ngay</button>
+        <p class="pro-upgrade-msg" id="proUpgradeMsg" hidden></p>
+      </article>
+    </div>
+
+    <section class="pro-games card menu-card">
+      <h2 class="pro-section-title">🎮 5 game trong gói</h2>
+      <div class="pro-games-grid" id="proGamesGrid"></div>
+    </section>
+
+    <div class="pro-footer-actions">
+      <a href="game.html" class="profile-btn profile-btn-primary">🎮 Vào chơi game</a>
+      <a href="profile.html" class="profile-btn">← Về hồ sơ</a>
+    </div>
+  </div>
+</main>
+
+<script src="firebase.js"></script>
+<script src="account-plan.js"></script>
+<script src="play-limits.js"></script>
+<script src="shared.js"></script>
+<script src="menu.js"></script>
+<script src="pro.js"></script>
+<script src="spa.js"></script>
+</body>
+</html>

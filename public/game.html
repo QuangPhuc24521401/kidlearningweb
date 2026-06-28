@@ -14,7 +14,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css">
-<link rel="stylesheet" href="game.css?v=20260625">
+<link rel="stylesheet" href="game.css?v=20260629">
+<link rel="stylesheet" href="pro.css">
 <link rel="stylesheet" href="spa.css">
 <script>
   (function(){
@@ -108,7 +109,7 @@
         <header class="game-hub-head">
           <a href="index.html" id="gameHubBack" class="game-hub-back">← Trang chủ</a>
           <h1 class="game-hub-title">🎮 Chọn trò chơi</h1>
-          <p class="game-hub-sub">Học mà chơi — mỗi game đều có câu hỏi và phần thưởng riêng!</p>
+          <p class="game-hub-sub">Học mà chơi — mỗi game đều có câu hỏi và phần thưởng riêng! <span id="gameHubPlanNote"></span></p>
         </header>
         <div class="game-hub-grid">
           <button type="button" class="game-hub-card" data-game-pick="platformer">
@@ -129,7 +130,20 @@
             <span class="game-hub-card-desc">Thả móc lấy vàng · trả lời đúng câu hỏi mới được giữ vàng</span>
             <span class="game-hub-card-tag">Gold Miner học tập</span>
           </button>
+          <button type="button" class="game-hub-card game-hub-card--memory" data-game-pick="memory">
+            <span class="game-hub-card-icon">🃏</span>
+            <strong class="game-hub-card-name">Ghép cặp trí nhớ</strong>
+            <span class="game-hub-card-desc">Lật thẻ tìm cặp giống nhau · rèn trí nhớ &amp; câu hỏi</span>
+            <span class="game-hub-card-tag">Mới · 5 màn</span>
+          </button>
+          <button type="button" class="game-hub-card game-hub-card--sort" data-game-pick="sort">
+            <span class="game-hub-card-icon">📦</span>
+            <strong class="game-hub-card-name">Phân loại thông minh</strong>
+            <span class="game-hub-card-desc">Chọn đồ vật vào đúng thùng · màu sắc, hình, số</span>
+            <span class="game-hub-card-tag">Mới · 5 màn</span>
+          </button>
         </div>
+        <p class="game-hub-pro-link"><a href="pro.html">✨ Nâng cấp Pro — chơi không giới hạn</a></p>
       </section>
 
       <div id="gamePlayArea" hidden>
@@ -179,6 +193,8 @@
   </div>
 </main>
 
+<script src="account-plan.js"></script>
+<script src="play-limits.js"></script>
 <script src="firebase.js"></script>
 <script src="progress-sync.js"></script>
 <script src="class-sync.js?v=20260528g"></script>
@@ -203,7 +219,13 @@
 <script src="game/digger-assets.js?v=20260625"></script>
 <script src="game/digger-progress.js"></script>
 <script src="game/digger-canvas.js?v=20260625"></script>
-<script src="game-hub.js?v=20260625"></script>
+<script src="game/memory-levels.js"></script>
+<script src="game/memory-progress.js"></script>
+<script src="game/memory-canvas.js"></script>
+<script src="game/sort-levels.js"></script>
+<script src="game/sort-progress.js"></script>
+<script src="game/sort-canvas.js"></script>
+<script src="game-hub.js?v=20260629"></script>
 <script>
   (function deepRoleGuard(){
     if(localStorage.getItem('userRole')) return;
@@ -216,6 +238,9 @@
           var role = data?.role || 'parent';
           localStorage.setItem('userRole', role);
           if(data?.displayName) localStorage.setItem('userDisplayName', data.displayName);
+          if(global.KidAccountPlan && global.KidAccountPlan.syncFromUserDoc) {
+            global.KidAccountPlan.syncFromUserDoc(data);
+          }
           if(role === 'teacher') window.location.replace('mentor-teacher.html');
         })
         .catch(function(e){ console.warn('[deepRoleGuard]', e); });

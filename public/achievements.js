@@ -38,6 +38,10 @@
     { id: "maze_master",    icon: "🗺️", title: "Bậc thầy mê cung", desc: "Hoàn thành tất cả màn mê cung" },
     { id: "digger_first",   icon: "⛏️", title: "Thợ đào vàng",    desc: "Hoàn thành màn đào vàng đầu tiên" },
     { id: "digger_master",  icon: "👑", title: "Vua mỏ vàng",     desc: "Hoàn thành tất cả màn đào vàng" },
+    { id: "memory_first",   icon: "🃏", title: "Trí nhớ siêu phàm", desc: "Hoàn thành màn ghép cặp đầu tiên" },
+    { id: "memory_master",  icon: "🧠", title: "Bậc thầy trí nhớ",  desc: "Hoàn thành tất cả màn ghép cặp" },
+    { id: "sort_first",     icon: "📦", title: "Nhà phân loại",    desc: "Hoàn thành màn phân loại đầu tiên" },
+    { id: "sort_master",    icon: "🏷️", title: "Siêu sắp xếp",     desc: "Hoàn thành tất cả màn phân loại" },
     { id: "game_runner",    icon: "🍄", title: "Phiêu lưu gia",   desc: "Hoàn thành màn platformer đầu tiên" }
   ];
 
@@ -110,7 +114,7 @@
         total += entry.totalStars;
       }
     });
-    ['game', 'game_maze', 'game_digger'].forEach(function(sub){
+    ['game', 'game_maze', 'game_digger', 'game_memory', 'game_sort'].forEach(function(sub){
       var entry = progress[sub];
       if(!entry || !entry.topics) return;
       Object.values(entry.topics).forEach(function(t){
@@ -134,6 +138,14 @@
 
   function diggerLevelCount(){
     return (window.DiggerLevels && window.DiggerLevels.LEVELS) ? window.DiggerLevels.LEVELS.length : 6;
+  }
+
+  function memoryLevelCount(){
+    return (window.MemoryLevels && window.MemoryLevels.LEVELS) ? window.MemoryLevels.LEVELS.length : 5;
+  }
+
+  function sortLevelCount(){
+    return (window.SortLevels && window.SortLevels.LEVELS) ? window.SortLevels.LEVELS.length : 5;
   }
 
   function subjectsDoneCount(progress){
@@ -166,6 +178,10 @@
       case "maze_master": return gameCompletedCount(progress, "game_maze") >= mazeLevelCount();
       case "digger_first": return gameCompletedCount(progress, "game_digger") >= 1;
       case "digger_master": return gameCompletedCount(progress, "game_digger") >= diggerLevelCount();
+      case "memory_first": return gameCompletedCount(progress, "game_memory") >= 1;
+      case "memory_master": return gameCompletedCount(progress, "game_memory") >= memoryLevelCount();
+      case "sort_first": return gameCompletedCount(progress, "game_sort") >= 1;
+      case "sort_master": return gameCompletedCount(progress, "game_sort") >= sortLevelCount();
       case "game_runner": return gameCompletedCount(progress, "game") >= 1;
       default: return false;
     }

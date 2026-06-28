@@ -1,0 +1,488 @@
+/* ─────────── Trang Pro ─────────── */
+.page-pro #page-root {
+  padding: 88px 16px 48px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.pro-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pro-hero {
+  text-align: center;
+  padding: 28px 24px 32px;
+  background: linear-gradient(145deg, #fffbeb 0%, #fef3c7 45%, #fde68a 100%);
+  border: 2px solid rgba(245, 158, 11, 0.45);
+}
+
+.pro-hero-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.pro-hero-title {
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  color: #1e293b;
+  margin: 0 0 10px;
+  line-height: 1.2;
+}
+
+.pro-hero-title span {
+  background: linear-gradient(90deg, #7c3aed, #db2777);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pro-hero-sub {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  color: #475569;
+  max-width: 520px;
+  margin: 0 auto 16px;
+  line-height: 1.5;
+}
+
+.pro-plan-pill {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px solid #cbd5e1;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.pro-plan-pill.is-pro {
+  border-color: #a855f7;
+  color: #6b21a8;
+  background: #faf5ff;
+}
+
+.pro-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.pro-plan-card {
+  position: relative;
+  padding: 24px 20px;
+  border-radius: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(241,245,249,.92));
+  box-shadow: var(--shadow-card, 0 12px 32px rgba(99, 102, 241, 0.12));
+}
+
+.pro-plan-card--pro {
+  background: linear-gradient(145deg, #faf5ff 0%, #f3e8ff 50%, #ede9fe 100%);
+  border-color: rgba(168, 85, 247, 0.45);
+}
+
+.pro-plan-ribbon {
+  position: absolute;
+  top: 14px;
+  right: -8px;
+  padding: 4px 14px;
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 8px 0 0 8px;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+}
+
+.pro-plan-card h2 {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.5rem;
+  margin: 0 0 4px;
+  color: #1e293b;
+}
+
+.pro-plan-price {
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+.pro-plan-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.8;
+}
+
+.pro-plan-note {
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.pro-upgrade-btn {
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 16px;
+  font-family: 'Baloo 2', cursive;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  box-shadow: 0 6px 0 #5b21b6, 0 12px 24px rgba(124, 58, 237, 0.35);
+  transition: transform .12s, box-shadow .12s;
+}
+
+.pro-upgrade-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.pro-upgrade-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #5b21b6;
+}
+
+.pro-upgrade-btn.is-done,
+.pro-upgrade-btn:disabled {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 4px 0 #15803d;
+  cursor: default;
+}
+
+.pro-upgrade-msg {
+  margin: 12px 0 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pro-upgrade-msg--ok { color: #15803d; }
+.pro-upgrade-msg--err { color: #dc2626; }
+
+.pro-section-title {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.25rem;
+  margin: 0 0 14px;
+  color: #1e293b;
+}
+
+.pro-games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.pro-game-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 2px solid rgba(226, 232, 240, 0.9);
+  text-align: center;
+}
+
+.pro-game-icon { font-size: 28px; }
+
+.pro-game-chip strong {
+  font-family: 'Baloo 2', cursive;
+  font-size: 12px;
+  color: #1e293b;
+}
+
+.pro-game-plays {
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  color: #7c3aed;
+}
+
+.pro-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  padding-bottom: 24px;
+}
+
+/* Play limit modal (game.html) */
+.play-limit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.play-limit-modal[hidden] { display: none !important; }
+
+.play-limit-card {
+  position: relative;
+  width: min(400px, 100%);
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #fffbeb, #fef3c7);
+  border: 3px solid #f59e0b;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.play-limit-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: rgba(0,0,0,.06);
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.play-limit-icon { font-size: 42px; margin-bottom: 8px; }
+
+.play-limit-title {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.35rem;
+  color: #9a3412;
+  margin: 0 0 10px;
+}
+
+.play-limit-msg {
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.play-limit-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.play-limit-btn {
+  display: block;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-family: 'Baloo 2', cursive;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.play-limit-btn--pro {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+}
+
+.play-limit-btn--ghost {
+  background: rgba(255,255,255,.7);
+  color: #64748b;
+}
+
+/* Memory & Sort game UI */
+.memory-ui--play,
+.sort-ui--play {
+  padding: 8px 12px 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+}
+
+.memory-hud,
+.sort-hud {
+  font-family: 'Baloo 2', cursive;
+  font-size: 15px;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0,0,0,.35);
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--mem-cols, 4), 1fr);
+  gap: 8px;
+  flex: 1;
+  align-content: center;
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.memory-card {
+  aspect-ratio: 1;
+  border: 2px solid rgba(255,255,255,.85);
+  border-radius: 14px;
+  background: linear-gradient(145deg, #6366f1, #4f46e5);
+  cursor: pointer;
+  font-size: clamp(22px, 5vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .12s;
+  touch-action: manipulation;
+}
+
+.memory-card:hover:not(:disabled) { transform: scale(1.04); }
+.memory-card.is-matched { opacity: 0.35; pointer-events: none; }
+.memory-card-back { color: #e0e7ff; font-family: 'Baloo 2', cursive; font-weight: 800; }
+
+.sort-stage {
+  text-align: center;
+  padding: 12px;
+}
+
+.sort-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 32px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.92);
+  border: 3px solid #e2e8f0;
+  cursor: pointer;
+  transition: border-color .15s, transform .12s;
+}
+
+.sort-item.is-selected {
+  border-color: #22c55e;
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.25);
+}
+
+.sort-item-emoji { font-size: 48px; }
+.sort-item-label {
+  font-family: 'Baloo 2', cursive;
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.sort-hint {
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  color: rgba(255,255,255,.85);
+  margin: 10px 0 0;
+}
+
+.sort-bins {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.sort-bin {
+  flex: 1;
+  min-width: 120px;
+  max-width: 180px;
+  padding: 16px 12px;
+  border: 2px solid rgba(255,255,255,.9);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fef3c7, #fde68a);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: transform .12s;
+}
+
+.sort-bin:hover { transform: translateY(-3px); }
+.sort-bin-emoji { font-size: 32px; }
+.sort-bin-label {
+  font-family: 'Baloo 2', cursive;
+  font-size: 14px;
+  color: #78350f;
+}
+
+.game-hub-card--memory {
+  background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(237,233,254,.9));
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.game-hub-card--sort {
+  background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(219,234,254,.9));
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.game-hub-plays {
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  color: #7c3aed;
+  margin-top: 2px;
+}
+
+.game-hub-plays.is-empty { color: #dc2626; }
+
+.profile-pro-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #faf5ff, #ede9fe);
+  border: 2px solid rgba(168, 85, 247, 0.35);
+  margin-bottom: 16px;
+}
+
+.profile-pro-banner.is-pro {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.profile-pro-banner-text h2 {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.1rem;
+  margin: 0 0 4px;
+  color: #1e293b;
+}
+
+.profile-pro-banner-text p {
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.page-game.game-pick-memory .memory-ui,
+.page-game.game-pick-sort .sort-ui {
+  visibility: visible;
+}

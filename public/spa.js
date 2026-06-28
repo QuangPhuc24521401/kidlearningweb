@@ -20,7 +20,7 @@
 
   /** Set các pathname được SPA xử lý.
       Lưu ý: cùng origin + path khớp 1 trong các pattern dưới đây mới được intercept. */
-  var SPA_ROUTES = ['/', '/index.html', '/pvp.html', '/progress.html', '/profile.html'];
+  var SPA_ROUTES = ['/', '/index.html', '/pvp.html', '/progress.html', '/profile.html', '/pro.html'];
 
   /** Trả về tên page chuẩn hoá ('index', 'pvp', 'progress', 'profile') hoặc null nếu không phải SPA. */
   function routeName(pathname){
@@ -28,6 +28,7 @@
     if(pathname.endsWith('/pvp.html'))      return 'pvp';
     if(pathname.endsWith('/progress.html')) return 'progress';
     if(pathname.endsWith('/profile.html'))  return 'profile';
+    if(pathname.endsWith('/pro.html'))      return 'pro';
     return null;
   }
 
@@ -75,6 +76,10 @@
     profile: function(){
       if(typeof window.mountUserBar === 'function') window.mountUserBar();
       if(typeof window.renderProfilePage === 'function') window.renderProfilePage();
+    },
+    pro: function(){
+      if(typeof window.mountUserBar === 'function') window.mountUserBar();
+      if(typeof window.renderProPage === 'function') window.renderProPage();
     }
   };
 

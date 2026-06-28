@@ -265,6 +265,8 @@ function cacheUserMeta(meta) {
     if (meta?.role)      localStorage.setItem("userRole", meta.role);
     if (meta?.classRoom) localStorage.setItem("classRoom", meta.classRoom);
     if (meta?.displayName) localStorage.setItem("userDisplayName", meta.displayName);
+    if (meta?.plan === "pro" || meta?.role === "teacher") localStorage.setItem("userPlan", "pro");
+    else if (meta?.plan) localStorage.setItem("userPlan", "basic");
     if (meta?.role === "teacher") {
       localStorage.removeItem("studentAvatarMode");
       localStorage.removeItem("studentAvatarEmoji");
@@ -636,6 +638,7 @@ async function handleParentRegister(e) {
     /** Đăng ký chỉ cần tối thiểu — avatar/nickname trong trang onboarding sau đăng nhập lần đầu. */
     await writeUserMeta(cred.user.uid, {
       role: "parent",
+      plan: "basic",
       email,
       classRoom: classCheck.classRoom,
       childName: childName || "",
