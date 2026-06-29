@@ -12,6 +12,7 @@
   var mentorCooldownUntil = 0;
   var mentorCooldownTimer = null;
   var statusTimer = null;
+  var micAskSent = false;
 
   function $(id) { return document.getElementById(id); }
 
@@ -50,7 +51,8 @@
     var input = $('askInput');
     var btn = $('askSendBtn');
     var mic = $('micBtn');
-    var limited = window.KidMentorLimits && !window.KidMentorLimits.canAsk();
+    var limits = window.KidMentorLimits;
+    var limited = limits && (!limits.isReady() || !limits.canAsk());
     var off = disabled || limited;
     if (input) input.disabled = off;
     if (btn) btn.disabled = off;
@@ -69,9 +71,13 @@
   };
 
   function startListen() {
-    if (window.KidMentorLimits && !window.KidMentorLimits.canAsk()) {
-      window.KidMentorLimits.showLimitModal();
-      return;
+    micAskSent = false;
+    if (window.KidMentorLimits) {
+      if (!window.KidMentorLimits.isReady()) return;
+      if (!window.KidMentorLimits.canAsk()) {
+        window.KidMentorLimits.showLimitModal();
+        return;
+      }
     }
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { showStatus('error', '⚠️ Dùng Chrome để dùng mic!'); return; }
@@ -95,7 +101,11 @@
       var text = '';
       for (var i = 0; i < e.results.length; i++) text = e.results[i][0].transcript;
       $('micHeard').textContent = '👂 "' + text + '"';
-      if (e.results[0].isFinal) { stopListen(); window.askQuestion(text); }
+      if (e.results[0].isFinal && !micAskSent) {
+        micAskSent = true;
+        stopListen();
+        window.askQuestion(text);
+      }
     };
 
     recognition.onerror = function () { stopListen(); };
@@ -124,10 +134,13 @@
   window.askQuestion = async function (text) {
     if (!text.trim() || isAsking) return;
 
-    if (window.KidMentorLimits && !window.KidMentorLimits.canAsk()) {
-      window.KidMentorLimits.showLimitModal();
-      syncFormWithLimits();
-      return;
+    if (window.KidMentorLimits) {
+      if (!window.KidMentorLimits.isReady()) return;
+      if (!window.KidMentorLimits.tryAsk()) {
+        window.KidMentorLimits.showLimitModal();
+        syncFormWithLimits();
+        return;
+      }
     }
 
     isAsking = true;
@@ -170,8 +183,6 @@
       reply = getFallbackReply(text);
       showStatus('error', 'Cô trả lời sai ngôn ngữ — đang dùng câu tiếng Việt mẫu');
     }
-
-    if (window.KidMentorLimits) window.KidMentorLimits.consumeAsk();
 
     isAsking = false;
     syncFormWithLimits();
