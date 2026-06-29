@@ -266,7 +266,7 @@
 
 .pro-games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 
@@ -517,6 +517,16 @@
   border-color: rgba(59, 130, 246, 0.4);
 }
 
+.game-hub-card--spot {
+  background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(254,243,199,.9));
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.game-hub-card--spot .game-hub-card-tag {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}
+
 .game-hub-plays {
   font-family: 'Nunito', sans-serif;
   font-size: 10px;
@@ -560,8 +570,87 @@
 }
 
 .page-game.game-pick-memory .memory-ui,
-.page-game.game-pick-sort .sort-ui {
+.page-game.game-pick-sort .sort-ui,
+.page-game.game-pick-spot .spot-ui {
   visibility: visible;
+}
+
+/* Spot — Tìm khác biệt */
+.spot-ui--play {
+  padding: 8px 12px 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.spot-hud {
+  font-family: 'Baloo 2', cursive;
+  font-size: 15px;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0,0,0,.35);
+}
+
+.spot-prompt {
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(1rem, 3.5vw, 1.25rem);
+  color: #fef08a;
+  text-align: center;
+  margin: 0;
+  line-height: 1.35;
+  text-shadow: 0 2px 6px rgba(0,0,0,.4);
+}
+
+.spot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 360px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  align-content: center;
+  transition: transform .15s;
+}
+
+.spot-grid.is-wrong-flash {
+  animation: spotWrongFlash .4s ease;
+}
+
+@keyframes spotWrongFlash {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.spot-choice {
+  aspect-ratio: 1;
+  border: 3px solid rgba(255,255,255,.9);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(241,245,249,.9));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .12s, border-color .12s, box-shadow .12s;
+  touch-action: manipulation;
+  min-height: 72px;
+}
+
+.spot-choice:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+}
+
+.spot-choice:active {
+  transform: scale(0.96);
+}
+
+.spot-choice-emoji {
+  font-size: clamp(32px, 10vw, 48px);
+  line-height: 1;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -640,7 +729,7 @@
   }
 
   .pro-games-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
 
@@ -769,6 +858,21 @@
   .sort-bin-label {
     font-size: 13px;
   }
+
+  .spot-prompt {
+    font-size: 0.95rem;
+    padding: 0 6px;
+  }
+
+  .spot-grid {
+    gap: 8px;
+    max-width: none;
+  }
+
+  .spot-choice {
+    min-height: 64px;
+    border-radius: 14px;
+  }
 }
 
 @media (max-width: 380px) {
@@ -777,7 +881,8 @@
   }
 
   .pro-games-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
   }
 
   .game-hub-plays {

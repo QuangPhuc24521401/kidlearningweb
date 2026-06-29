@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════
-   GAME-HUB.JS — Chọn game (5 trò chơi học tập)
+   GAME-HUB.JS — Chọn game (6 trò chơi học tập)
 ═══════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
 
-  var GAME_IDS = ['platformer', 'maze', 'digger', 'memory', 'sort'];
+  var GAME_IDS = ['platformer', 'maze', 'digger', 'memory', 'sort', 'spot'];
 
   function $(id) { return document.getElementById(id); }
 
@@ -25,6 +25,7 @@
     if (global.GameDigger && global.GameDigger.shutdown) global.GameDigger.shutdown();
     if (global.GameMemory && global.GameMemory.shutdown) global.GameMemory.shutdown();
     if (global.GameSort && global.GameSort.shutdown) global.GameSort.shutdown();
+    if (global.GameSpot && global.GameSpot.shutdown) global.GameSpot.shutdown();
     var mount = $('gameMount');
     if (mount) mount.innerHTML = '';
     if (global.GameQuizUI) global.GameQuizUI.hide();
@@ -37,6 +38,7 @@
     else if (which === 'digger' && global.GameDigger) global.GameDigger.boot();
     else if (which === 'memory' && global.GameMemory) global.GameMemory.boot();
     else if (which === 'sort' && global.GameSort) global.GameSort.boot();
+    else if (which === 'spot' && global.GameSpot) global.GameSpot.boot();
     else if (global.GamePlatformer) global.GamePlatformer.boot();
     if (LANDSCAPE_GAMES.indexOf(which) >= 0 && global.KidGameOrientation && global.KidGameOrientation.enter) {
       global.KidGameOrientation.enter({ userGesture: true });
@@ -70,7 +72,7 @@
     destroyGames();
     document.body.classList.remove(
       'game-pick-platformer', 'game-pick-maze', 'game-pick-digger',
-      'game-pick-memory', 'game-pick-sort', 'game-force-landscape', 'game-virt-landscape'
+      'game-pick-memory', 'game-pick-sort', 'game-pick-spot', 'game-force-landscape', 'game-virt-landscape'
     );
     document.body.classList.add('game-hub-visible');
     if (global.KidGameOrientation && global.KidGameOrientation.exit) {
@@ -110,6 +112,7 @@
       digger: 'Mẹo: Móc <b>đung đưa</b> — nhấn <b>Space</b> hoặc nút <b>⛏</b> để thả · kéo vàng lên · <b>trả lời đúng</b> mới vào túi!',
       memory: 'Mẹo: <b>Bấm 2 thẻ</b> giống nhau để ghép cặp · trả lời câu hỏi để nhận thêm sao!',
       sort: 'Mẹo: <b>Bấm đồ vật</b> rồi chọn <b>thùng đúng</b> · phân loại hết trước khi hết giờ!',
+      spot: 'Mẹo: <b>Bấm món khác biệt</b> trong 4 lựa chọn · trả lời câu hỏi để nhận thêm sao!',
       platformer: 'Mẹo: <b>← →</b> đi, <b>Space/↑</b> nhảy · trả lời đúng mở cổng!'
     };
     hint.innerHTML = hints[which] || hints.platformer;
@@ -131,7 +134,7 @@
     }
     document.body.classList.remove('game-hub-visible');
     document.body.classList.remove(
-      'game-pick-platformer', 'game-pick-maze', 'game-pick-digger', 'game-pick-memory', 'game-pick-sort'
+      'game-pick-platformer', 'game-pick-maze', 'game-pick-digger', 'game-pick-memory', 'game-pick-sort', 'game-pick-spot'
     );
     document.body.classList.add('game-pick-' + which);
 

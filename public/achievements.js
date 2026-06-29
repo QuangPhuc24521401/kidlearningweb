@@ -42,6 +42,8 @@
     { id: "memory_master",  icon: "🧠", title: "Bậc thầy trí nhớ",  desc: "Hoàn thành tất cả màn ghép cặp" },
     { id: "sort_first",     icon: "📦", title: "Nhà phân loại",    desc: "Hoàn thành màn phân loại đầu tiên" },
     { id: "sort_master",    icon: "🏷️", title: "Siêu sắp xếp",     desc: "Hoàn thành tất cả màn phân loại" },
+    { id: "spot_first",     icon: "🔍", title: "Mắt tinh tường",   desc: "Hoàn thành màn tìm khác biệt đầu tiên" },
+    { id: "spot_master",    icon: "👁️", title: "Thám tử nhí",      desc: "Hoàn thành tất cả màn tìm khác biệt" },
     { id: "game_runner",    icon: "🍄", title: "Phiêu lưu gia",   desc: "Hoàn thành màn platformer đầu tiên" }
   ];
 
@@ -114,7 +116,7 @@
         total += entry.totalStars;
       }
     });
-    ['game', 'game_maze', 'game_digger', 'game_memory', 'game_sort'].forEach(function(sub){
+    ['game', 'game_maze', 'game_digger', 'game_memory', 'game_sort', 'game_spot'].forEach(function(sub){
       var entry = progress[sub];
       if(!entry || !entry.topics) return;
       Object.values(entry.topics).forEach(function(t){
@@ -146,6 +148,10 @@
 
   function sortLevelCount(){
     return (window.SortLevels && window.SortLevels.LEVELS) ? window.SortLevels.LEVELS.length : 5;
+  }
+
+  function spotLevelCount(){
+    return (window.SpotLevels && window.SpotLevels.LEVELS) ? window.SpotLevels.LEVELS.length : 5;
   }
 
   function subjectsDoneCount(progress){
@@ -182,6 +188,8 @@
       case "memory_master": return gameCompletedCount(progress, "game_memory") >= memoryLevelCount();
       case "sort_first": return gameCompletedCount(progress, "game_sort") >= 1;
       case "sort_master": return gameCompletedCount(progress, "game_sort") >= sortLevelCount();
+      case "spot_first": return gameCompletedCount(progress, "game_spot") >= 1;
+      case "spot_master": return gameCompletedCount(progress, "game_spot") >= spotLevelCount();
       case "game_runner": return gameCompletedCount(progress, "game") >= 1;
       default: return false;
     }

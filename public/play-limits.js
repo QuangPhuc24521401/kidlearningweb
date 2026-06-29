@@ -6,13 +6,14 @@
 
   var LIMIT = 3;
   var STORAGE_KEY = 'kid_game_play_counts';
-  var GAME_IDS = ['platformer', 'maze', 'digger', 'memory', 'sort'];
+  var GAME_IDS = ['platformer', 'maze', 'digger', 'memory', 'sort', 'spot'];
   var GAME_LABELS = {
     platformer: 'Phiêu lưu Platformer',
     maze: 'Mê cung 2D',
     digger: 'Đào vàng',
     memory: 'Ghép cặp trí nhớ',
-    sort: 'Phân loại thông minh'
+    sort: 'Phân loại thông minh',
+    spot: 'Tìm khác biệt'
   };
 
   function readLocal() {

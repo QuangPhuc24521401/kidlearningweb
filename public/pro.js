@@ -9,7 +9,8 @@
     { id: 'maze', icon: '🧩', name: 'Mê cung 2D' },
     { id: 'digger', icon: '⛏️', name: 'Đào vàng' },
     { id: 'memory', icon: '🃏', name: 'Ghép cặp trí nhớ' },
-    { id: 'sort', icon: '📦', name: 'Phân loại thông minh' }
+    { id: 'sort', icon: '📦', name: 'Phân loại thông minh' },
+    { id: 'spot', icon: '🔍', name: 'Tìm khác biệt' }
   ];
 
   function $(id) { return document.getElementById(id); }

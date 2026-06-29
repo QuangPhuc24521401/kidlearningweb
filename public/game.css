@@ -575,6 +575,7 @@ body:not(.game-mobile-input) .game-touch {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+  align-items: stretch;
 }
 
 .game-hub-card {
@@ -649,6 +650,26 @@ body:not(.game-mobile-input) .game-touch {
 .game-hub-card--digger .game-hub-card-tag {
   background: rgba(234, 179, 8, 0.18);
   color: #a16207;
+}
+
+.game-hub-card--memory {
+  background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(237,233,254,.9));
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.game-hub-card--sort {
+  background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(219,234,254,.9));
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.game-hub-card--spot {
+  background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(254,243,199,.9));
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.game-hub-card--spot .game-hub-card-tag {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
 }
 
 .game-switch-btn {
@@ -836,10 +857,23 @@ body:not(.game-mobile-input) .game-touch {
   max-width: 880px;
 }
 
-@media (max-width: 900px) {
-  .game-hub-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.page-game.game-pick-memory .game-stage,
+.page-game.game-pick-sort .game-stage,
+.page-game.game-pick-spot .game-stage {
+  min-height: min(70vh, 520px);
+  aspect-ratio: unset;
+}
+
+.page-game.game-pick-memory .game-mount,
+.page-game.game-pick-sort .game-mount,
+.page-game.game-pick-spot .game-mount,
+.page-game.game-pick-memory .memory-ui,
+.page-game.game-pick-sort .sort-ui,
+.page-game.game-pick-spot .spot-ui {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 @media (max-width: 640px) {
@@ -849,7 +883,7 @@ body:not(.game-mobile-input) .game-touch {
   }
 
   .game-hub {
-    padding: 4px 12px max(32px, env(safe-area-inset-bottom));
+    padding: 4px 10px max(32px, env(safe-area-inset-bottom));
   }
 
   .game-hub-head {
@@ -857,61 +891,60 @@ body:not(.game-mobile-input) .game-touch {
   }
 
   .game-hub-title {
-    font-size: clamp(1.35rem, 6vw, 1.65rem);
+    font-size: clamp(1.3rem, 5vw, 1.55rem);
   }
 
   .game-hub-sub {
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.45;
-    padding: 0 4px;
+    padding: 0 2px;
   }
 
   .game-hub-pro-link {
-    font-size: 12px;
-    line-height: 1.45;
-    padding: 0 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 0 4px;
   }
 
+  /* Luôn 3 cột — 2 hàng × 3 game */
   .game-hub-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
 
-  /* Thẻ game dạng ngang — dễ quét trên mobile */
   .game-hub-card {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 18px;
-    min-height: 72px;
+    text-align: center;
+    gap: 4px;
+    padding: 12px 6px;
+    border-radius: 16px;
+    min-height: 0;
   }
 
   .game-hub-card-icon {
-    font-size: 34px;
-    flex-shrink: 0;
-    width: 44px;
-    text-align: center;
+    font-size: 28px;
+    width: auto;
   }
 
   .game-hub-card-name {
-    font-size: 1rem;
+    font-size: 0.72rem;
     line-height: 1.2;
   }
 
   .game-hub-card-desc {
-    font-size: 12px;
-    line-height: 1.35;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: none;
   }
 
-  .game-hub-card-tag,
+  .game-hub-card-tag {
+    font-size: 9px;
+    padding: 2px 6px;
+    margin-top: 0;
+  }
+
   .game-hub-plays {
-    font-size: 10px;
-    margin-top: 2px;
+    font-size: 8px;
+    line-height: 1.2;
   }
 
   .maze-ui {
@@ -975,7 +1008,8 @@ body:not(.game-mobile-input) .game-touch {
   }
 
   .page-game.game-pick-memory .game-switch-btn,
-  .page-game.game-pick-sort .game-switch-btn {
+  .page-game.game-pick-sort .game-switch-btn,
+  .page-game.game-pick-spot .game-switch-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -983,14 +1017,29 @@ body:not(.game-mobile-input) .game-touch {
   }
 
   .page-game.game-pick-memory .game-hint,
-  .page-game.game-pick-sort .game-hint {
+  .page-game.game-pick-sort .game-hint,
+  .page-game.game-pick-spot .game-hint {
     display: none;
+  }
+
+  .page-game.game-pick-spot .game-stage {
+    min-height: min(72vh, 640px);
+    aspect-ratio: unset;
+  }
+
+  .page-game.game-pick-spot:not(.game-force-landscape) .game-wrap {
+    max-width: 100%;
+    padding: 0 8px;
   }
 }
 
 @media (max-width: 380px) {
-  .game-hub-card-desc {
-    -webkit-line-clamp: 1;
+  .game-hub-card-name {
+    font-size: 0.65rem;
+  }
+
+  .game-hub-card-icon {
+    font-size: 24px;
   }
 
   .maze-select-grid {
