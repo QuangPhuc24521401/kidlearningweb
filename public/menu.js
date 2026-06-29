@@ -167,6 +167,20 @@ function _statusOf(agg){
   return 'inprogress';
 }
 
+/** Số chủ đề/bài trong môn (từ LESSON_DATA khi chưa có tiến độ lưu). */
+function _subjectTopicCount(sub){
+  try{
+    var rows = window.LESSON_DATA && window.LESSON_DATA[sub];
+    if(!rows || !rows.length) return 0;
+    var seen = {};
+    rows.forEach(function(q){
+      if(q && q.topic) seen[q.topic] = true;
+    });
+    var n = Object.keys(seen).length;
+    return n || rows.length;
+  }catch(e){ return 0; }
+}
+
 function renderProgressBadges(){
   var data = _readProgress();
   var subjects = ['nhan_biet','tu_duy','am_nhac','ghep_hinh','my_thuat','ngon_ngu'];
@@ -245,10 +259,11 @@ function renderProgressSubjects(){
     var meta = PROGRESS_SUBJECT_META[sub] || { title: sub, icon: '📘', tag: 'Môn', tone: 'lang' };
     var agg = _aggregateSubject(data[sub]);
     var status = _statusOf(agg);
-    var done = agg.topicsDone || 0;
-    var totalT = agg.topicsTotal || 0;
+    var done = agg ? (agg.topicsDone || 0) : 0;
+    var totalT = agg ? (agg.topicsTotal || 0) : _subjectTopicCount(sub);
+    if(!totalT) totalT = _subjectTopicCount(sub);
     var pct = totalT ? Math.round(done / totalT * 100) : 0;
-    var stars = agg.totalStars || 0;
+    var stars = agg ? (agg.totalStars || 0) : 0;
     var statusLabel = status === 'done' ? 'Hoàn thành' : (status === 'inprogress' ? 'Đang học' : 'Chưa học');
     var statusClass = status === 'done' ? 'prog-sub-status--done' : (status === 'inprogress' ? 'prog-sub-status--prog' : 'prog-sub-status--none');
     return (
