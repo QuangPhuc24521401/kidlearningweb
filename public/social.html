@@ -10,8 +10,8 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css?v=20260528d">
-<link rel="stylesheet" href="menu.css?v=20260528d">
-<link rel="stylesheet" href="social.css?v=20260625b">
+<link rel="stylesheet" href="menu.css?v=20260630f">
+<link rel="stylesheet" href="social.css?v=20260701a">
 <script>
   (function(){
     try{ if(localStorage.getItem('userRole')) return; }catch(e){}
@@ -67,17 +67,43 @@
 <main id="page-root" data-page="social">
   <div class="soc-shell">
 
-    <header class="soc-banner">
-      <div class="soc-banner-text">
-        <h1>🌈 Cộng đồng Kid Learning</h1>
-        <p>Chia sẻ, kết bạn và trò chuyện cùng lớp!</p>
+    <header class="soc-hero">
+      <div class="soc-hero-main">
+        <p class="soc-hero-eyebrow">Cộng đồng học tập</p>
+        <h1>Kid Learning Social</h1>
+        <p class="soc-hero-desc">Chia sẻ thành tích, kết bạn cùng lớp và cùng nhau tiến bộ mỗi ngày.</p>
       </div>
-      <div class="soc-banner-deco" aria-hidden="true">✨🎈⭐</div>
+      <div class="soc-hero-stats" aria-label="Thống kê nhanh">
+        <div class="soc-stat-chip soc-stat-chip--members">
+          <span class="soc-stat-icon" aria-hidden="true">👥</span>
+          <div class="soc-stat-body">
+            <strong class="soc-stat-value" id="socStatClass">—</strong>
+            <span class="soc-stat-label">Thành viên lớp</span>
+          </div>
+        </div>
+        <div class="soc-stat-chip soc-stat-chip--stars">
+          <span class="soc-stat-icon" aria-hidden="true">⭐</span>
+          <div class="soc-stat-body">
+            <strong class="soc-stat-value" id="socStatStars">0</strong>
+            <span class="soc-stat-label">Sao của bạn</span>
+          </div>
+        </div>
+        <div class="soc-stat-chip soc-stat-chip--rank">
+          <span class="soc-stat-icon" aria-hidden="true">🏆</span>
+          <div class="soc-stat-body">
+            <strong class="soc-stat-value" id="socStatRank">—</strong>
+            <span class="soc-stat-label">Xếp hạng lớp</span>
+          </div>
+        </div>
+      </div>
     </header>
 
     <nav class="soc-nav" role="tablist" aria-label="Chức năng cộng đồng">
       <button type="button" class="soc-nav-btn is-active" data-panel="feed" role="tab" aria-selected="true">
         <span class="soc-nav-icon">📣</span><span class="soc-nav-label">Bảng tin</span>
+      </button>
+      <button type="button" class="soc-nav-btn" data-panel="discover" role="tab" aria-selected="false">
+        <span class="soc-nav-icon">✨</span><span class="soc-nav-label">Khám phá</span>
       </button>
       <button type="button" class="soc-nav-btn" data-panel="search" role="tab" aria-selected="false">
         <span class="soc-nav-icon">🔍</span><span class="soc-nav-label">Tìm bạn</span>
@@ -90,6 +116,9 @@
         <span class="soc-nav-icon">💬</span><span class="soc-nav-label">Tin nhắn</span>
       </button>
     </nav>
+
+    <div class="soc-dashboard">
+      <div class="soc-main">
 
     <!-- ═══ TAB: BẢNG TIN ═══ -->
     <section class="soc-panel is-active" id="panel-feed" data-panel="feed" role="tabpanel">
@@ -109,6 +138,15 @@
         <button type="button" class="soc-feed-tab" data-feed="all">🌍 Tất cả</button>
       </div>
       <div class="soc-card soc-feed-card" id="socFeed" aria-live="polite"></div>
+    </section>
+
+    <!-- ═══ TAB: KHÁM PHÁ ═══ -->
+    <section class="soc-panel" id="panel-discover" data-panel="discover" role="tabpanel" hidden>
+      <div class="soc-discover-grid">
+        <div class="soc-card soc-widget-card" id="socDiscoverFeatured"></div>
+        <div class="soc-card soc-widget-card" id="socDiscoverLeaderboard"></div>
+        <div class="soc-card soc-widget-card soc-widget-card--wide" id="socDiscoverNews"></div>
+      </div>
     </section>
 
     <!-- ═══ TAB: TÌM BẠN ═══ -->
@@ -155,6 +193,27 @@
       </div>
     </section>
 
+      </div><!-- /.soc-main -->
+
+      <aside class="soc-sidebar" id="socSidebar" aria-label="Tin nổi bật và xếp hạng">
+        <div class="soc-widget" id="socFeaturedWidget"></div>
+        <div class="soc-widget" id="socLeaderboardWidget"></div>
+        <div class="soc-widget" id="socNewsWidget"></div>
+        <div class="soc-widget soc-widget--links">
+          <div class="soc-widget-head">
+            <span class="soc-widget-icon">🔗</span>
+            <h3>Lối tắt</h3>
+          </div>
+          <div class="soc-quick-links">
+            <a href="progress.html" class="soc-quick-link">🏅 Tiến độ &amp; huy hiệu</a>
+            <a href="game.html" class="soc-quick-link">🎮 Khu game</a>
+            <a href="pvp.html" class="soc-quick-link">⚔️ Đấu PvP</a>
+            <a href="index.html" class="soc-quick-link">📚 Học bài</a>
+          </div>
+        </div>
+      </aside>
+    </div><!-- /.soc-dashboard -->
+
   </div>
 </main>
 
@@ -182,6 +241,6 @@
 <script src="secrets/tts.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
-<script src="social.js?v=20260625b"></script>
+<script src="social.js?v=20260701a"></script>
 </body>
 </html>

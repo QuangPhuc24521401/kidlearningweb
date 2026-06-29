@@ -256,6 +256,19 @@
     });
   }
 
+  function computeStarsFromProgress(prog) {
+    var stars = 0;
+    if (!prog || typeof prog !== 'object') return 0;
+    Object.keys(prog).forEach(function (sub) {
+      var entry = prog[sub];
+      if (!entry || !entry.topics) return;
+      Object.values(entry.topics).forEach(function (t) {
+        stars += t.totalStars || 0;
+      });
+    });
+    return stars;
+  }
+
   /** Tiến độ / thành tựu tóm tắt từ learning_progress. */
   function getUserAchievements(uid) {
     var firestore = db();
@@ -276,6 +289,136 @@
       });
       return { stars: stars, badges: badges, gameLevels: gameLevels };
     }).catch(function () { return { stars: 0, badges: 0, gameLevels: 0 }; });
+  }
+
+  /** Bài nổi bật — ưu tiên nhiều like + thành tích gần đây. */
+  function listFeaturedPosts(limit) {
+    limit = limit || 3;
+    return whenAuthReady().then(function (user) {
+      if (!user) return [];
+      return listPosts('class').then(function (posts) {
+        if (posts && posts.length) return posts;
+        return listPosts('all');
+      }).then(function (posts) {
+        posts = posts || [];
+        return posts.slice().sort(function (a, b) {
+          var scoreA = (a.likeCount || 0) * 12 + (a.type === 'achievement' ? 8 : 0) + (a.commentCount || 0) * 2;
+          var scoreB = (b.likeCount || 0) * 12 + (b.type === 'achievement' ? 8 : 0) + (b.commentCount || 0) * 2;
+          if (scoreB !== scoreA) return scoreB - scoreA;
+          return (b.createdMs || 0) - (a.createdMs || 0);
+        }).slice(0, limit);
+      });
+    }).catch(function () { return []; });
+  }
+
+  /** Bảng vàng sao trong lớp (cùng classRoom). */
+  function getClassLeaderboard(limit) {
+    limit = limit || 8;
+    return whenAuthReady().then(function (user) {
+      if (!user) return { rows: [], myRank: null, classRoom: '', memberCount: 0 };
+      return getPublicProfile(user.uid).then(function (me) {
+        if (!me.classRoom) {
+          return getUserAchievements(user.uid).then(function (ach) {
+            return {
+              rows: [{
+                uid: user.uid,
+                displayName: me.displayName,
+                stars: ach.stars,
+                avatarMode: me.avatarMode,
+                avatarEmoji: me.avatarEmoji,
+                avatarRing: me.avatarRing,
+                avatarPhoto: me.avatarPhoto,
+                isMe: true
+              }],
+              myRank: 1,
+              classRoom: '',
+              memberCount: 1
+            };
+          });
+        }
+        return db().collection('users').where('classRoom', '==', me.classRoom).limit(40).get()
+          .then(function (snap) {
+            var users = snap.docs.map(function (d) {
+              var x = d.data();
+              var av = avatarFromUserDoc(x);
+              return {
+                uid: d.id,
+                displayName: x.displayName || x.nickname || x.childName || 'Bé học sinh',
+                role: x.role || 'parent',
+                avatarMode: av.avatarMode,
+                avatarEmoji: av.avatarEmoji,
+                avatarRing: av.avatarRing,
+                avatarPhoto: av.avatarPhoto
+              };
+            }).filter(function (u) { return u.role !== 'teacher'; });
+
+            if (!users.length) {
+              return getUserAchievements(user.uid).then(function (ach) {
+                return {
+                  rows: [{
+                    uid: user.uid,
+                    displayName: me.displayName,
+                    stars: ach.stars,
+                    avatarMode: me.avatarMode,
+                    avatarEmoji: me.avatarEmoji,
+                    avatarRing: me.avatarRing,
+                    avatarPhoto: me.avatarPhoto,
+                    isMe: true
+                  }],
+                  myRank: 1,
+                  classRoom: me.classRoom,
+                  memberCount: 0
+                };
+              });
+            }
+
+            var tasks = users.map(function (u) {
+              return db().collection('learning_progress').doc(u.uid).get()
+                .then(function (ps) {
+                  var prog = ps.exists && ps.data().progress ? ps.data().progress : {};
+                  return {
+                    uid: u.uid,
+                    displayName: u.displayName,
+                    stars: computeStarsFromProgress(prog),
+                    avatarMode: u.avatarMode,
+                    avatarEmoji: u.avatarEmoji,
+                    avatarRing: u.avatarRing,
+                    avatarPhoto: u.avatarPhoto,
+                    isMe: u.uid === user.uid
+                  };
+                }).catch(function () {
+                  return {
+                    uid: u.uid,
+                    displayName: u.displayName,
+                    stars: 0,
+                    avatarMode: u.avatarMode,
+                    avatarEmoji: u.avatarEmoji,
+                    avatarRing: u.avatarRing,
+                    avatarPhoto: u.avatarPhoto,
+                    isMe: u.uid === user.uid
+                  };
+                });
+            });
+
+            return Promise.all(tasks).then(function (rows) {
+              rows.sort(function (a, b) {
+                if (b.stars !== a.stars) return b.stars - a.stars;
+                return String(a.displayName).localeCompare(String(b.displayName), 'vi');
+              });
+              var myRank = null;
+              rows.forEach(function (r, i) { if (r.isMe) myRank = i + 1; });
+              return {
+                rows: rows.slice(0, limit),
+                myRank: myRank,
+                classRoom: me.classRoom,
+                memberCount: users.length
+              };
+            });
+          });
+      });
+    }).catch(function () {
+      return { rows: [], myRank: null, classRoom: '', memberCount: 0 };
+    });
   }
 
   function isFollowing(targetUid) {
@@ -896,6 +1039,9 @@
     renderAvatarHtml: renderAvatarHtml,
     enrichProfiles: enrichProfiles,
     getUserAchievements: getUserAchievements,
+    computeStarsFromProgress: computeStarsFromProgress,
+    listFeaturedPosts: listFeaturedPosts,
+    getClassLeaderboard: getClassLeaderboard,
     isFollowing: isFollowing,
     follow: follow,
     unfollow: unfollow,

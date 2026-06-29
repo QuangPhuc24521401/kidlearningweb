@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   SOCIAL.JS — Hub cộng đồng (4 tab: feed / search / friends / chat)
+   SOCIAL.JS — Hub cộng đồng (feed / khám phá / tìm bạn / bạn bè / chat)
 ═══════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -12,6 +12,14 @@
   var unsubMessages = null;
   var searchTimer = null;
   var isMobile = false;
+
+  var NEWS_ITEMS = [
+    { tag: 'Mới', title: '6 game học tập Basic & Pro', desc: 'Platformer, mê cung, trí nhớ, phân loại và tìm khác biệt.', link: 'game.html', icon: '🎮' },
+    { tag: 'Sự kiện', title: 'Tuần lửa học tập', desc: 'Học 7 ngày liên tiếp để mở huy hiệu Tuần vàng trên trang Tiến độ.', link: 'progress.html', icon: '🔥' },
+    { tag: 'Mẹo', title: 'Chia sẻ thành tích', desc: 'Bấm nút vàng khi đăng bài để bạn bè cổ vũ bé học giỏi!', link: '', icon: '⭐' },
+    { tag: 'Cộng đồng', title: 'Kết bạn để nhắn tin', desc: 'Gửi lời mời ở tab Tìm bạn — chấp nhận xong mới chat được.', link: '', icon: '💬' },
+    { tag: 'PvP', title: 'Thi đấu cùng bạn', desc: 'Vào sảnh PvP để thi đấu trí tuệ realtime với bạn bè.', link: 'pvp.html', icon: '⚔️' }
+  ];
 
   function $(id) { return document.getElementById(id); }
 
@@ -28,9 +36,165 @@
 
   function updateBodyPanelClass(panel) {
     document.body.classList.toggle('soc-panel-chat', panel === 'chat');
+    document.body.classList.toggle('soc-panel-discover', panel === 'discover');
     if (panel !== 'chat') {
       document.body.classList.remove('soc-chat-open');
     }
+  }
+
+  function rankMedal(i) {
+    if (i === 0) return '🥇';
+    if (i === 1) return '🥈';
+    if (i === 2) return '🥉';
+    return String(i + 1);
+  }
+
+  function renderFeaturedHtml(posts, compact) {
+    if (!posts || !posts.length) {
+      return '<div class="soc-widget-empty">Chưa có tin nổi bật — hãy đăng bài đầu tiên!</div>';
+    }
+    return posts.map(function (p, idx) {
+      var hot = (p.likeCount || 0) >= 2 || p.type === 'achievement';
+      var text = p.text.length > (compact ? 72 : 120) ? p.text.slice(0, compact ? 72 : 120) + '…' : p.text;
+      return '<article class="soc-hot-item' + (hot ? ' is-hot' : '') + '" data-post-id="' + KidSocial.esc(p.id) + '">' +
+        '<div class="soc-hot-top">' +
+          (hot ? '<span class="soc-hot-badge">🔥 Nổi bật</span>' : '<span class="soc-hot-badge soc-hot-badge--soft">📌 Mới</span>') +
+          '<span class="soc-hot-meta">❤️ ' + (p.likeCount || 0) + '</span>' +
+        '</div>' +
+        '<a class="soc-hot-user" href="profile.html?uid=' + encodeURIComponent(p.authorUid) + '">' +
+          avatarHtml(postAuthorProf(p)).replace('soc-av', 'soc-av soc-hot-av') +
+          '<span>' + KidSocial.esc(p.authorName) + '</span>' +
+        '</a>' +
+        '<p class="soc-hot-text">' + KidSocial.esc(text) + '</p>' +
+        (compact ? '' : '<button type="button" class="soc-hot-link" data-goto-post="' + KidSocial.esc(p.id) + '">Xem trên bảng tin →</button>') +
+      '</article>';
+    }).join('');
+  }
+
+  function renderLeaderboardHtml(data, compact) {
+    data = data || { rows: [], classRoom: '', myRank: null };
+    var rows = data.rows || [];
+    if (!rows.length) {
+      return '<div class="soc-widget-empty">Chưa có dữ liệu xếp hạng. Hãy học bài để tích sao nhé!</div>';
+    }
+    var head = data.classRoom
+      ? '<p class="soc-lb-sub">Lớp <strong>' + KidSocial.esc(data.classRoom) + '</strong>' +
+        (data.myRank ? ' · Bạn đang hạng <strong>#' + data.myRank + '</strong>' : '') + '</p>'
+      : '<p class="soc-lb-sub">Thêm mã lớp ở Hồ sơ để xem bảng vàng cùng lớp.</p>';
+    var list = rows.map(function (r, i) {
+      var prof = {
+        avatarMode: r.avatarMode,
+        avatarEmoji: r.avatarEmoji,
+        avatarRing: r.avatarRing,
+        avatarPhoto: r.avatarPhoto
+      };
+      return '<div class="soc-lb-row' + (r.isMe ? ' is-me' : '') + '">' +
+        '<span class="soc-lb-rank" aria-hidden="true">' + rankMedal(i) + '</span>' +
+        '<a class="soc-lb-user" href="profile.html?uid=' + encodeURIComponent(r.uid) + '">' +
+          avatarHtml(prof).replace('soc-av', 'soc-av soc-lb-av') +
+          '<span class="soc-lb-name">' + KidSocial.esc(r.displayName) + (r.isMe ? ' (bạn)' : '') + '</span>' +
+        '</a>' +
+        '<span class="soc-lb-stars">⭐ ' + (r.stars || 0) + '</span>' +
+      '</div>';
+    }).join('');
+    return head + '<div class="soc-lb-list">' + list + '</div>';
+  }
+
+  function renderNewsHtml() {
+    return NEWS_ITEMS.map(function (n) {
+      var inner =
+        '<div class="soc-news-item">' +
+          '<span class="soc-news-icon" aria-hidden="true">' + n.icon + '</span>' +
+          '<div class="soc-news-body">' +
+            '<span class="soc-news-tag">' + KidSocial.esc(n.tag) + '</span>' +
+            '<strong class="soc-news-title">' + KidSocial.esc(n.title) + '</strong>' +
+            '<p class="soc-news-desc">' + KidSocial.esc(n.desc) + '</p>' +
+          '</div>' +
+        '</div>';
+      if (n.link) return '<a class="soc-news-link" href="' + KidSocial.esc(n.link) + '">' + inner + '</a>';
+      return inner;
+    }).join('');
+  }
+
+  function widgetShell(icon, title, bodyHtml) {
+    return '<div class="soc-widget-head">' +
+      '<span class="soc-widget-icon">' + icon + '</span>' +
+      '<h3>' + title + '</h3>' +
+    '</div>' +
+    '<div class="soc-widget-body">' + bodyHtml + '</div>';
+  }
+
+  function wireFeaturedLinks(root) {
+    if (!root) return;
+    root.querySelectorAll('[data-goto-post]').forEach(function (btn) {
+      btn.onclick = function () {
+        switchPanel('feed');
+        setTimeout(function () {
+          var el = document.querySelector('.soc-post[data-id="' + btn.getAttribute('data-goto-post') + '"]');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 350);
+      };
+    });
+  }
+
+  function fillWidget(id, html) {
+    var el = $(id);
+    if (el) el.innerHTML = html;
+  }
+
+  function loadSidebar() {
+    var featTargets = ['socFeaturedWidget', 'socDiscoverFeatured'];
+    var lbTargets = ['socLeaderboardWidget', 'socDiscoverLeaderboard'];
+    var newsTargets = ['socNewsWidget', 'socDiscoverNews'];
+
+    featTargets.forEach(function (id) {
+      fillWidget(id, widgetShell('🔥', 'Tin nổi bật', '<div class="soc-loading">Đang tải…</div>'));
+    });
+    lbTargets.forEach(function (id) {
+      fillWidget(id, widgetShell('🏆', 'Bảng vàng lớp', '<div class="soc-loading">Đang tải…</div>'));
+    });
+    newsTargets.forEach(function (id) {
+      fillWidget(id, widgetShell('📰', 'Tin tức & sự kiện', renderNewsHtml()));
+    });
+
+    KidSocial.listFeaturedPosts(4).then(function (posts) {
+      var sidebarHtml = widgetShell('🔥', 'Tin nổi bật', renderFeaturedHtml(posts, true));
+      var discoverHtml = widgetShell('🔥', 'Tin nổi bật', renderFeaturedHtml(posts, false));
+      fillWidget('socFeaturedWidget', sidebarHtml);
+      fillWidget('socDiscoverFeatured', discoverHtml);
+      wireFeaturedLinks($('socFeaturedWidget'));
+      wireFeaturedLinks($('socDiscoverFeatured'));
+    });
+
+    KidSocial.getClassLeaderboard(8).then(function (data) {
+      var html = widgetShell('🏆', 'Bảng vàng lớp', renderLeaderboardHtml(data, true));
+      fillWidget('socLeaderboardWidget', html);
+      fillWidget('socDiscoverLeaderboard', widgetShell('🏆', 'Bảng vàng học sinh', renderLeaderboardHtml(data, false)));
+      updateHeroStats(data);
+    });
+  }
+
+  function loadDiscoverPanel() {
+    loadSidebar();
+  }
+
+  function updateHeroStats(lbData) {
+    var classEl = $('socStatClass');
+    var starsEl = $('socStatStars');
+    var rankEl = $('socStatRank');
+    if (lbData) {
+      if (classEl) classEl.textContent = lbData.memberCount ? String(lbData.memberCount) : '—';
+      if (rankEl) rankEl.textContent = lbData.myRank ? ('#' + lbData.myRank) : '—';
+    }
+    if (myUid && KidSocial.getUserAchievements) {
+      KidSocial.getUserAchievements(myUid).then(function (ach) {
+        if (starsEl) starsEl.textContent = String(ach.stars || 0);
+      });
+    }
+  }
+
+  function loadHeroStats() {
+    KidSocial.getClassLeaderboard(8).then(updateHeroStats);
   }
 
   function getTabFromUrl() {
@@ -70,6 +234,7 @@
     setUrlTab(panel, panel === 'chat' && activeChatId ? activeOtherUid() : '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (panel === 'feed') loadFeed();
+    if (panel === 'discover') loadDiscoverPanel();
     if (panel === 'search') renderSearchHint();
     if (panel === 'friends') loadFriendsPanel();
     if (panel === 'chat') loadChatPanel();
@@ -161,6 +326,10 @@
       }
       feed.innerHTML = posts.map(renderPost).join('');
       wirePostEvents();
+      KidSocial.listFeaturedPosts(4).then(function (featured) {
+        fillWidget('socFeaturedWidget', widgetShell('🔥', 'Tin nổi bật', renderFeaturedHtml(featured, true)));
+        wireFeaturedLinks($('socFeaturedWidget'));
+      });
     }).catch(function (err) {
       feed.innerHTML = '<div class="soc-empty">' + KidSocial.esc(err.message) + '</div>';
     });
@@ -629,11 +798,13 @@
 
     boot.then(function () {
       if (typeof mountUserBar === 'function') mountUserBar();
+      loadSidebar();
+      loadHeroStats();
       var tab = getTabFromUrl();
       var chatUid = getChatUidFromUrl();
       switchPanel(tab);
       if (tab === 'chat' && chatUid) openChatWithUid(chatUid);
-      else loadFriendsPanel();
+      else if (tab !== 'friends' && tab !== 'discover') loadFriendsPanel();
     });
   }
 
