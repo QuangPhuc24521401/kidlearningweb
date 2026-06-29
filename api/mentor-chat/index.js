@@ -21,9 +21,9 @@ const MODEL_PREFER = [
   "gemini-flash-latest"
 ];
 
-const MAX_MODEL_TRIES = 2;
-const GEMINI_CALL_TIMEOUT_MS = 10000;
-const HANDLER_BUDGET_MS = 14000;
+const MAX_MODEL_TRIES = 1;
+const GEMINI_CALL_TIMEOUT_MS = 12000;
+const HANDLER_BUDGET_MS = 13000;
 
 const MODEL_SKIP = new Set([
   "gemini-2.0-flash",
@@ -193,9 +193,9 @@ function getFastModelList() {
     if (!m || seen.has(m) || MODEL_SKIP.has(m)) continue;
     seen.add(m);
     out.push(m);
-    if (out.length >= MAX_MODEL_TRIES) break;
+    if (out.length >= 2) break;
   }
-  return out.length ? out : MODEL_PREFER.slice(0, MAX_MODEL_TRIES);
+  return out.length ? out : MODEL_PREFER.slice(0, 2);
 }
 
 function setCors(res) {
@@ -252,47 +252,37 @@ async function askGemini(apiKey, message, model, extraSystemNote) {
 async function askGeminiWithFallback(apiKey, message) {
   const deadline = Date.now() + HANDLER_BUDGET_MS;
   const models = getFastModelList();
+  const model = models[0] || MODEL_PREFER[0];
   let lastErr = null;
-  let quotaHit = false;
 
-  for (const model of models) {
-    if (Date.now() >= deadline) break;
+  try {
+    let reply = await askGemini(apiKey, message, model);
+    if (!isVietnameseReply(reply)) {
+      return { reply: localMentorReply(message), model, provider: "local", sanitized: true, geminiUnavailable: true };
+    }
+    return { reply, model, provider: "gemini" };
+  } catch (err) {
+    lastErr = err;
+    console.warn("[mentor-chat] gemini fail:", model, err.message);
+  }
+
+  if (models[1] && Date.now() < deadline) {
     try {
-      let reply = await askGemini(apiKey, message, model);
-      if (!isVietnameseReply(reply) && Date.now() < deadline) {
-        reply = await askGemini(
-          apiKey,
-          message,
-          model,
-          "Chỉ trả lời tiếng Việt có dấu, không dùng ngôn ngữ khác."
-        );
+      let reply = await askGemini(apiKey, message, models[1]);
+      if (isVietnameseReply(reply)) {
+        return { reply, model: models[1], provider: "gemini" };
       }
-      if (!isVietnameseReply(reply)) {
-        return { reply: localMentorReply(message), model, provider: "local", sanitized: true };
-      }
-      return { reply, model, provider: "gemini" };
     } catch (err) {
       lastErr = err;
-      if (isModelGoneError(err.message)) {
-        console.warn("[mentor-chat] model gone:", model);
-        continue;
-      }
-      if (isQuotaOrRateError(err.message)) {
-        quotaHit = true;
-        console.warn("[mentor-chat] quota on", model);
-        if (Date.now() < deadline) await delay(150);
-        continue;
-      }
-      throw err;
     }
   }
 
   return {
     reply: localMentorReply(message),
-    model: models[0] || "local",
+    model,
     provider: "local",
     geminiUnavailable: true,
-    quotaHit,
+    quotaHit: lastErr && isQuotaOrRateError(lastErr.message),
     lastError: lastErr ? lastErr.message : ""
   };
 }

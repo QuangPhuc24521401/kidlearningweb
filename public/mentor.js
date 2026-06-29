@@ -17,7 +17,7 @@
   function $(id) { return document.getElementById(id); }
 
   var MENTOR_API_REMOTE = 'https://kidlearningweb.vercel.app/api/mentor-chat';
-  var MENTOR_FETCH_TIMEOUT_MS = 45000;
+  var MENTOR_FETCH_TIMEOUT_MS = 60000;
 
   function getMentorChatUrl() {
     var custom = typeof window.__MENTOR_CHAT_URL__ === 'string' ? window.__MENTOR_CHAT_URL__.trim() : '';
@@ -66,6 +66,43 @@
       .catch(function () {
         updateGeminiStatus('warn', '⚠️ Không gọi được API — Cô dùng câu trả lời mẫu');
       });
+  }
+
+  async function postMentorChat(message) {
+    var url = getMentorChatUrl();
+    var body = JSON.stringify({ message: message });
+    var lastErr = null;
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        var res = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: body
+        }, MENTOR_FETCH_TIMEOUT_MS);
+        var data = await res.json().catch(function () { return {}; });
+        if (res.ok && data.reply) return data;
+        lastErr = new Error(data.error || ('HTTP ' + res.status));
+      } catch (err) {
+        lastErr = err;
+        console.warn('[mentor] POST attempt ' + (attempt + 1) + ' failed:', err);
+      }
+    }
+    throw lastErr || new Error('Không nhận được phản hồi API');
+  }
+
+  function deliverAnswer(question, reply, apiData) {
+    var fromGemini = apiData && apiData.provider === 'gemini' && !apiData.geminiUnavailable;
+    showBubble(reply);
+    setTeacherState('talking');
+    if (fromGemini) {
+      updateGeminiStatus('ok', '✨ Đã kết nối Gemini · ' + (apiData.model || 'Google AI'));
+      showStatus('ok', '✨ Cô Mai trả lời bằng Gemini AI');
+      try { sessionStorage.removeItem('mentorCooldownUntil'); mentorCooldownUntil = 0; } catch (e) {}
+    } else {
+      showStatus('ok', '💬 Cô Mai đã trả lời con');
+    }
+    speakTeacher(reply);
+    saveHistory(question, reply);
   }
 
   function loadMentorCooldown() {
@@ -191,59 +228,21 @@
     syncFormWithLimits();
 
     var reply = null;
-    var apiNote = '';
+    var apiData = null;
     try {
       var heard = $('micHeard');
       if (heard) heard.textContent = '💬 "' + text + '"';
       setTeacherState('thinking');
       showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
 
-      var res = await fetchWithTimeout(getMentorChatUrl(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim() })
-      }, MENTOR_FETCH_TIMEOUT_MS);
-      var data = await res.json().catch(function () { return {}; });
-      if (res.ok && data.reply) {
-        reply = data.reply;
-        if (data.provider === 'gemini' && !data.geminiUnavailable) {
-          updateGeminiStatus('ok', '✨ Đã kết nối Gemini · ' + (data.model || 'Google AI'));
-          showStatus('ok', '✨ Cô Mai trả lời bằng Gemini AI');
-        }
-        if (!data.localMode && !data.geminiUnavailable) {
-          try { sessionStorage.removeItem('mentorCooldownUntil'); mentorCooldownUntil = 0; } catch (e) {}
-        }
-      } else if (res.status === 404) {
-        apiNote = ' (API chưa deploy — cần Vercel)';
-      } else if (data.configured === false) {
-        apiNote = ' (chưa gắn GEMINI_API_KEY)';
-      } else if (!res.ok) {
-        apiNote = ' (dùng câu mẫu)';
-        console.warn('[mentor]', String(data.error || res.status || '').slice(0, 80));
-      }
-
-      if (!reply) {
-        reply = getFallbackReply(text);
-        if (apiNote) showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt' + apiNote);
-      } else if (!isVietnameseText(reply)) {
-        reply = getFallbackReply(text);
-        showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt');
-      } else if (data.localMode || data.geminiUnavailable) {
-        showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt (Gemini đang bận)');
-      }
-
-      setTeacherState('talking');
-      showBubble(reply);
-      speakTeacher(reply);
-      saveHistory(text, reply);
+      apiData = await postMentorChat(text.trim());
+      reply = apiData.reply;
+      if (!isVietnameseText(reply)) reply = getFallbackReply(text);
+      deliverAnswer(text, reply, apiData);
     } catch (err) {
-      console.warn('[mentor] askQuestion error:', err);
+      console.warn('[mentor] askQuestion fallback:', err);
       reply = getFallbackReply(text);
-      showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt (chưa kết nối được Gemini)');
-      setTeacherState('talking');
-      showBubble(reply);
-      speakTeacher(reply);
-      saveHistory(text, reply);
+      deliverAnswer(text, reply, null);
     } finally {
       isAsking = false;
       syncFormWithLimits();
@@ -278,26 +277,28 @@
     var svg = $('teacherSvg');
     var wave = $('aiWave');
     var mouth = $('teacherMouth');
+    if (!svg) return;
     if (state === 'thinking') {
       svg.className = 'teacher-svg';
-      wave.classList.remove('active');
+      if (wave) wave.classList.remove('active');
       showStatus('thinking', '🤔 Cô đang suy nghĩ...');
       if (mouth) mouth.setAttribute('d', 'M58,67 Q65,67 72,67');
     } else if (state === 'talking') {
       svg.className = 'teacher-svg talking';
-      wave.classList.add('active');
+      if (wave) wave.classList.add('active');
       showStatus('ok', '🎙️ Cô Mai đang nói...');
       if (mouth) mouth.setAttribute('d', 'M56,67 Q65,75 74,67');
     } else {
       svg.className = 'teacher-svg';
-      wave.classList.remove('active');
+      if (wave) wave.classList.remove('active');
       hideStatus();
       if (mouth) mouth.setAttribute('d', 'M56,67 Q65,75 74,67');
     }
   }
 
   function showBubble(html) {
-    $('bubbleText').innerHTML = html;
+    var el = $('bubbleText');
+    if (el) el.innerHTML = html;
   }
 
   function pickVietnameseVoice() {
