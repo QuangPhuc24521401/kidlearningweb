@@ -1,7 +1,11 @@
-// Vercel — trả mentor.config.js (không commit secret; URL API tuỳ chọn qua ENV)
+// Vercel — trả mentor.config.js (URL API qua ENV hoặc cùng domain)
 export default function handler(req, res) {
   const custom = process.env.MENTOR_CHAT_PUBLIC_URL || "";
-  const safe = JSON.stringify(custom);
+  const vercelUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}/api/mentor-chat`
+    : "";
+  const url = custom || vercelUrl || "";
+  const safe = JSON.stringify(url);
 
   res.setHeader("Content-Type", "application/javascript; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=0, s-maxage=300");

@@ -16,9 +16,14 @@
 
   function $(id) { return document.getElementById(id); }
 
+  var MENTOR_API_REMOTE = 'https://kidlearningweb.vercel.app/api/mentor-chat';
+
   function getMentorChatUrl() {
     var custom = typeof window.__MENTOR_CHAT_URL__ === 'string' ? window.__MENTOR_CHAT_URL__.trim() : '';
-    return custom || '/api/mentor-chat';
+    if (custom) return custom;
+    var host = (location.hostname || '').toLowerCase();
+    if (host.endsWith('.vercel.app') || host === 'vercel.app') return '/api/mentor-chat';
+    return MENTOR_API_REMOTE;
   }
 
   function loadMentorCooldown() {
@@ -151,11 +156,16 @@
       setTeacherState('thinking');
       showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
 
+      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var fetchTimer = controller ? setTimeout(function () { controller.abort(); }, 22000) : null;
+
       var res = await fetch(getMentorChatUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller ? controller.signal : undefined,
         body: JSON.stringify({ message: text.trim() })
       });
+      if (fetchTimer) clearTimeout(fetchTimer);
       var data = await res.json().catch(function () { return {}; });
       if (res.ok && data.reply) {
         reply = data.reply;
@@ -176,7 +186,9 @@
         if (apiNote) showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt' + apiNote);
       } else if (!isVietnameseText(reply)) {
         reply = getFallbackReply(text);
-        showStatus('error', 'Cô trả lời sai ngôn ngữ — đang dùng câu tiếng Việt mẫu');
+        showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt');
+      } else if (data.localMode || data.geminiUnavailable) {
+        showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt (Gemini đang bận)');
       }
 
       setTeacherState('talking');
@@ -186,7 +198,7 @@
     } catch (err) {
       console.warn('[mentor] askQuestion error:', err);
       reply = getFallbackReply(text);
-      showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt (mất kết nối API)');
+      showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt (chưa kết nối được Gemini)');
       setTeacherState('talking');
       showBubble(reply);
       speakTeacher(reply);

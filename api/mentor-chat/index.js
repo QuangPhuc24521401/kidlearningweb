@@ -13,7 +13,6 @@ Quy tắc BẮT BUỘC:
 - Kết thúc bằng một câu hỏi nhỏ hoặc lời khen
 - Xưng "cô", gọi bé là "con"`;
 
-/** Model 2026 — gemini-1.5-* đã shutdown, không dùng nữa. */
 const MODEL_PREFER = [
   "gemini-2.5-flash-lite",
   "gemini-2.5-flash",
@@ -21,6 +20,10 @@ const MODEL_PREFER = [
   "gemini-2.0-flash-lite",
   "gemini-flash-latest"
 ];
+
+const MAX_MODEL_TRIES = 3;
+const GEMINI_CALL_TIMEOUT_MS = 8000;
+const HANDLER_BUDGET_MS = 12000;
 
 const MODEL_SKIP = new Set([
   "gemini-2.0-flash",
@@ -177,6 +180,24 @@ async function getModelList(apiKey) {
   return out.length ? out : [...MODEL_PREFER];
 }
 
+/** Danh sách model gọn cho POST — tránh timeout Vercel (15s). */
+function getFastModelList() {
+  const custom = (process.env.GEMINI_MODEL || "")
+    .split(",")
+    .map((s) => normalizeModelName(s))
+    .filter((n) => n && !MODEL_SKIP.has(n));
+
+  const out = [];
+  const seen = new Set();
+  for (const m of [...custom, ...MODEL_PREFER]) {
+    if (!m || seen.has(m) || MODEL_SKIP.has(m)) continue;
+    seen.add(m);
+    out.push(m);
+    if (out.length >= MAX_MODEL_TRIES) break;
+  }
+  return out.length ? out : MODEL_PREFER.slice(0, MAX_MODEL_TRIES);
+}
+
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -197,6 +218,7 @@ async function askGemini(apiKey, message, model, extraSystemNote) {
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(GEMINI_CALL_TIMEOUT_MS),
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemText }] },
       contents: [{ role: "user", parts: [{ text: message }] }],
@@ -228,14 +250,16 @@ async function askGemini(apiKey, message, model, extraSystemNote) {
 }
 
 async function askGeminiWithFallback(apiKey, message) {
-  const models = await getModelList(apiKey);
+  const deadline = Date.now() + HANDLER_BUDGET_MS;
+  const models = getFastModelList();
   let lastErr = null;
   let quotaHit = false;
 
   for (const model of models) {
+    if (Date.now() >= deadline) break;
     try {
       let reply = await askGemini(apiKey, message, model);
-      if (!isVietnameseReply(reply)) {
+      if (!isVietnameseReply(reply) && Date.now() < deadline) {
         reply = await askGemini(
           apiKey,
           message,
@@ -256,7 +280,7 @@ async function askGeminiWithFallback(apiKey, message) {
       if (isQuotaOrRateError(err.message)) {
         quotaHit = true;
         console.warn("[mentor-chat] quota on", model);
-        await delay(300);
+        if (Date.now() < deadline) await delay(150);
         continue;
       }
       throw err;
