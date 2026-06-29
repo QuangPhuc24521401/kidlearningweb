@@ -17,6 +17,7 @@
   function $(id) { return document.getElementById(id); }
 
   var MENTOR_API_REMOTE = 'https://kidlearningweb.vercel.app/api/mentor-chat';
+  var MENTOR_FETCH_TIMEOUT_MS = 45000;
 
   function getMentorChatUrl() {
     var custom = typeof window.__MENTOR_CHAT_URL__ === 'string' ? window.__MENTOR_CHAT_URL__.trim() : '';
@@ -24,6 +25,47 @@
     var host = (location.hostname || '').toLowerCase();
     if (host.endsWith('.vercel.app') || host === 'vercel.app') return '/api/mentor-chat';
     return MENTOR_API_REMOTE;
+  }
+
+  function fetchWithTimeout(url, options, timeoutMs) {
+    options = options || {};
+    timeoutMs = timeoutMs || MENTOR_FETCH_TIMEOUT_MS;
+    if (typeof AbortController === 'undefined') {
+      return fetch(url, options);
+    }
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+    options.signal = controller.signal;
+    return fetch(url, options).finally(function () { clearTimeout(timer); });
+  }
+
+  function updateGeminiStatus(kind, message) {
+    var el = $('mentorGeminiStatus');
+    if (!el) return;
+    el.className = 'mentor-gemini-status mentor-gemini-status--' + (kind || 'check');
+    el.textContent = message || '';
+  }
+
+  function checkMentorApiConnection() {
+    updateGeminiStatus('check', '🔄 Đang kết nối Google Gemini…');
+    fetchWithTimeout(getMentorChatUrl(), { method: 'GET' }, 20000)
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          return { res: res, data: data };
+        });
+      })
+      .then(function (_ref) {
+        if (_ref.res.ok && _ref.data.configured) {
+          updateGeminiStatus('ok', '✨ Đã kết nối Gemini · ' + (_ref.data.model || 'Google AI'));
+        } else if (_ref.res.ok) {
+          updateGeminiStatus('warn', '⚠️ Chưa cấu hình GEMINI_API_KEY trên server');
+        } else {
+          updateGeminiStatus('warn', '⚠️ API chưa sẵn sàng — Cô dùng câu trả lời mẫu');
+        }
+      })
+      .catch(function () {
+        updateGeminiStatus('warn', '⚠️ Không gọi được API — Cô dùng câu trả lời mẫu');
+      });
   }
 
   function loadMentorCooldown() {
@@ -156,19 +198,18 @@
       setTeacherState('thinking');
       showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
 
-      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      var fetchTimer = controller ? setTimeout(function () { controller.abort(); }, 22000) : null;
-
-      var res = await fetch(getMentorChatUrl(), {
+      var res = await fetchWithTimeout(getMentorChatUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: controller ? controller.signal : undefined,
         body: JSON.stringify({ message: text.trim() })
-      });
-      if (fetchTimer) clearTimeout(fetchTimer);
+      }, MENTOR_FETCH_TIMEOUT_MS);
       var data = await res.json().catch(function () { return {}; });
       if (res.ok && data.reply) {
         reply = data.reply;
+        if (data.provider === 'gemini' && !data.geminiUnavailable) {
+          updateGeminiStatus('ok', '✨ Đã kết nối Gemini · ' + (data.model || 'Google AI'));
+          showStatus('ok', '✨ Cô Mai trả lời bằng Gemini AI');
+        }
         if (!data.localMode && !data.geminiUnavailable) {
           try { sessionStorage.removeItem('mentorCooldownUntil'); mentorCooldownUntil = 0; } catch (e) {}
         }
@@ -385,6 +426,7 @@
     }
 
     function bootLimits() {
+      checkMentorApiConnection();
       if (window.KidMentorLimits) {
         if (!limitsBooted) {
           limitsBooted = true;

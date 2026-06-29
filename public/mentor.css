@@ -83,6 +83,38 @@
   max-width: 44ch;
 }
 
+.mentor-gemini-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.12);
+  color: rgba(255,255,255,.95);
+}
+
+.mentor-gemini-status--ok {
+  background: rgba(16,185,129,.22);
+  border-color: rgba(110,231,183,.45);
+  color: #ecfdf5;
+}
+
+.mentor-gemini-status--warn,
+.mentor-gemini-status--err {
+  background: rgba(251,191,36,.18);
+  border-color: rgba(252,211,77,.4);
+  color: #fffbeb;
+}
+
+.mentor-gemini-status--check {
+  opacity: .92;
+}
+
 .mentor-hero-side {
   flex: 1 1 260px;
   max-width: 320px;

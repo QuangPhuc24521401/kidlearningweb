@@ -21,9 +21,9 @@ const MODEL_PREFER = [
   "gemini-flash-latest"
 ];
 
-const MAX_MODEL_TRIES = 3;
-const GEMINI_CALL_TIMEOUT_MS = 8000;
-const HANDLER_BUDGET_MS = 12000;
+const MAX_MODEL_TRIES = 2;
+const GEMINI_CALL_TIMEOUT_MS = 10000;
+const HANDLER_BUDGET_MS = 14000;
 
 const MODEL_SKIP = new Set([
   "gemini-2.0-flash",
@@ -223,7 +223,7 @@ async function askGemini(apiKey, message, model, extraSystemNote) {
       systemInstruction: { parts: [{ text: systemText }] },
       contents: [{ role: "user", parts: [{ text: message }] }],
       generationConfig: {
-        maxOutputTokens: 280,
+        maxOutputTokens: 200,
         temperature: 0.55
       }
     })

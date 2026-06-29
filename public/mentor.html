@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="menu.css?v=20260630f">
-<link rel="stylesheet" href="mentor.css?v=20260701c">
+<link rel="stylesheet" href="mentor.css?v=20260701g">
 <script>
   (function(){
     try{ if(localStorage.getItem('userRole')) return; }catch(e){}
@@ -107,6 +107,7 @@
       <p class="mentor-hero-eyebrow">Trợ giảng thông minh</p>
       <h1 class="mentor-hero-title">👩‍🏫 Cô Giáo AI — Cô Mai</h1>
       <p class="mentor-hero-desc">Bé gõ hoặc nói để hỏi về bài học, hình dạng, màu sắc, đếm số… Cô trả lời bằng tiếng Việt dễ hiểu và đọc to cho con nghe.</p>
+      <p class="mentor-gemini-status mentor-gemini-status--check" id="mentorGeminiStatus">🔄 Đang kết nối Google Gemini…</p>
     </div>
     <aside class="mentor-hero-side" aria-label="Lượt hỏi hôm nay">
       <div class="mentor-usage-card">
@@ -260,10 +261,9 @@
 <script src="account-plan.js"></script>
 <script src="mentor-limits.js?v=20260701e"></script>
 <script src="secrets/tts.config.js"></script>
-<script>window.__MENTOR_CHAT_URL__=window.__MENTOR_CHAT_URL__||'';</script>
 <script src="secrets/mentor.config.js"></script>
 <script src="shared.js"></script>
 <script src="menu.js"></script>
-<script src="mentor.js?v=20260701f"></script>
+<script src="mentor.js?v=20260701g"></script>
 </body>
 </html>
