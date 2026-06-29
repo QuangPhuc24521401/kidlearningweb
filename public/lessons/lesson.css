@@ -833,7 +833,7 @@ h2#question img.tw-emoji,
 }
 .ach-toast-inner{
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   gap:14px;
   padding:14px 18px;
   border-radius:20px;
@@ -842,6 +842,13 @@ h2#question img.tw-emoji,
   box-shadow:0 12px 36px rgba(67,56,202,.22), 0 4px 0 rgba(99,102,241,.2);
   font-family:'Nunito',sans-serif;
 }
+.ach-toast .ach-medal{
+  width:52px;
+  height:58px;
+  flex-shrink:0;
+}
+.ach-toast .ach-medal-icon{ font-size:22px; top:28px; }
+.ach-toast-text{ min-width:0; flex:1; }
 .ach-toast-icon{
   font-size:36px;
   line-height:1;

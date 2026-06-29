@@ -281,14 +281,74 @@
     return String(s || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
   }
 
+  /** Màu & icon cho huy hiệu sinh động (medal CSS + emoji). */
+  var BADGE_THEMES = {
+    first_step:       { from: "#fbbf24", to: "#f97316", ring: "#fde68a", icon: "🎯" },
+    master_nhan_biet: { from: "#f472b6", to: "#db2777", ring: "#fbcfe8", icon: "👀" },
+    master_tu_duy:    { from: "#818cf8", to: "#4f46e5", ring: "#c7d2fe", icon: "🧠" },
+    master_am_nhac:   { from: "#fb923c", to: "#ea580c", ring: "#fed7aa", icon: "🎵" },
+    master_ghep_hinh: { from: "#a78bfa", to: "#7c3aed", ring: "#ddd6fe", icon: "🧩" },
+    master_my_thuat:  { from: "#e879f9", to: "#c026d3", ring: "#f5d0fe", icon: "🎨" },
+    master_ngon_ngu:  { from: "#38bdf8", to: "#0284c7", ring: "#bae6fd", icon: "📚" },
+    super_kid:        { from: "#fde047", to: "#eab308", ring: "#fef9c3", icon: "🏆" },
+    stars_25:         { from: "#fcd34d", to: "#f59e0b", ring: "#fef3c7", icon: "⭐" },
+    stars_75:         { from: "#fbbf24", to: "#d97706", ring: "#fde68a", icon: "🌟" },
+    stars_150:        { from: "#fde68a", to: "#a855f7", ring: "#f3e8ff", icon: "✨" },
+    streak_3:         { from: "#fb923c", to: "#ef4444", ring: "#fecaca", icon: "🔥" },
+    streak_7:         { from: "#34d399", to: "#6366f1", ring: "#a7f3d0", icon: "🌈" },
+    arena_champion:   { from: "#f87171", to: "#b91c1c", ring: "#fecaca", icon: "🏟️" },
+    arena_legend:     { from: "#fbbf24", to: "#9333ea", ring: "#fde68a", icon: "👑" },
+    maze_first:       { from: "#2dd4bf", to: "#0d9488", ring: "#99f6e4", icon: "🌀" },
+    maze_master:      { from: "#14b8a6", to: "#115e59", ring: "#5eead4", icon: "🗺️" },
+    digger_first:     { from: "#fbbf24", to: "#b45309", ring: "#fde68a", icon: "⛏️" },
+    digger_master:    { from: "#eab308", to: "#854d0e", ring: "#fef08a", icon: "💎" },
+    memory_first:     { from: "#c084fc", to: "#7e22ce", ring: "#e9d5ff", icon: "🃏" },
+    memory_master:    { from: "#a855f7", to: "#581c87", ring: "#d8b4fe", icon: "🧠" },
+    sort_first:       { from: "#4ade80", to: "#16a34a", ring: "#bbf7d0", icon: "📦" },
+    sort_master:      { from: "#22c55e", to: "#14532d", ring: "#86efac", icon: "🏷️" },
+    spot_first:       { from: "#22d3ee", to: "#0891b2", ring: "#a5f3fc", icon: "🔍" },
+    spot_master:      { from: "#06b6d4", to: "#164e63", ring: "#67e8f9", icon: "👁️" },
+    game_runner:      { from: "#ef4444", to: "#7f1d1d", ring: "#fecaca", icon: "🍄" }
+  };
+
+  function badgeTheme(def){
+    return BADGE_THEMES[def.id] || { from: "#94a3b8", to: "#64748b", ring: "#e2e8f0", icon: def.icon || "🏅" };
+  }
+
+  function renderAchievementBadge(def, unlocked){
+    var theme = badgeTheme(def);
+    var cls = "ach-medal" + (unlocked ? " is-unlocked" : " is-locked");
+    var icon = unlocked ? (theme.icon || def.icon) : "🔒";
+    return (
+      '<div class="' + cls + '" style="--medal-from:' + theme.from + ';--medal-to:' + theme.to + ';--medal-ring:' + theme.ring + '">' +
+        '<svg class="ach-medal-shape" viewBox="0 0 72 80" aria-hidden="true">' +
+          '<defs>' +
+            '<linearGradient id="ach-grad-' + def.id + '" x1="0" y1="0" x2="0.9" y2="1">' +
+              '<stop offset="0%" stop-color="' + theme.from + '"/>' +
+              '<stop offset="100%" stop-color="' + theme.to + '"/>' +
+            '</linearGradient>' +
+            '<filter id="ach-glow-' + def.id + '"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="' + theme.to + '" flood-opacity=".35"/></filter>' +
+          '</defs>' +
+          '<path class="ach-medal-ribbon ach-medal-ribbon--l" d="M18 52 L8 78 L24 66 Z"/>' +
+          '<path class="ach-medal-ribbon ach-medal-ribbon--r" d="M54 52 L64 78 L48 66 Z"/>' +
+          '<circle class="ach-medal-disc" cx="36" cy="34" r="28" fill="url(#ach-grad-' + def.id + ')" filter="url(#ach-glow-' + def.id + ')"/>' +
+          '<circle class="ach-medal-disc-inner" cx="36" cy="34" r="22" fill="rgba(255,255,255,.22)"/>' +
+          '<circle class="ach-medal-ring" cx="36" cy="34" r="28" fill="none" stroke="' + theme.ring + '" stroke-width="3" opacity=".85"/>' +
+        '</svg>' +
+        '<span class="ach-medal-icon" aria-hidden="true">' + icon + '</span>' +
+        (unlocked ? '<span class="ach-medal-spark" aria-hidden="true">✦</span>' : '') +
+      '</div>'
+    );
+  }
+
   function showAchievementToast(def){
     var t = document.createElement("div");
     t.className = "ach-toast";
     t.setAttribute("role", "status");
     t.innerHTML =
       '<div class="ach-toast-inner">' +
-        '<span class="ach-toast-icon">' + def.icon + "</span>" +
-        "<div>" +
+        renderAchievementBadge(def, true) +
+        "<div class=\"ach-toast-text\">" +
           '<div class="ach-toast-kicker">Huy hiệu mới!</div>' +
           '<div class="ach-toast-title">' + escapeAttr(def.title) + "</div>" +
           '<div class="ach-toast-desc">' + escapeAttr(def.desc) + "</div>" +
@@ -312,12 +372,30 @@
     var state = readAchievements();
     if(streakEl) streakEl.textContent = String(state.streak || 0);
 
+    var total = window.ACHIEVEMENT_DEFS.length;
+    var unlocked = 0;
+    window.ACHIEVEMENT_DEFS.forEach(function(def){
+      if(state.unlocked[def.id]) unlocked++;
+    });
+
+    var countEl = document.getElementById("progBadgeCount");
+    var totalEl = document.getElementById("progBadgeTotal");
+    if(countEl) countEl.textContent = String(unlocked);
+    if(totalEl) totalEl.textContent = String(total);
+
+    var fillEl = document.getElementById("achProgressFill");
+    var labelEl = document.getElementById("achProgressLabel");
+    var pct = total ? Math.round(unlocked / total * 100) : 0;
+    if(fillEl) fillEl.style.width = pct + "%";
+    if(labelEl) labelEl.textContent = unlocked + " / " + total + " huy hiệu";
+
     var html = window.ACHIEVEMENT_DEFS.map(function(def){
       var got = !!state.unlocked[def.id];
       return (
         '<div class="ach-card' + (got ? " is-unlocked" : " is-locked") + '" title="' + escapeAttr(def.desc) + '">' +
-          '<span class="ach-emoji">' + (got ? def.icon : "❔") + "</span>" +
+          renderAchievementBadge(def, got) +
           '<span class="ach-card-title">' + escapeAttr(def.title) + "</span>" +
+          '<span class="ach-card-desc">' + escapeAttr(def.desc) + "</span>" +
         "</div>"
       );
     }).join("");
@@ -370,6 +448,7 @@
   window.readAchievements = readAchievements;
   window.recordStudyDay = recordStudyDay;
   window.renderAchievementsPanel = renderAchievementsPanel;
+  window.renderAchievementBadge = renderAchievementBadge;
   window.mergeAchievementsFromCloud = mergeAchievementsFromCloud;
   window.flushAchievementsToCloud = flushAchievementsToCloud;
   window.syncAchievementsAfterLessonSave = syncAchievementsAfterLessonSave;

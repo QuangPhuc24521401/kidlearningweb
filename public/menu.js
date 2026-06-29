@@ -220,9 +220,53 @@ function renderProgressBadges(){
     var s = document.getElementById('opStars'); if(s) s.textContent = totalStars;
     var d = document.getElementById('opDone');  if(d) d.textContent = doneCount;
   }
+
+  if(typeof renderProgressSubjects === 'function') renderProgressSubjects();
   // Cập nhật user-bar (nếu đang có) cho khớp tổng sao mới
   mountUserBar();
   if(typeof renderAchievementsPanel === 'function') renderAchievementsPanel();
+}
+
+var PROGRESS_SUBJECT_META = {
+  nhan_biet:  { title: 'Nhận biết', icon: '👀', tag: 'Cơ bản',   tone: 'lang' },
+  tu_duy:     { title: 'Tư duy',    icon: '🧠', tag: 'Logic',    tone: 'logic' },
+  am_nhac:    { title: 'Âm nhạc',   icon: '🎵', tag: 'Âm thanh', tone: 'music' },
+  ghep_hinh:  { title: 'Ghép hình', icon: '🧩', tag: 'Không gian', tone: 'puzzle' },
+  my_thuat:   { title: 'Mỹ thuật',  icon: '🎨', tag: 'Sáng tạo', tone: 'art' },
+  ngon_ngu:   { title: 'Ngôn ngữ',  icon: '📚', tag: 'Từ vựng',  tone: 'vocab' }
+};
+
+function renderProgressSubjects(){
+  var grid = document.getElementById('progressSubjectsGrid');
+  if(!grid) return;
+  var data = _readProgress();
+  var subjects = ['nhan_biet','tu_duy','am_nhac','ghep_hinh','my_thuat','ngon_ngu'];
+  grid.innerHTML = subjects.map(function(sub){
+    var meta = PROGRESS_SUBJECT_META[sub] || { title: sub, icon: '📘', tag: 'Môn', tone: 'lang' };
+    var agg = _aggregateSubject(data[sub]);
+    var status = _statusOf(agg);
+    var done = agg.topicsDone || 0;
+    var totalT = agg.topicsTotal || 0;
+    var pct = totalT ? Math.round(done / totalT * 100) : 0;
+    var stars = agg.totalStars || 0;
+    var statusLabel = status === 'done' ? 'Hoàn thành' : (status === 'inprogress' ? 'Đang học' : 'Chưa học');
+    var statusClass = status === 'done' ? 'prog-sub-status--done' : (status === 'inprogress' ? 'prog-sub-status--prog' : 'prog-sub-status--none');
+    return (
+      '<button type="button" class="prog-subject-card prog-subject-card--' + meta.tone + ' is-' + status + '" onclick="goLesson(\'' + sub + '\')">' +
+        '<div class="prog-subject-top">' +
+          '<span class="prog-subject-icon" aria-hidden="true">' + meta.icon + '</span>' +
+          '<span class="prog-subject-tag">' + _escapeHtml(meta.tag) + '</span>' +
+        '</div>' +
+        '<h3 class="prog-subject-title">' + _escapeHtml(meta.title) + '</h3>' +
+        '<div class="prog-subject-meta">' +
+          '<span class="prog-sub-status ' + statusClass + '">' + statusLabel + '</span>' +
+          '<span class="prog-subject-frac">' + done + '/' + totalT + ' bài</span>' +
+        '</div>' +
+        '<div class="prog-subject-bar" aria-hidden="true"><div class="prog-subject-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="prog-subject-foot"><span>⭐ ' + stars + ' sao</span><span class="prog-subject-go">Học tiếp →</span></div>' +
+      '</button>'
+    );
+  }).join('');
 }
 
 /* Xoá toàn bộ tiến độ — có xác nhận */

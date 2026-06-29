@@ -12,7 +12,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
-<link rel="stylesheet" href="menu.css">
+<link rel="stylesheet" href="menu.css?v=20260630e">
 <link rel="stylesheet" href="arena.css">
 <link rel="stylesheet" href="pvp.css">
 <link rel="stylesheet" href="spa.css">
@@ -101,38 +101,67 @@
 </div>
 
 <main id="page-root" data-page="progress">
-<div class="card menu-card progress-page-card">
-  <div class="menu-hero-block" id="progress-page-top">
-    <h1 class="menu-title">Tiến độ &amp; huy hiệu</h1>
-    <p class="subtitle">Theo dõi tổng sao, số môn đã hoàn thành và các huy hiệu bé đã mở khóa. Quay lại <a href="index.html">trang chủ</a> để tiếp tục học.</p>
-  </div>
+<div class="card menu-card progress-page-card prog-dashboard">
 
-  <div class="menu-progress-stack">
-    <div id="overallProgress" class="overall-progress" hidden>
-      <div class="op-row">
-        <span class="op-icon">🌟</span>
-        <span class="op-label">Tổng sao:</span>
-        <span class="op-value" id="opStars">0</span>
+  <header class="prog-header" id="progress-page-top">
+    <div class="prog-intro">
+      <p class="prog-eyebrow">Theo dõi học tập</p>
+      <h1 class="menu-title prog-title">Tiến độ &amp; huy hiệu</h1>
+      <p class="prog-desc">Tổng hợp sao, môn đã hoàn thành và bộ sưu tập huy hiệu. Tiếp tục học tại <a href="index.html">trang chủ</a>.</p>
+    </div>
+    <div class="prog-stats" id="overallProgress" aria-label="Tổng quan tiến độ">
+      <div class="prog-stat-chip prog-stat-chip--stars">
+        <span class="prog-stat-icon" aria-hidden="true">🌟</span>
+        <div class="prog-stat-body">
+          <strong class="prog-stat-value" id="opStars">0</strong>
+          <span class="prog-stat-label">Tổng sao</span>
+        </div>
       </div>
-      <div class="op-row">
-        <span class="op-icon">✅</span>
-        <span class="op-label">Đã hoàn thành:</span>
-        <span class="op-value"><span id="opDone">0</span>/6 môn</span>
+      <div class="prog-stat-chip prog-stat-chip--done">
+        <span class="prog-stat-icon" aria-hidden="true">✅</span>
+        <div class="prog-stat-body">
+          <strong class="prog-stat-value"><span id="opDone">0</span><span class="prog-stat-denom">/6</span></strong>
+          <span class="prog-stat-label">Môn hoàn thành</span>
+        </div>
       </div>
-      <div class="op-row">
-        <button class="op-reset" onclick="resetProgress()" title="Xoá toàn bộ tiến độ học">🗑️ Bắt đầu lại</button>
+      <div class="prog-stat-chip prog-stat-chip--badges">
+        <span class="prog-stat-icon" aria-hidden="true">🏅</span>
+        <div class="prog-stat-body">
+          <strong class="prog-stat-value"><span id="progBadgeCount">0</span><span class="prog-stat-denom">/<span id="progBadgeTotal">0</span></span></strong>
+          <span class="prog-stat-label">Huy hiệu</span>
+        </div>
       </div>
     </div>
+  </header>
 
-    <div id="achievementsPanel" class="achievements-panel" hidden>
-      <div class="ach-head">
-        <h3 class="ach-h3">🏅 Huy hiệu</h3>
-        <span class="ach-streak-line" title="Số ngày học liên tiếp (theo lịch)">🔥 Chuỗi: <strong id="achStreak">0</strong> ngày</span>
+  <section class="prog-section" aria-labelledby="progSubjectsTitle">
+    <div class="prog-section-head">
+      <div>
+        <h2 class="prog-section-title" id="progSubjectsTitle">Tiến độ từng môn</h2>
+        <p class="prog-section-sub">6 môn học chính — bấm vào môn để tiếp tục học.</p>
       </div>
-      <p class="ach-hint">Hoàn thành bài học, gom sao và học đều mỗi ngày để mở thêm huy hiệu nhé!</p>
+      <button type="button" class="prog-reset-btn" onclick="resetProgress()" title="Xoá toàn bộ tiến độ học">🗑️ Bắt đầu lại</button>
+    </div>
+    <div id="progressSubjectsGrid" class="prog-subjects-grid" aria-live="polite"></div>
+  </section>
+
+  <section class="prog-section prog-section--badges" aria-labelledby="progBadgesTitle">
+    <div id="achievementsPanel" class="achievements-panel">
+      <div class="ach-head">
+        <div>
+          <h2 class="ach-h3" id="progBadgesTitle">Bộ sưu tập huy hiệu</h2>
+          <p class="ach-hint">Hoàn thành bài học, gom sao, chơi game và học đều mỗi ngày để mở thêm huy hiệu.</p>
+        </div>
+        <span class="ach-streak-line" title="Số ngày học liên tiếp">🔥 Chuỗi <strong id="achStreak">0</strong> ngày</span>
+      </div>
+      <div class="ach-progress-wrap" aria-hidden="true">
+        <div class="ach-progress-bar"><div class="ach-progress-fill" id="achProgressFill"></div></div>
+        <span class="ach-progress-label" id="achProgressLabel">0 / 0</span>
+      </div>
       <div id="achievementsGrid" class="ach-grid"></div>
     </div>
-  </div>
+  </section>
+
 </div>
 </main>
 
