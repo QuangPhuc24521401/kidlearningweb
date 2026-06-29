@@ -102,10 +102,22 @@
   }
 
   /* ── Feed ── */
-  function avatarHtml(role, name) {
-    var icon = role === 'teacher' ? '👩‍🏫' : '🧒';
-    return '<span class="soc-av" aria-hidden="true">' + icon + '</span>' +
-      '<span class="soc-name">' + KidSocial.esc(name) + '</span>';
+  function avatarHtml(prof) {
+    if (typeof KidSocial.renderAvatarHtml === 'function') {
+      return KidSocial.renderAvatarHtml(prof, 'soc-av');
+    }
+    var icon = prof && prof.role === 'teacher' ? '👩‍🏫' : '🧒';
+    return '<span class="soc-av" aria-hidden="true">' + icon + '</span>';
+  }
+
+  function postAuthorProf(p) {
+    return {
+      role: p.authorRole,
+      avatarMode: p.avatarMode,
+      avatarEmoji: p.avatarEmoji,
+      avatarRing: p.avatarRing,
+      avatarPhoto: p.avatarPhoto
+    };
   }
 
   function renderPost(p) {
@@ -116,7 +128,8 @@
     return '<article class="soc-post" data-id="' + p.id + '">' +
       '<header class="soc-post-head">' +
         '<a class="soc-post-user" href="profile.html?uid=' + encodeURIComponent(p.authorUid) + '">' +
-          avatarHtml(p.authorRole, p.authorName) +
+          avatarHtml(postAuthorProf(p)) +
+          '<span class="soc-name">' + KidSocial.esc(p.authorName) + '</span>' +
         '</a>' +
         '<span class="soc-time">' + KidSocial.esc(p.timeAgo) + '</span>' +
       '</header>' +
@@ -178,8 +191,16 @@
           KidSocial.listComments(id).then(function (list) {
             box.innerHTML = list.length
               ? list.map(function (c) {
-                return '<div class="soc-cmt"><b>' + KidSocial.esc(c.authorName) + '</b> ' +
-                  KidSocial.esc(c.text) + ' <em>' + KidSocial.esc(c.timeAgo) + '</em></div>';
+                return '<div class="soc-cmt">' +
+                  avatarHtml({
+                    role: 'parent',
+                    avatarMode: c.avatarMode,
+                    avatarEmoji: c.avatarEmoji,
+                    avatarRing: c.avatarRing,
+                    avatarPhoto: c.avatarPhoto
+                  }) +
+                  '<div class="soc-cmt-body"><b>' + KidSocial.esc(c.authorName) + '</b> ' +
+                  KidSocial.esc(c.text) + ' <em>' + KidSocial.esc(c.timeAgo) + '</em></div></div>';
               }).join('')
               : '<div class="soc-cmt">Chưa có bình luận</div>';
           });
@@ -202,7 +223,16 @@
             form.hidden = false;
             KidSocial.listComments(id).then(function (list) {
               box.innerHTML = list.map(function (c) {
-                return '<div class="soc-cmt"><b>' + KidSocial.esc(c.authorName) + '</b> ' + KidSocial.esc(c.text) + '</div>';
+                return '<div class="soc-cmt">' +
+                  avatarHtml({
+                    role: 'parent',
+                    avatarMode: c.avatarMode,
+                    avatarEmoji: c.avatarEmoji,
+                    avatarRing: c.avatarRing,
+                    avatarPhoto: c.avatarPhoto
+                  }) +
+                  '<div class="soc-cmt-body"><b>' + KidSocial.esc(c.authorName) + '</b> ' +
+                  KidSocial.esc(c.text) + '</div></div>';
               }).join('');
               box.dataset.loaded = '1';
             });
@@ -273,9 +303,9 @@
   /* ── User cards ── */
   function renderUserCard(u) {
     var roleLabel = u.role === 'teacher' ? 'Giáo viên' : 'Học sinh';
-    var icon = u.role === 'teacher' ? '👩‍🏫' : '🧒';
     return '<div class="soc-user-card" data-uid="' + KidSocial.esc(u.uid) + '">' +
-      '<a class="soc-user-card-av" href="profile.html?uid=' + encodeURIComponent(u.uid) + '">' + icon + '</a>' +
+      '<a class="soc-user-card-av" href="profile.html?uid=' + encodeURIComponent(u.uid) + '">' +
+        avatarHtml(u) + '</a>' +
       '<div class="soc-user-card-body">' +
         '<a class="soc-user-card-name" href="profile.html?uid=' + encodeURIComponent(u.uid) + '">' + KidSocial.esc(u.displayName) + '</a>' +
         '<span class="soc-user-card-meta">' + roleLabel + (u.classRoom ? ' · Lớp ' + KidSocial.esc(u.classRoom) : '') + '</span>' +
@@ -443,20 +473,29 @@
     }
     box.innerHTML = rows.map(function (r) {
       var active = r.chatId === activeChatId ? ' is-active' : '';
-      var initial = (r.otherName || '?').charAt(0).toUpperCase();
+      var avProf = Object.assign({ role: 'parent' }, r.otherAvatar || {});
       return '<button type="button" class="soc-inbox-item' + active + '" data-chat="' + KidSocial.esc(r.chatId) +
         '" data-uid="' + KidSocial.esc(r.otherUid) + '" data-name="' + KidSocial.esc(r.otherName) + '">' +
-        '<span class="soc-inbox-av">' + initial + '</span>' +
+        avatarHtml(avProf).replace('soc-av', 'soc-av soc-inbox-av') +
         '<span class="soc-inbox-meta"><strong>' + KidSocial.esc(r.otherName) + '</strong>' +
         '<em>' + KidSocial.esc(r.lastText || 'Bắt đầu trò chuyện') + '</em></span>' +
         '<span class="soc-inbox-time">' + KidSocial.esc(r.timeAgo) + '</span></button>';
     }).join('');
     box.querySelectorAll('.soc-inbox-item').forEach(function (btn) {
+      var cid = btn.getAttribute('data-chat');
+      var row = rows.find(function (r) { return r.chatId === cid; });
       btn.onclick = function () {
-        openChat(btn.getAttribute('data-chat'), btn.getAttribute('data-uid'), btn.getAttribute('data-name'));
+        openChat(
+          btn.getAttribute('data-chat'),
+          btn.getAttribute('data-uid'),
+          btn.getAttribute('data-name'),
+          row ? row.otherAvatar : null
+        );
       };
     });
   }
+
+  var activeOtherAvatar = null;
 
   function renderMessages(list) {
     var box = $('msgList');
@@ -467,15 +506,27 @@
     }
     box.innerHTML = list.map(function (m) {
       var mine = m.senderUid === myUid;
+      var avProf = {
+        role: 'parent',
+        avatarMode: m.avatarMode,
+        avatarEmoji: m.avatarEmoji,
+        avatarRing: m.avatarRing,
+        avatarPhoto: m.avatarPhoto
+      };
+      var av = avatarHtml(avProf).replace('soc-av', 'soc-av soc-msg-av');
       return '<div class="soc-bubble-row' + (mine ? ' is-mine' : '') + '">' +
+        (mine ? '' : av) +
         '<div class="soc-bubble">' + KidSocial.esc(m.text) +
-        '<span class="soc-bubble-time">' + KidSocial.esc(m.timeAgo) + '</span></div></div>';
+        '<span class="soc-bubble-time">' + KidSocial.esc(m.timeAgo) + '</span></div>' +
+        (mine ? av : '') +
+        '</div>';
     }).join('');
     box.scrollTop = box.scrollHeight;
   }
 
-  function openChat(chatId, otherUid, otherName) {
+  function openChat(chatId, otherUid, otherName, otherAvatar) {
     activeChatId = chatId;
+    activeOtherAvatar = otherAvatar || null;
     if (unsubMessages) { unsubMessages(); unsubMessages = null; }
     var head = $('msgHeader');
     var inp = $('msgInput');
@@ -483,10 +534,11 @@
     var main = $('socChatMain');
     if (head) {
       head.dataset.otherUid = otherUid;
+      var headAv = Object.assign({ role: 'parent' }, otherAvatar || {});
       head.innerHTML =
         '<button type="button" class="soc-chat-back" id="socChatBack" aria-label="Quay lại danh sách">←</button>' +
         '<a class="soc-chat-head-user" href="profile.html?uid=' + encodeURIComponent(otherUid) + '">' +
-          '<span class="soc-inbox-av">' + (otherName.charAt(0) || '?') + '</span>' +
+          avatarHtml(headAv).replace('soc-av', 'soc-av soc-inbox-av') +
           '<span class="soc-chat-head-name">' + KidSocial.esc(otherName) + '</span></a>' +
         '<a class="soc-chat-head-link" href="profile.html?uid=' + encodeURIComponent(otherUid) + '">Hồ sơ</a>';
       var back = $('socChatBack');
@@ -535,7 +587,7 @@
     if (!uid) return;
     switchPanel('chat');
     KidSocial.ensureChat(uid).then(function (chat) {
-      openChat(chat.chatId, chat.otherUid, chat.otherName);
+      openChat(chat.chatId, chat.otherUid, chat.otherName, chat.otherAvatar);
     }).catch(function (e) { alert(e.message); });
   }
 

@@ -17,6 +17,14 @@
     } catch (e) { return ''; }
   }
 
+  function avatarHtml(prof, className) {
+    className = className || 'msg-inbox-av';
+    if (typeof KidSocial.renderAvatarHtml === 'function') {
+      return KidSocial.renderAvatarHtml(prof, className);
+    }
+    return '<span class="' + className + '">' + (prof && prof.role === 'teacher' ? '👩‍🏫' : '🧒') + '</span>';
+  }
+
   function renderInbox(rows) {
     var box = $('msgInboxList');
     if (!box) return;
@@ -26,9 +34,10 @@
     }
     box.innerHTML = rows.map(function (r) {
       var active = r.chatId === activeChatId ? ' is-active' : '';
+      var avProf = Object.assign({ role: 'parent' }, r.otherAvatar || {});
       return '<button type="button" class="msg-inbox-item' + active + '" data-chat="' + KidSocial.esc(r.chatId) +
         '" data-uid="' + KidSocial.esc(r.otherUid) + '" data-name="' + KidSocial.esc(r.otherName) + '">' +
-        '<span class="msg-inbox-av">' + (r.otherName.charAt(0) || '🧒') + '</span>' +
+        avatarHtml(avProf, 'msg-inbox-av soc-av') +
         '<span class="msg-inbox-meta">' +
           '<strong>' + KidSocial.esc(r.otherName) + '</strong>' +
           '<em>' + KidSocial.esc(r.lastText || 'Bắt đầu trò chuyện') + '</em>' +
@@ -37,8 +46,15 @@
       '</button>';
     }).join('');
     box.querySelectorAll('.msg-inbox-item').forEach(function (btn) {
+      var cid = btn.getAttribute('data-chat');
+      var row = rows.find(function (r) { return r.chatId === cid; });
       btn.onclick = function () {
-        openChat(btn.getAttribute('data-chat'), btn.getAttribute('data-uid'), btn.getAttribute('data-name'));
+        openChat(
+          btn.getAttribute('data-chat'),
+          btn.getAttribute('data-uid'),
+          btn.getAttribute('data-name'),
+          row ? row.otherAvatar : null
+        );
       };
     });
   }
@@ -52,20 +68,34 @@
     }
     box.innerHTML = list.map(function (m) {
       var mine = m.senderUid === myUid;
+      var avProf = {
+        role: 'parent',
+        avatarMode: m.avatarMode,
+        avatarEmoji: m.avatarEmoji,
+        avatarRing: m.avatarRing,
+        avatarPhoto: m.avatarPhoto
+      };
+      var av = avatarHtml(avProf, 'msg-bubble-av soc-av');
       return '<div class="msg-bubble-row' + (mine ? ' is-mine' : '') + '">' +
+        (mine ? '' : av) +
         '<div class="msg-bubble">' + KidSocial.esc(m.text) +
-        '<span class="msg-bubble-time">' + KidSocial.esc(m.timeAgo) + '</span></div></div>';
+        '<span class="msg-bubble-time">' + KidSocial.esc(m.timeAgo) + '</span></div>' +
+        (mine ? av : '') +
+      '</div>';
     }).join('');
     box.scrollTop = box.scrollHeight;
   }
 
-  function openChat(chatId, otherUid, otherName) {
+  function openChat(chatId, otherUid, otherName, otherAvatar) {
     activeChatId = chatId;
     activeOtherUid = otherUid;
     if (unsubMessages) { unsubMessages(); unsubMessages = null; }
     var head = $('msgHeader');
     if (head) {
-      head.innerHTML = '<a href="profile.html?uid=' + encodeURIComponent(otherUid) + '" class="msg-head-user">' +
+      var avProf = Object.assign({ role: 'parent' }, otherAvatar || {});
+      head.innerHTML =
+        avatarHtml(avProf, 'msg-head-av soc-av') +
+        '<a href="profile.html?uid=' + encodeURIComponent(otherUid) + '" class="msg-head-user">' +
         KidSocial.esc(otherName) + '</a>' +
         '<a href="profile.html?uid=' + encodeURIComponent(otherUid) + '" class="msg-head-link">Hồ sơ</a>';
     }
@@ -139,7 +169,7 @@
       var uid = queryUid();
       if (uid) {
         KidSocial.ensureChat(uid).then(function (chat) {
-          openChat(chat.chatId, chat.otherUid, chat.otherName);
+          openChat(chat.chatId, chat.otherUid, chat.otherName, chat.otherAvatar);
         }).catch(function (e) { alert(e.message); });
       }
     });

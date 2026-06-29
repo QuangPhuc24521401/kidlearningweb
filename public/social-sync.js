@@ -47,6 +47,121 @@
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function isSafePhotoUrl(u) {
+    return typeof u === 'string'
+      && u.indexOf('data:image/jpeg;base64,') === 0
+      && u.length < 200000
+      && !/["\s<>]/.test(u);
+  }
+
+  function readLocalAvatar() {
+    try {
+      var mode = localStorage.getItem('studentAvatarMode') === 'photo' ? 'photo' : 'emoji';
+      var emoji = (localStorage.getItem('studentAvatarEmoji') || '').trim() || '🧒';
+      var ringRe = /^#[0-9A-Fa-f]{6}$/;
+      var ringRaw = localStorage.getItem('studentAvatarRing') || '';
+      var ring = ringRe.test(ringRaw.trim()) ? ringRaw.trim() : '#fbbf24';
+      var photo = localStorage.getItem('studentAvatarPhoto') || '';
+      if (mode === 'photo' && isSafePhotoUrl(photo)) {
+        return { avatarMode: 'photo', avatarEmoji: emoji, avatarRing: ring, avatarPhoto: photo };
+      }
+      return { avatarMode: 'emoji', avatarEmoji: emoji, avatarRing: ring, avatarPhoto: '' };
+    } catch (e) {
+      return { avatarMode: 'emoji', avatarEmoji: '🧒', avatarRing: '#fbbf24', avatarPhoto: '' };
+    }
+  }
+
+  function avatarFromUserDoc(d) {
+    d = d || {};
+    var modeRaw = d.studentAvatarMode || d.avatarMode || 'emoji';
+    var mode = modeRaw === 'photo' ? 'photo' : 'emoji';
+    var photo = '';
+    if (mode === 'photo') {
+      var p = d.studentAvatarPhoto || d.avatarPhoto || '';
+      if (isSafePhotoUrl(p)) photo = p;
+      else mode = 'emoji';
+    }
+    var emoji = (d.studentAvatarEmoji || d.avatarEmoji || '').trim() || '🧒';
+    var ringRe = /^#[0-9A-Fa-f]{6}$/;
+    var ringRaw = d.studentAvatarRing || d.avatarRing || '#fbbf24';
+    var ring = ringRe.test(String(ringRaw).trim()) ? String(ringRaw).trim() : '#fbbf24';
+    return { avatarMode: mode, avatarEmoji: emoji, avatarRing: ring, avatarPhoto: photo };
+  }
+
+  function avatarFieldsFromProfile(prof, prefix) {
+    prefix = prefix || 'author';
+    var mode = prof.avatarMode === 'photo' && prof.avatarPhoto ? 'photo' : 'emoji';
+    var out = {};
+    out[prefix + 'AvatarMode'] = mode;
+    out[prefix + 'AvatarEmoji'] = prof.avatarEmoji || '🧒';
+    out[prefix + 'AvatarRing'] = prof.avatarRing || '#fbbf24';
+    if (mode === 'photo' && prof.avatarPhoto) out[prefix + 'AvatarPhoto'] = prof.avatarPhoto;
+    return out;
+  }
+
+  function avatarFromStoredFields(x, prefix) {
+    prefix = prefix || 'author';
+    var modeRaw = x[prefix + 'AvatarMode'] || 'emoji';
+    var mode = modeRaw === 'photo' ? 'photo' : 'emoji';
+    var photo = x[prefix + 'AvatarPhoto'] || '';
+    if (mode === 'photo' && !isSafePhotoUrl(photo)) mode = 'emoji';
+    return {
+      avatarMode: mode,
+      avatarEmoji: (x[prefix + 'AvatarEmoji'] || '').trim() || '🧒',
+      avatarRing: x[prefix + 'AvatarRing'] || '#fbbf24',
+      avatarPhoto: mode === 'photo' ? photo : ''
+    };
+  }
+
+  function renderAvatarHtml(prof, className) {
+    className = className || 'soc-av';
+    prof = prof || {};
+    if (prof.role === 'teacher') {
+      return '<span class="' + className + ' soc-av--teacher" aria-hidden="true">👩‍🏫</span>';
+    }
+    var ring = esc(prof.avatarRing || '#fbbf24');
+    if (prof.avatarMode === 'photo' && isSafePhotoUrl(prof.avatarPhoto)) {
+      return '<span class="' + className + ' soc-av--photo" style="--av-ring:' + ring + '" aria-hidden="true">' +
+        '<img class="soc-av-img" src="' + prof.avatarPhoto + '" alt="" decoding="async"></span>';
+    }
+    return '<span class="' + className + ' soc-av--emoji" style="--av-ring:' + ring + '" aria-hidden="true">' +
+      esc(prof.avatarEmoji || '🧒') + '</span>';
+  }
+
+  function enrichProfiles(uids) {
+    uids = (uids || []).filter(function (u, i, arr) { return u && arr.indexOf(u) === i; });
+    if (!uids.length) return Promise.resolve({});
+    var reads = uids.map(function (uid) {
+      return getPublicProfile(uid).then(function (p) { return [uid, p]; }).catch(function () { return [uid, null]; });
+    });
+    return Promise.all(reads).then(function (pairs) {
+      var map = {};
+      pairs.forEach(function (pair) { if (pair[1]) map[pair[0]] = pair[1]; });
+      return map;
+    });
+  }
+
+  function mergeLiveAvatar(item, profileMap, uidKey, prefix) {
+    uidKey = uidKey || 'authorUid';
+    prefix = prefix || 'author';
+    var uid = item[uidKey];
+    var live = uid && profileMap ? profileMap[uid] : null;
+    var stored = avatarFromStoredFields(item, prefix);
+    if (live) {
+      item.avatarMode = live.avatarMode;
+      item.avatarEmoji = live.avatarEmoji;
+      item.avatarRing = live.avatarRing;
+      item.avatarPhoto = live.avatarPhoto;
+      if (live.role) item[prefix + 'Role'] = live.role;
+    } else {
+      item.avatarMode = stored.avatarMode;
+      item.avatarEmoji = stored.avatarEmoji;
+      item.avatarRing = stored.avatarRing;
+      item.avatarPhoto = stored.avatarPhoto;
+    }
+    return item;
+  }
+
   function timeAgo(ms) {
     if (!ms) return '';
     var diff = Date.now() - ms;
@@ -78,9 +193,10 @@
       displayName: name,
       role: role,
       classRoom: classRoom,
-      avatarEmoji: '',
-      avatarMode: 'emoji',
-      avatarRing: '#fbbf24'
+      avatarEmoji: readLocalAvatar().avatarEmoji,
+      avatarMode: readLocalAvatar().avatarMode,
+      avatarRing: readLocalAvatar().avatarRing,
+      avatarPhoto: readLocalAvatar().avatarPhoto
     };
   }
 
@@ -92,30 +208,16 @@
       if (!snap.exists) return profileFromLocal(uid);
       var d = snap.data();
       var local = profileFromLocal(uid);
-      var modeRaw = d.studentAvatarMode || d.avatarMode || 'emoji';
-      var mode = modeRaw === 'photo' ? 'photo' : 'emoji';
-      var photo = '';
-      if(mode === 'photo'){
-        var p = d.studentAvatarPhoto || d.avatarPhoto || '';
-        if(typeof p === 'string'
-          && p.indexOf('data:image/jpeg;base64,') === 0
-          && p.length < 200000){
-          photo = p;
-        } else {
-          mode = 'emoji';
-        }
-      }
-      var emoji = (d.studentAvatarEmoji || d.avatarEmoji || '').trim() || '🧒';
-      var ring = d.studentAvatarRing || d.avatarRing || '#fbbf24';
+      var av = avatarFromUserDoc(d);
       return {
         uid: uid,
         displayName: d.displayName || d.nickname || d.childName || local.displayName,
         role: d.role || local.role,
         classRoom: d.classRoom || local.classRoom,
-        avatarEmoji: emoji,
-        avatarMode: mode,
-        avatarRing: ring,
-        avatarPhoto: photo
+        avatarEmoji: av.avatarEmoji,
+        avatarMode: av.avatarMode,
+        avatarRing: av.avatarRing,
+        avatarPhoto: av.avatarPhoto
       };
     }).catch(function () {
       return profileFromLocal(uid);
@@ -130,14 +232,25 @@
       return ref.get().then(function (snap) {
         if (snap.exists) return snap.data();
         var prof = profileFromLocal(user.uid);
+        var avLocal = readLocalAvatar();
         var patch = {
           displayName: prof.displayName,
           nickname: prof.displayName,
           searchName: String(prof.displayName || '').toLowerCase().trim(),
           role: prof.role,
           classRoom: prof.classRoom || '',
+          avatarMode: avLocal.avatarMode,
+          avatarEmoji: avLocal.avatarEmoji,
+          avatarRing: avLocal.avatarRing,
+          studentAvatarMode: avLocal.avatarMode,
+          studentAvatarEmoji: avLocal.avatarEmoji,
+          studentAvatarRing: avLocal.avatarRing,
           updatedAt: ts()
         };
+        if (avLocal.avatarMode === 'photo' && avLocal.avatarPhoto) {
+          patch.avatarPhoto = avLocal.avatarPhoto;
+          patch.studentAvatarPhoto = avLocal.avatarPhoto;
+        }
         return ref.set(patch, { merge: true }).then(function () { return patch; });
       });
     });
@@ -221,6 +334,7 @@
           commentCount: 0,
           createdAt: ts()
         };
+        Object.assign(payload, avatarFieldsFromProfile(prof, 'author'));
         if (opts.shareMeta) payload.shareMeta = opts.shareMeta;
         return db().collection('posts').add(payload);
       });
@@ -256,12 +370,12 @@
       var postRef = db().collection('posts').doc(postId);
       var cRef = postRef.collection('comments').doc();
       var batch = db().batch();
-      batch.set(cRef, {
+      batch.set(cRef, Object.assign({
         authorUid: user.uid,
         authorName: prof.displayName,
         text: text.slice(0, 300),
         createdAt: ts()
-      });
+      }, avatarFieldsFromProfile(prof, 'author')));
       batch.update(postRef, { commentCount: firebase.firestore.FieldValue.increment(1) });
       return batch.commit().then(function () { return cRef.id; });
     });
@@ -271,15 +385,24 @@
     return db().collection('posts').doc(postId).collection('comments')
       .orderBy('createdAt', 'asc').limit(50).get()
       .then(function (snap) {
-        return snap.docs.map(function (d) {
+        var rows = snap.docs.map(function (d) {
           var x = d.data();
+          var av = avatarFromStoredFields(x, 'author');
           return {
             id: d.id,
             authorUid: x.authorUid,
             authorName: x.authorName,
+            avatarMode: av.avatarMode,
+            avatarEmoji: av.avatarEmoji,
+            avatarRing: av.avatarRing,
+            avatarPhoto: av.avatarPhoto,
             text: x.text,
             timeAgo: timeAgo(docTime(x))
           };
+        });
+        var uids = rows.map(function (r) { return r.authorUid; });
+        return enrichProfiles(uids).then(function (map) {
+          return rows.map(function (row) { return mergeLiveAvatar(row, map, 'authorUid', 'author'); });
         });
       });
   }
@@ -302,12 +425,17 @@
       return docs.map(function (d) {
         var x = d.data();
         var likes = Array.isArray(x.likes) ? x.likes : [];
+        var av = avatarFromStoredFields(x, 'author');
         return {
           id: d.id,
           authorUid: x.authorUid,
           authorName: x.authorName,
           authorRole: x.authorRole,
           classRoom: x.classRoom,
+          avatarMode: av.avatarMode,
+          avatarEmoji: av.avatarEmoji,
+          avatarRing: av.avatarRing,
+          avatarPhoto: av.avatarPhoto,
           text: x.text,
           type: x.type,
           shareMeta: x.shareMeta,
@@ -320,6 +448,13 @@
       }).sort(function (a, b) { return b.createdMs - a.createdMs; });
     }
 
+    function enrichPosts(rows) {
+      var uids = rows.map(function (r) { return r.authorUid; }).filter(Boolean);
+      return enrichProfiles(uids).then(function (map) {
+        return rows.map(function (row) { return mergeLiveAvatar(row, map, 'authorUid', 'author'); });
+      });
+    }
+
     if (feed === 'following') {
       return listFollowingUids(user.uid).then(function (uids) {
         if (!uids.length) return [];
@@ -330,7 +465,7 @@
         return Promise.all(reads).then(function (snaps) {
           var docs = [];
           snaps.forEach(function (s) { docs = docs.concat(s.docs); });
-          return mapDocs(docs).slice(0, 30);
+          return enrichPosts(mapDocs(docs).slice(0, 30));
         });
       });
     }
@@ -341,14 +476,14 @@
         return db().collection('posts')
           .where('classRoom', '==', prof.classRoom)
           .limit(40).get()
-          .then(function (snap) { return mapDocs(snap.docs); });
+          .then(function (snap) { return enrichPosts(mapDocs(snap.docs)); });
       });
     }
 
     return db().collection('posts').orderBy('createdAt', 'desc').limit(30).get()
-      .then(function (snap) { return mapDocs(snap.docs); })
+      .then(function (snap) { return enrichPosts(mapDocs(snap.docs)); })
       .catch(function () {
-        return db().collection('posts').limit(30).get().then(function (snap) { return mapDocs(snap.docs); });
+        return db().collection('posts').limit(30).get().then(function (snap) { return enrichPosts(mapDocs(snap.docs)); });
       });
   }
 
@@ -361,10 +496,15 @@
         .then(function (snap) {
           return snap.docs.filter(function (d) { return d.id !== user.uid; }).map(function (d) {
             var x = d.data();
+            var av = avatarFromUserDoc(x);
             return {
               uid: d.id,
               displayName: x.displayName || x.nickname || x.childName || 'Bé',
-              role: x.role || 'parent'
+              role: x.role || 'parent',
+              avatarMode: av.avatarMode,
+              avatarEmoji: av.avatarEmoji,
+              avatarRing: av.avatarRing,
+              avatarPhoto: av.avatarPhoto
             };
           });
         });
@@ -373,11 +513,16 @@
 
   function mapUserDoc(d) {
     var x = d.data();
+    var av = avatarFromUserDoc(x);
     return {
       uid: d.id,
       displayName: x.displayName || x.nickname || x.childName || 'Bé học sinh',
       role: x.role || 'parent',
-      classRoom: x.classRoom || ''
+      classRoom: x.classRoom || '',
+      avatarMode: av.avatarMode,
+      avatarEmoji: av.avatarEmoji,
+      avatarRing: av.avatarRing,
+      avatarPhoto: av.avatarPhoto
     };
   }
 
@@ -541,8 +686,27 @@
               uid: d.id,
               displayName: x.displayName || 'Bạn bè',
               role: x.role || 'parent',
-              classRoom: x.classRoom || ''
+              classRoom: x.classRoom || '',
+              avatarMode: (x.avatarMode || 'emoji'),
+              avatarEmoji: x.avatarEmoji || '🧒',
+              avatarRing: x.avatarRing || '#fbbf24',
+              avatarPhoto: x.avatarPhoto || ''
             };
+          });
+        }).then(function (rows) {
+          var uids = rows.map(function (r) { return r.uid; });
+          return enrichProfiles(uids).then(function (map) {
+            return rows.map(function (row) {
+              var live = map[row.uid];
+              if (live) {
+                row.avatarMode = live.avatarMode;
+                row.avatarEmoji = live.avatarEmoji;
+                row.avatarRing = live.avatarRing;
+                row.avatarPhoto = live.avatarPhoto;
+                row.role = live.role;
+              }
+              return row;
+            });
           });
         });
     }).catch(function () { return []; });
@@ -552,20 +716,48 @@
     return whenAuthReady().then(function (user) {
       if (!user) return Promise.reject(new Error('Cần đăng nhập'));
       if (user.uid === otherUid) return Promise.reject(new Error('Không thể nhắn cho chính mình'));
-      return Promise.all([getPublicProfile(user.uid), getPublicProfile(otherUid)]).then(function (arr) {
-        var cid = chatIdFor(user.uid, otherUid);
-        var ref = db().collection('chats').doc(cid);
-        var names = {};
-        names[user.uid] = arr[0].displayName;
-        names[otherUid] = arr[1].displayName;
-        return ref.set({
-          participants: [user.uid, otherUid].sort(),
-          participantNames: names,
-          lastText: '',
-          lastAt: ts(),
-          updatedAt: ts()
-        }, { merge: true }).then(function () {
-          return { chatId: cid, otherUid: otherUid, otherName: arr[1].displayName };
+      return isFriend(otherUid).then(function (ok) {
+        if (!ok) return Promise.reject(new Error('Chỉ nhắn tin được với bạn bè. Hãy gửi và chấp nhận lời mời kết bạn trước.'));
+        return Promise.all([getPublicProfile(user.uid), getPublicProfile(otherUid)]).then(function (arr) {
+          var cid = chatIdFor(user.uid, otherUid);
+          var ref = db().collection('chats').doc(cid);
+          var names = {};
+          names[user.uid] = arr[0].displayName;
+          names[otherUid] = arr[1].displayName;
+          var avatars = {};
+          avatars[user.uid] = {
+            mode: arr[0].avatarMode,
+            emoji: arr[0].avatarEmoji,
+            ring: arr[0].avatarRing,
+            photo: arr[0].avatarPhoto || ''
+          };
+          avatars[otherUid] = {
+            mode: arr[1].avatarMode,
+            emoji: arr[1].avatarEmoji,
+            ring: arr[1].avatarRing,
+            photo: arr[1].avatarPhoto || ''
+          };
+          return ref.set({
+            participants: [user.uid, otherUid].sort(),
+            participantNames: names,
+            participantAvatars: avatars,
+            lastText: '',
+            lastAt: ts(),
+            updatedAt: ts()
+          }, { merge: true }).then(function () {
+            return {
+              chatId: cid,
+              otherUid: otherUid,
+              otherName: arr[1].displayName,
+              otherAvatar: {
+                avatarMode: arr[1].avatarMode,
+                avatarEmoji: arr[1].avatarEmoji,
+                avatarRing: arr[1].avatarRing,
+                avatarPhoto: arr[1].avatarPhoto,
+                role: arr[1].role
+              }
+            };
+          });
         });
       });
     }).catch(function (err) {
@@ -582,19 +774,65 @@
           var rows = snap.docs.map(function (d) {
             var x = d.data();
             var other = (x.participants || []).find(function (p) { return p !== user.uid; }) || '';
+            var avRaw = x.participantAvatars && x.participantAvatars[other] ? x.participantAvatars[other] : null;
+            var av = avRaw ? {
+              avatarMode: avRaw.mode === 'photo' && isSafePhotoUrl(avRaw.photo) ? 'photo' : 'emoji',
+              avatarEmoji: avRaw.emoji || '🧒',
+              avatarRing: avRaw.ring || '#fbbf24',
+              avatarPhoto: isSafePhotoUrl(avRaw.photo) ? avRaw.photo : ''
+            } : { avatarMode: 'emoji', avatarEmoji: '🧒', avatarRing: '#fbbf24', avatarPhoto: '' };
             return {
               chatId: d.id,
               otherUid: other,
               otherName: (x.participantNames && x.participantNames[other]) || 'Bạn bè',
+              otherAvatar: av,
               lastText: x.lastText || '',
               lastAt: docTime(x),
               timeAgo: timeAgo(docTime(x))
             };
           });
           rows.sort(function (a, b) { return b.lastAt - a.lastAt; });
-          return rows;
+          return enrichProfiles(rows.map(function (r) { return r.otherUid; })).then(function (map) {
+            return rows.map(function (row) {
+              var live = map[row.otherUid];
+              if (live) {
+                row.otherAvatar = {
+                  avatarMode: live.avatarMode,
+                  avatarEmoji: live.avatarEmoji,
+                  avatarRing: live.avatarRing,
+                  avatarPhoto: live.avatarPhoto,
+                  role: live.role
+                };
+              }
+              return row;
+            });
+          });
         });
     }).catch(function () { return []; });
+  }
+
+  function mapMessageDoc(d) {
+    var x = d.data();
+    var av = avatarFromStoredFields(x, 'sender');
+    return {
+      id: d.id,
+      senderUid: x.senderUid,
+      senderName: x.senderName,
+      avatarMode: av.avatarMode,
+      avatarEmoji: av.avatarEmoji,
+      avatarRing: av.avatarRing,
+      avatarPhoto: av.avatarPhoto,
+      text: x.text,
+      createdMs: docTime(x),
+      timeAgo: timeAgo(docTime(x))
+    };
+  }
+
+  function enrichMessages(rows) {
+    var uids = rows.map(function (r) { return r.senderUid; }).filter(Boolean);
+    return enrichProfiles(uids).then(function (map) {
+      return rows.map(function (row) { return mergeLiveAvatar(row, map, 'senderUid', 'sender'); });
+    });
   }
 
   function listMessages(chatId, limit) {
@@ -602,17 +840,7 @@
     return db().collection('chats').doc(chatId).collection('messages')
       .orderBy('createdAt', 'asc').limit(limit).get()
       .then(function (snap) {
-        return snap.docs.map(function (d) {
-          var x = d.data();
-          return {
-            id: d.id,
-            senderUid: x.senderUid,
-            senderName: x.senderName,
-            text: x.text,
-            createdMs: docTime(x),
-            timeAgo: timeAgo(docTime(x))
-          };
-        });
+        return enrichMessages(snap.docs.map(mapMessageDoc));
       });
   }
 
@@ -625,16 +853,20 @@
         var chatRef = db().collection('chats').doc(chatId);
         var msgRef = chatRef.collection('messages').doc();
         var batch = db().batch();
-        batch.set(msgRef, {
+        batch.set(msgRef, Object.assign({
           senderUid: user.uid,
           senderName: prof.displayName,
           text: text.slice(0, 500),
           createdAt: ts()
-        });
+        }, avatarFieldsFromProfile(prof, 'sender')));
         batch.update(chatRef, {
           lastText: text.slice(0, 120),
           lastAt: ts(),
-          updatedAt: ts()
+          updatedAt: ts(),
+          ['participantAvatars.' + user.uid + '.mode']: prof.avatarMode === 'photo' && prof.avatarPhoto ? 'photo' : 'emoji',
+          ['participantAvatars.' + user.uid + '.emoji']: prof.avatarEmoji || '🧒',
+          ['participantAvatars.' + user.uid + '.ring']: prof.avatarRing || '#fbbf24',
+          ['participantAvatars.' + user.uid + '.photo']: prof.avatarMode === 'photo' && prof.avatarPhoto ? prof.avatarPhoto : ''
         });
         return batch.commit().then(function () { return msgRef.id; });
       });
@@ -647,18 +879,10 @@
     return db().collection('chats').doc(chatId).collection('messages')
       .orderBy('createdAt', 'asc').limit(80)
       .onSnapshot(function (snap) {
-        var list = snap.docs.map(function (d) {
-          var x = d.data();
-          return {
-            id: d.id,
-            senderUid: x.senderUid,
-            senderName: x.senderName,
-            text: x.text,
-            createdMs: docTime(x),
-            timeAgo: timeAgo(docTime(x))
-          };
+        var rows = snap.docs.map(mapMessageDoc);
+        enrichMessages(rows).then(function (list) {
+          if (typeof onChange === 'function') onChange(list);
         });
-        if (typeof onChange === 'function') onChange(list);
       });
   }
 
@@ -669,6 +893,8 @@
     ensureUserDoc: ensureUserDoc,
     friendlyFirestoreError: friendlyFirestoreError,
     getPublicProfile: getPublicProfile,
+    renderAvatarHtml: renderAvatarHtml,
+    enrichProfiles: enrichProfiles,
     getUserAchievements: getUserAchievements,
     isFollowing: isFollowing,
     follow: follow,
