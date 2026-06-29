@@ -574,8 +574,14 @@ function _applyProfileInfo(info, isOther){
       av.textContent = '👩‍🏫';
     } else {
       var sv = info.studentAvatar || _readStudentAvatarFromStorage();
-      if(isOther && info.avatarEmoji){
-        sv = { mode: 'emoji', emoji: info.avatarEmoji, ring: info.avatarRing || '#fbbf24' };
+      if(isOther){
+        var oMode = info.avatarMode === 'photo' && info.avatarPhoto ? 'photo' : 'emoji';
+        sv = {
+          mode: oMode,
+          emoji: info.avatarEmoji || '🧒',
+          ring: info.avatarRing || '#FF9800',
+          photo: oMode === 'photo' ? info.avatarPhoto : ''
+        };
       }
       var ringEscProfile = sv.ring;
       av.style.setProperty('--avatar-ring', ringEscProfile);
@@ -604,6 +610,7 @@ function _applyProfileInfo(info, isOther){
   _configureProfileNav(info, !!isOther);
 
   show('profNameEditBtn', !info.isTeacher && !isOther);
+  show('profAvatarEditBtn', !info.isTeacher && !isOther);
   show('profClassBox', !isOther && !info.isTeacher);
   show('profBtnSettings', !isOther);
   show('profBtnLogout', !isOther);
@@ -707,7 +714,9 @@ function renderOtherProfile(uid){
         honor: 0,
         createdAt: null,
         avatarEmoji: prof.avatarEmoji,
-        avatarRing: prof.avatarRing
+        avatarMode: prof.avatarMode,
+        avatarRing: prof.avatarRing,
+        avatarPhoto: prof.avatarPhoto
       }, true);
       _wireProfilePanels();
     });
@@ -793,6 +802,7 @@ function renderProfilePage(){
 
   show('profSocialActions', false);
   show('profNameEditBtn', !info.isTeacher);
+  show('profAvatarEditBtn', !info.isTeacher);
 
   var proBanner = document.getElementById('profProBanner');
   var proTitle = document.getElementById('profProTitle');
@@ -909,6 +919,334 @@ function renderProfilePage(){
   _wireProfileActions(card);
 }
 
+var PROF_STUDENT_EMOJIS = ['🧒', '👧', '🐻', '🐼', '🦊', '🐰', '🦄', '🦁', '🐸', '🐨', '🐥', '🚀', '⭐', '🌈', '🎨', '⚽'];
+var PROF_RING_HEX = ['#FF9800', '#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#00BCD4'];
+
+function _isSafeProfRingHex(hex){
+  return typeof hex === 'string' && /^#[0-9A-Fa-f]{6}$/.test(hex.trim());
+}
+
+function _compressProfAvatarPhoto(file){
+  return new Promise(function(resolve, reject){
+    if(!file || !/^image\/(jpeg|png|webp)/i.test(file.type)){
+      reject(new Error('Chọn file JPG, PNG hoặc WebP.'));
+      return;
+    }
+    var maxEdge = 200;
+    var maxChars = 120000;
+    if(typeof createImageBitmap !== 'function'){
+      reject(new Error('Trình duyệt không hỗ trợ xử lý ảnh.'));
+      return;
+    }
+    createImageBitmap(file).then(function(bmp){
+      var scale = Math.min(1, maxEdge / Math.max(bmp.width, bmp.height));
+      var w = Math.max(1, Math.round(bmp.width * scale));
+      var h = Math.max(1, Math.round(bmp.height * scale));
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, w, h);
+      var quality = 0.88;
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+      while(dataUrl.length > maxChars && quality > 0.42){
+        quality -= 0.06;
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+      }
+      if(dataUrl.length > maxChars){
+        reject(new Error('Ảnh vẫn quá lớn. Hãy chọn ảnh nhỏ hơn.'));
+        return;
+      }
+      resolve(dataUrl);
+    }).catch(function(err){
+      reject(err || new Error('Không đọc được ảnh.'));
+    });
+  });
+}
+
+function _buildProfAvatarPickers(){
+  var grid = document.getElementById('profAvatarEmojiPicker');
+  if(grid && !grid.dataset.built){
+    grid.dataset.built = '1';
+    grid.innerHTML = PROF_STUDENT_EMOJIS.map(function(em){
+      return '<button type="button" data-emoji="' + em + '" aria-label="Chọn ' + em + '">' + em + '</button>';
+    }).join('');
+  }
+  var rings = document.getElementById('profAvatarRingPicker');
+  if(rings && !rings.dataset.built){
+    rings.dataset.built = '1';
+    rings.innerHTML = PROF_RING_HEX.map(function(hex, i){
+      return '<button type="button"' + (i === 0 ? ' class="is-selected"' : '') + ' data-ring="' + hex + '" style="background:' + hex + '" aria-label="Màu viền ' + (i + 1) + '"></button>';
+    }).join('');
+  }
+}
+
+function _syncProfAvatarPreviewFromPickers(){
+  var ringBt = document.querySelector('#profAvatarRingPicker button.is-selected');
+  var emojiBt = document.querySelector('#profAvatarEmojiPicker button.is-selected');
+  var ring = ringBt && ringBt.dataset.ring ? ringBt.dataset.ring : '#FF9800';
+  var emoji = emojiBt && emojiBt.dataset.emoji ? emojiBt.dataset.emoji : '🧒';
+  var previewRing = document.getElementById('profAvatarPreviewRing');
+  var previewEmoji = document.getElementById('profAvatarPreviewEmoji');
+  var previewImg = document.getElementById('profAvatarPreviewImg');
+  if(!previewRing) return;
+  previewRing.style.setProperty('--ring', _isSafeProfRingHex(ring) ? ring : '#FF9800');
+  if(previewRing.dataset.mode !== 'photo'){
+    if(previewEmoji){
+      previewEmoji.textContent = emoji;
+      previewEmoji.removeAttribute('hidden');
+    }
+    if(previewImg){
+      previewImg.setAttribute('hidden', '');
+      previewImg.removeAttribute('src');
+    }
+  }
+}
+
+function _setProfAvatarPickerSelection(sv){
+  sv = sv || _readStudentAvatarFromStorage();
+  var emoji = sv.emoji || '🧒';
+  var ring = sv.ring || '#FF9800';
+  document.querySelectorAll('#profAvatarEmojiPicker button').forEach(function(b){
+    b.classList.toggle('is-selected', b.dataset.emoji === emoji);
+  });
+  if(!document.querySelector('#profAvatarEmojiPicker button.is-selected')){
+    var firstEmoji = document.querySelector('#profAvatarEmojiPicker button');
+    if(firstEmoji) firstEmoji.classList.add('is-selected');
+  }
+  document.querySelectorAll('#profAvatarRingPicker button').forEach(function(b){
+    b.classList.toggle('is-selected', b.dataset.ring === ring);
+  });
+  if(!document.querySelector('#profAvatarRingPicker button.is-selected')){
+    document.querySelectorAll('#profAvatarRingPicker button').forEach(function(b, i){
+      b.classList.toggle('is-selected', i === 0);
+    });
+  }
+  var previewRing = document.getElementById('profAvatarPreviewRing');
+  var previewImg = document.getElementById('profAvatarPreviewImg');
+  var previewEmoji = document.getElementById('profAvatarPreviewEmoji');
+  var clearBtn = document.getElementById('profAvatarPhotoClearBtn');
+  if(!previewRing) return;
+  if(sv.mode === 'photo' && sv.photo && _safeDataUrlForAttr(sv.photo)){
+    previewRing.dataset.mode = 'photo';
+    if(previewImg){
+      previewImg.src = sv.photo;
+      previewImg.removeAttribute('hidden');
+    }
+    if(previewEmoji) previewEmoji.setAttribute('hidden', '');
+    if(clearBtn) clearBtn.removeAttribute('hidden');
+  } else {
+    previewRing.dataset.mode = 'emoji';
+    if(previewImg){
+      previewImg.removeAttribute('src');
+      previewImg.setAttribute('hidden', '');
+    }
+    if(previewEmoji) previewEmoji.removeAttribute('hidden');
+    if(clearBtn) clearBtn.setAttribute('hidden', '');
+    _syncProfAvatarPreviewFromPickers();
+  }
+}
+
+function openProfAvatarModal(){
+  var modal = document.getElementById('profAvatarModal');
+  var msg = document.getElementById('profAvatarMsg');
+  if(!modal) return;
+  _buildProfAvatarPickers();
+  _setProfAvatarPickerSelection(_readStudentAvatarFromStorage());
+  if(msg){ msg.hidden = true; msg.textContent = ''; }
+  modal.hidden = false;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProfAvatarModal(){
+  var modal = document.getElementById('profAvatarModal');
+  if(!modal) return;
+  modal.classList.remove('open');
+  modal.hidden = true;
+  var nameModal = document.getElementById('profNameModal');
+  if(!nameModal || nameModal.hidden) document.body.style.overflow = '';
+}
+
+function saveStudentAvatar(){
+  return new Promise(function(resolve){
+    if(typeof firebase === 'undefined' || !firebase.auth || !firebase.firestore){
+      resolve({ ok: false, error: 'Firebase chưa sẵn sàng.' });
+      return;
+    }
+    var user = firebase.auth().currentUser;
+    if(!user){
+      resolve({ ok: false, error: 'Cần đăng nhập để lưu ảnh.' });
+      return;
+    }
+
+    var ringBt = document.querySelector('#profAvatarRingPicker button.is-selected');
+    var emojiBt = document.querySelector('#profAvatarEmojiPicker button.is-selected');
+    var ring = ringBt && ringBt.dataset.ring ? ringBt.dataset.ring : '#FF9800';
+    if(!_isSafeProfRingHex(ring)) ring = '#FF9800';
+    var emoji = emojiBt && emojiBt.dataset.emoji ? emojiBt.dataset.emoji : '🧒';
+    if(PROF_STUDENT_EMOJIS.indexOf(emoji) < 0) emoji = '🧒';
+
+    var previewRing = document.getElementById('profAvatarPreviewRing');
+    var previewImg = document.getElementById('profAvatarPreviewImg');
+    var isPhoto = previewRing && previewRing.dataset.mode === 'photo'
+      && previewImg && previewImg.src
+      && previewImg.src.indexOf('data:image/jpeg;base64,') === 0;
+    var photoDataUrl = '';
+    var mode = 'emoji';
+    if(isPhoto){
+      photoDataUrl = previewImg.src;
+      if(photoDataUrl.length > 200000){
+        resolve({ ok: false, error: 'Ảnh vẫn quá lớn. Chọn ảnh nhỏ hơn hoặc dùng emoji.' });
+        return;
+      }
+      mode = 'photo';
+    }
+
+    var patch = {
+      studentAvatarMode: mode,
+      studentAvatarEmoji: emoji,
+      studentAvatarRing: ring,
+      avatarMode: mode,
+      avatarEmoji: emoji,
+      avatarRing: ring,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(mode === 'photo'){
+      patch.studentAvatarPhoto = photoDataUrl;
+    } else {
+      patch.studentAvatarPhoto = firebase.firestore.FieldValue.delete();
+    }
+
+    firebase.firestore().collection('users').doc(user.uid).set(patch, { merge: true })
+      .then(function(){
+        applyStudentAvatarFromUserDoc({
+          role: 'parent',
+          studentAvatarMode: mode,
+          studentAvatarEmoji: emoji,
+          studentAvatarRing: ring,
+          studentAvatarPhoto: mode === 'photo' ? photoDataUrl : ''
+        });
+        if(typeof mountUserBar === 'function') mountUserBar();
+        if(typeof renderProfilePage === 'function') renderProfilePage();
+        closeProfAvatarModal();
+        resolve({ ok: true, message: 'Đã lưu ảnh đại diện.' });
+      })
+      .catch(function(err){
+        console.warn('[profile] saveStudentAvatar', err);
+        resolve({ ok: false, error: (err && err.message) || 'Không lưu được ảnh.' });
+      });
+  });
+}
+
+function _wireProfAvatarModal(){
+  var modal = document.getElementById('profAvatarModal');
+  if(!modal || modal.dataset.wired === '1') return;
+  modal.dataset.wired = '1';
+
+  _buildProfAvatarPickers();
+
+  document.getElementById('profAvatarModalClose')?.addEventListener('click', closeProfAvatarModal);
+  document.getElementById('profAvatarCancelBtn')?.addEventListener('click', closeProfAvatarModal);
+  modal.querySelectorAll('[data-prof-avatar-modal-close]').forEach(function(el){
+    el.addEventListener('click', closeProfAvatarModal);
+  });
+
+  document.getElementById('profAvatarEmojiPicker')?.addEventListener('click', function(ev){
+    var bt = ev.target.closest('button[data-emoji]');
+    if(!bt) return;
+    document.querySelectorAll('#profAvatarEmojiPicker button').forEach(function(b){ b.classList.remove('is-selected'); });
+    bt.classList.add('is-selected');
+    var previewRing = document.getElementById('profAvatarPreviewRing');
+    if(previewRing && previewRing.dataset.mode === 'photo'){
+      previewRing.dataset.mode = 'emoji';
+      var previewImg = document.getElementById('profAvatarPreviewImg');
+      var previewEmoji = document.getElementById('profAvatarPreviewEmoji');
+      if(previewImg){
+        previewImg.removeAttribute('src');
+        previewImg.setAttribute('hidden', '');
+      }
+      if(previewEmoji) previewEmoji.removeAttribute('hidden');
+      var clearBtn = document.getElementById('profAvatarPhotoClearBtn');
+      if(clearBtn) clearBtn.setAttribute('hidden', '');
+    }
+    _syncProfAvatarPreviewFromPickers();
+  });
+
+  document.getElementById('profAvatarRingPicker')?.addEventListener('click', function(ev){
+    var bt = ev.target.closest('button[data-ring]');
+    if(!bt) return;
+    document.querySelectorAll('#profAvatarRingPicker button').forEach(function(b){ b.classList.remove('is-selected'); });
+    bt.classList.add('is-selected');
+    _syncProfAvatarPreviewFromPickers();
+  });
+
+  document.getElementById('profAvatarPhotoInput')?.addEventListener('change', function(ev){
+    var file = ev.target.files && ev.target.files[0];
+    if(!file) return;
+    _compressProfAvatarPhoto(file).then(function(dataUrl){
+      var previewRing = document.getElementById('profAvatarPreviewRing');
+      var previewImg = document.getElementById('profAvatarPreviewImg');
+      var previewEmoji = document.getElementById('profAvatarPreviewEmoji');
+      if(previewRing) previewRing.dataset.mode = 'photo';
+      if(previewImg){
+        previewImg.src = dataUrl;
+        previewImg.removeAttribute('hidden');
+      }
+      if(previewEmoji) previewEmoji.setAttribute('hidden', '');
+      var clearBtn = document.getElementById('profAvatarPhotoClearBtn');
+      if(clearBtn) clearBtn.removeAttribute('hidden');
+    }).catch(function(err){
+      var msg = document.getElementById('profAvatarMsg');
+      if(msg){
+        msg.hidden = false;
+        msg.className = 'profile-field-msg profile-field-msg--err';
+        msg.textContent = (err && err.message) || 'Không đọc được ảnh.';
+      }
+    });
+    ev.target.value = '';
+  });
+
+  document.querySelector('.prof-avatar-upload')?.addEventListener('click', function(){
+    document.getElementById('profAvatarPhotoInput')?.click();
+  });
+
+  document.getElementById('profAvatarPhotoClearBtn')?.addEventListener('click', function(){
+    var previewRing = document.getElementById('profAvatarPreviewRing');
+    var previewImg = document.getElementById('profAvatarPreviewImg');
+    var previewEmoji = document.getElementById('profAvatarPreviewEmoji');
+    if(previewRing) previewRing.dataset.mode = 'emoji';
+    if(previewImg){
+      previewImg.removeAttribute('src');
+      previewImg.setAttribute('hidden', '');
+    }
+    if(previewEmoji) previewEmoji.removeAttribute('hidden');
+    var clearBtn = document.getElementById('profAvatarPhotoClearBtn');
+    if(clearBtn) clearBtn.setAttribute('hidden', '');
+    _syncProfAvatarPreviewFromPickers();
+  });
+
+  var saveBtn = document.getElementById('profAvatarSaveBtn');
+  if(saveBtn && !saveBtn.dataset.wired){
+    saveBtn.dataset.wired = '1';
+    saveBtn.addEventListener('click', function(){
+      var msg = document.getElementById('profAvatarMsg');
+      saveBtn.disabled = true;
+      var orig = saveBtn.textContent;
+      saveBtn.textContent = 'Đang lưu…';
+      saveStudentAvatar().then(function(r){
+        saveBtn.disabled = false;
+        saveBtn.textContent = orig;
+        if(!r.ok && msg){
+          msg.hidden = false;
+          msg.className = 'profile-field-msg profile-field-msg--err';
+          msg.textContent = r.error || 'Không lưu được.';
+        }
+      });
+    });
+  }
+}
+
 function openProfNameModal(){
   var modal = document.getElementById('profNameModal');
   var input = document.getElementById('profNameInput');
@@ -930,7 +1268,8 @@ function closeProfNameModal(){
   if(!modal) return;
   modal.classList.remove('open');
   modal.hidden = true;
-  document.body.style.overflow = '';
+  var avModal = document.getElementById('profAvatarModal');
+  if(!avModal || avModal.hidden) document.body.style.overflow = '';
 }
 
 function saveStudentDisplayName(rawName){
@@ -1047,15 +1386,32 @@ function _wireProfileActions(card){
     editBtn.addEventListener('click', openProfNameModal);
   }
 
-  _wireProfNameModal();
+  var avatarEditBtn = document.getElementById('profAvatarEditBtn');
+  if(avatarEditBtn && !avatarEditBtn.dataset.wired){
+    avatarEditBtn.dataset.wired = '1';
+    avatarEditBtn.addEventListener('click', openProfAvatarModal);
+  }
 
-  if(!window.__profNameEscapeWired){
-    window.__profNameEscapeWired = true;
+  var avatarWrap = document.getElementById('profAvatarWrap');
+  if(avatarWrap && !avatarWrap.dataset.wired){
+    avatarWrap.dataset.wired = '1';
+    avatarWrap.addEventListener('click', function(e){
+      if(e.target.closest('#profAvatarEditBtn')) return;
+      if(avatarEditBtn && !avatarEditBtn.hidden) openProfAvatarModal();
+    });
+  }
+
+  _wireProfNameModal();
+  _wireProfAvatarModal();
+
+  if(!window.__profModalEscapeWired){
+    window.__profModalEscapeWired = true;
     document.addEventListener('keydown', function(e){
-      if(e.key === 'Escape'){
-        var m = document.getElementById('profNameModal');
-        if(m && !m.hidden) closeProfNameModal();
-      }
+      if(e.key !== 'Escape') return;
+      var avModal = document.getElementById('profAvatarModal');
+      if(avModal && !avModal.hidden){ closeProfAvatarModal(); return; }
+      var nameModal = document.getElementById('profNameModal');
+      if(nameModal && !nameModal.hidden) closeProfNameModal();
     });
   }
 }

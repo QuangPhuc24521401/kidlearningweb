@@ -12,7 +12,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
-<link rel="stylesheet" href="menu.css?v=20260630">
+<link rel="stylesheet" href="menu.css?v=20260630b">
 <link rel="stylesheet" href="arena.css">
 <link rel="stylesheet" href="pvp.css">
 <link rel="stylesheet" href="pro.css">
@@ -106,7 +106,10 @@
 
       <aside class="profile-sidebar" id="profSidebar">
         <div class="profile-sidebar-user">
-          <div class="profile-avatar-big" id="profAvatar">🧒</div>
+          <div class="profile-avatar-wrap" id="profAvatarWrap">
+            <div class="profile-avatar-big" id="profAvatar">🧒</div>
+            <button type="button" id="profAvatarEditBtn" class="profile-avatar-edit" hidden aria-label="Đổi ảnh đại diện" title="Đổi ảnh đại diện">📷</button>
+          </div>
           <div class="profile-sidebar-meta">
             <div class="profile-name-row">
               <h1 class="profile-name" id="profName">Bé học sinh</h1>
@@ -327,6 +330,44 @@
         <button type="button" id="profNameSaveBtn" class="prof-modal-btn prof-modal-btn--primary">Lưu tên</button>
       </div>
       <p id="profNameMsg" class="profile-field-msg" hidden></p>
+    </div>
+  </div>
+
+  <div id="profAvatarModal" class="prof-modal prof-modal--avatar" role="dialog" aria-labelledby="profAvatarModalTitle" aria-modal="true" hidden>
+    <div class="prof-modal-backdrop" data-prof-avatar-modal-close="1"></div>
+    <div class="prof-modal-card prof-modal-card--wide">
+      <button type="button" class="prof-modal-close" id="profAvatarModalClose" aria-label="Đóng">×</button>
+      <h2 class="prof-modal-title" id="profAvatarModalTitle">📷 Ảnh đại diện</h2>
+      <p class="prof-modal-hint">Chọn nhân vật emoji, đổi màu viền hoặc tải ảnh riêng.</p>
+
+      <div class="prof-avatar-preview-row">
+        <div id="profAvatarPreviewRing" class="prof-avatar-preview-ring" style="--ring:#FF9800" data-mode="emoji">
+          <span id="profAvatarPreviewEmoji" class="prof-avatar-preview-emoji" aria-hidden="true">🧒</span>
+          <img id="profAvatarPreviewImg" class="prof-avatar-preview-img" alt="Ảnh đại diện" hidden decoding="async">
+        </div>
+      </div>
+
+      <p class="prof-avatar-label">Chọn nhân vật</p>
+      <div id="profAvatarEmojiPicker" class="prof-avatar-emoji-grid" role="group" aria-label="Chọn emoji"></div>
+
+      <p class="prof-avatar-label">Màu viền</p>
+      <div id="profAvatarRingPicker" class="prof-avatar-ring-colors" role="group" aria-label="Chọn màu viền avatar"></div>
+
+      <p class="prof-avatar-label">Hoặc tải ảnh (JPG / PNG)</p>
+      <label class="prof-avatar-upload">
+        <input id="profAvatarPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden>
+        <span class="prof-avatar-upload-inner">
+          <strong>📷 Chọn ảnh</strong>
+          <span>Ảnh vuông, rõ nét — tự nén trước khi lưu.</span>
+        </span>
+      </label>
+      <button type="button" class="prof-avatar-clear-btn" id="profAvatarPhotoClearBtn" hidden>↩️ Dùng lại nhân vật emoji</button>
+
+      <div class="prof-modal-actions">
+        <button type="button" id="profAvatarCancelBtn" class="prof-modal-btn prof-modal-btn--ghost">Hủy</button>
+        <button type="button" id="profAvatarSaveBtn" class="prof-modal-btn prof-modal-btn--primary">Lưu ảnh</button>
+      </div>
+      <p id="profAvatarMsg" class="profile-field-msg" hidden></p>
     </div>
   </div>
 </main>

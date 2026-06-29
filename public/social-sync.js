@@ -92,14 +92,30 @@
       if (!snap.exists) return profileFromLocal(uid);
       var d = snap.data();
       var local = profileFromLocal(uid);
+      var modeRaw = d.studentAvatarMode || d.avatarMode || 'emoji';
+      var mode = modeRaw === 'photo' ? 'photo' : 'emoji';
+      var photo = '';
+      if(mode === 'photo'){
+        var p = d.studentAvatarPhoto || d.avatarPhoto || '';
+        if(typeof p === 'string'
+          && p.indexOf('data:image/jpeg;base64,') === 0
+          && p.length < 200000){
+          photo = p;
+        } else {
+          mode = 'emoji';
+        }
+      }
+      var emoji = (d.studentAvatarEmoji || d.avatarEmoji || '').trim() || '🧒';
+      var ring = d.studentAvatarRing || d.avatarRing || '#fbbf24';
       return {
         uid: uid,
         displayName: d.displayName || d.nickname || d.childName || local.displayName,
         role: d.role || local.role,
         classRoom: d.classRoom || local.classRoom,
-        avatarEmoji: d.avatarEmoji || '',
-        avatarMode: d.avatarMode || 'emoji',
-        avatarRing: d.avatarRing || '#fbbf24'
+        avatarEmoji: emoji,
+        avatarMode: mode,
+        avatarRing: ring,
+        avatarPhoto: photo
       };
     }).catch(function () {
       return profileFromLocal(uid);
