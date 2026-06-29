@@ -261,16 +261,10 @@
   }
 
   function getFallbackReply(text) {
-    var t = text.toLowerCase();
-    if (t.includes('hình tròn') || t.includes('tron')) return 'Hình tròn giống như bánh pizza hay mặt trời đó con! Không có góc nào cả, tròn xoe 🔵 Con thấy đồng xu ở nhà không? Đó cũng là hình tròn!';
-    if (t.includes('hình vuông') || t.includes('vuong')) return 'Hình vuông có 4 cạnh bằng nhau và 4 góc vuông nha con ⬜ Giống như gạch lát nhà mình đó! Con đếm thử 4 góc xem nào?';
-    if (t.includes('tam giác') || t.includes('tam giac') || (t.includes('tam') && t.includes('cạnh')) || (t.includes('canh') && t.includes('giac')))
-      return 'Tam giác có 3 cạnh nha con! 🔺 Ba cạnh nối lại giống mái nhà hay bánh pizza cắt một miếng. Con thử vẽ tam giác trên giấy xem!';
-    if (t.includes('màu') || t.includes('mau')) return 'Màu sắc đẹp lắm con ơi! 🌈 Cầu vồng có 7 màu: đỏ, cam, vàng, lục, lam, chàm, tím. Con thích màu nào nhất?';
-    if (t.includes('đếm') || t.includes('dem') || t.includes('số')) return 'Con giỏi quá! Cùng cô đếm nào: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 🔢 Con thử đếm theo cô nhé!';
-    if (t.includes('kể chuyện') || t.includes('ke chuyen')) return 'Ngày xưa có chú Gấu con rất thích học bài. Mỗi ngày chú đếm hoa trong rừng: 1, 2, 3... Nhờ vậy chú Gấu trở thành học sinh giỏi nhất lớp! 🐻⭐ Con cũng sẽ giỏi như chú Gấu nhé!';
-    if (t.includes('giỏi') || t.includes('xong')) return 'Ồ con giỏi lắm! Cô rất vui khi thấy con chăm học 🌟 Tiếp tục cố gắng nhé, con là ngôi sao nhỏ của cô! ⭐';
-    return 'Cô hiểu rồi! Con thật thông minh khi hỏi điều đó 😊 Cô sẽ giải thích nhé: học tập giúp con biết nhiều điều hay lắm! Hôm nay con học được gì rồi?';
+    if (window.KidMentorFallback && typeof window.KidMentorFallback.reply === 'function') {
+      return window.KidMentorFallback.reply(text);
+    }
+    return 'Cô nghe câu hỏi của con rồi! 😊 Con thử hỏi về hình tròn, màu sắc hoặc đếm số nhé!';
   }
 
   function setTeacherState(state) {
@@ -323,7 +317,7 @@
   if (typeof speechSynthesis !== 'undefined') ensureMentorVoices(function () {});
 
   async function speakTeacher(text) {
-    var clean = text.replace(/[\u{1F000}-\u{1FFFF}]/gu, '').replace(/[⭐✨💫🌟🎀🌸]/g, '').trim();
+    var clean = text.replace(/<[^>]+>/g, '').replace(/[\u{1F000}-\u{1FFFF}]/gu, '').replace(/[⭐✨💫🌟🎀🌸]/g, '').trim();
     if (!clean || !isVietnameseText(clean)) { setTeacherState('idle'); return; }
     if (teacherAudio) { teacherAudio.pause(); teacherAudio = null; }
     speechSynthesis.cancel();

@@ -1,5 +1,7 @@
 // Vercel Serverless — Cô giáo AI (Gemini khi còn quota → trả lời local tiếng Việt khi hết)
 
+import { localMentorReply } from "../../lib/mentor-fallback.js";
+
 const SYSTEM_PROMPT = `Bạn là Cô Mai, giáo viên mầm non vui vẻ, dịu dàng và yêu trẻ em.
 Bạn đang nói chuyện với bé 3-6 tuổi đang học app Kid Learning.
 Quy tắc BẮT BUỘC:
@@ -83,47 +85,6 @@ function isVietnameseReply(text) {
   if (!letters.length) return true;
   const viLatin = letters.filter((ch) => /[A-Za-zÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯư]/.test(ch)).length;
   return viLatin / letters.length >= 0.55;
-}
-
-/** Trả lời offline — luôn tiếng Việt, không cần Gemini. */
-function localMentorReply(message) {
-  const t = String(message || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const raw = String(message || "").toLowerCase();
-
-  if (t.includes("hinh tron") || raw.includes("hình tròn"))
-    return "Hình tròn giống bánh pizza hay mặt trời đó con! Tròn tròn, không có góc 🔵 Con tìm thử đồng xu hay quả bóng nhé!";
-  if (t.includes("hinh vuong") || raw.includes("hình vuông"))
-    return "Hình vuông có 4 cạnh bằng nhau và 4 góc vuông nha con ⬜ Giống viên gạch lát nhà! Con đếm thử 4 góc xem!";
-  if (t.includes("tam giac") || raw.includes("tam giác"))
-    return "Tam giác có 3 cạnh nha con! 🔺 Giống mái nhà hay miếng bánh cắt. Con thử vẽ một tam giác trên giấy nhé!";
-  if (t.includes("chu nhat") || raw.includes("chữ nhật"))
-    return "Hình chữ nhật dài hơn hình vuông một chút, vẫn có 4 góc vuông nha con! 📐 Con thấy cánh cửa hay quyển sách không?";
-  if (t.includes("mau do") || raw.includes("màu đỏ"))
-    return "Màu đỏ giống quả táo chín hay đèn giao thông đó con! 🔴 Con thích màu đỏ không?";
-  if (t.includes("mau xanh") || raw.includes("màu xanh"))
-    return "Màu xanh giống lá cây và bầu trời trong lành! 💙💚 Con thích xanh lá hay xanh dương?";
-  if (t.includes("mau vang") || raw.includes("màu vàng"))
-    return "Màu vàng tươi như mặt trời và quả chuối chín! 🟡 Con thấy màu vàng ở đâu nữa?";
-  if (t.includes("mau") || t.includes("mau sac") || raw.includes("màu"))
-    return "Màu sắc đẹp lắm con ơi! 🌈 Cầu vồng có đỏ, cam, vàng, lục, lam, chàm, tím. Con thích màu nào nhất?";
-  if (t.includes("dem") || t.includes("so") || raw.includes("đếm") || raw.includes("số"))
-    return "Cùng cô đếm nha: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10! 🔢 Con đếm theo cô thử xem!";
-  if (t.includes("ke chuyen") || raw.includes("kể chuyện"))
-    return "Ngày xưa có chú Gấu con siêu chăm học. Mỗi ngày chú đếm hoa: 1, 2, 3... rồi chú giỏi nhất lớp! 🐻⭐ Con cũng làm được mà!";
-  if (t.includes("chao") || t.includes("xin chao") || raw.includes("chào"))
-    return "Chào con! Cô là Cô Mai đây 😊 Hôm nay con muốn học hình, màu hay đếm số nào?";
-  if (t.includes("cam on") || raw.includes("cảm ơn"))
-    return "Không có chi con ơi! Cô rất vui khi con chăm học 🌟 Con cố gắng thêm chút nữa nhé!";
-  if (t.includes("yeu") || raw.includes("yêu"))
-    return "Cô cũng yêu con nhiều lắm! 💕 Con là học trò ngoan của cô đó!";
-  if (t.includes("gioi") || t.includes("xong") || raw.includes("giỏi"))
-    return "Ồ con giỏi quá! Cô tự hào về con lắm ⭐ Hôm nay con học thêm bài nào nữa nhé?";
-  if (t.includes("meo") || t.includes("cho") || t.includes("con vat"))
-    return "Con mèo kêu meo meo, thích ăn cá và chơi bằng lông mềm! 🐱 Con thích con mèo hay con chó hơn?";
-  if (t.includes("tao") || t.includes("chuoi") || raw.includes("táo") || raw.includes("chuối"))
-    return "Táo thường màu đỏ, chuối màu vàng — đều ngon và tốt cho sức khỏe! 🍎🍌 Con thích trái nào?";
-
-  return "Cô nghe con rồi! Con thông minh lắm 😊 Hôm nay mình học hình, màu hay đếm số nhé — con muốn bắt đầu từ đâu?";
 }
 
 async function fetchLiveModels(apiKey) {
