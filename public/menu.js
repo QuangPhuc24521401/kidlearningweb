@@ -879,6 +879,9 @@ function saveStudentDisplayName(rawName){
       })
       .then(function(){
         try{ localStorage.setItem('userDisplayName', name); }catch(e){}
+        if(typeof KidSocial !== 'undefined' && KidSocial.ensureUserDoc){
+          KidSocial.ensureUserDoc().catch(function(){});
+        }
         if(typeof mountUserBar === 'function') mountUserBar();
         if(typeof renderProfilePage === 'function') renderProfilePage();
         closeProfNameModal();
@@ -891,38 +894,16 @@ function saveStudentDisplayName(rawName){
   });
 }
 
-function _wireProfileActions(card){
-  if(card.getAttribute('data-wired') === '1') return;
-  card.setAttribute('data-wired', '1');
-  var bS = document.getElementById('profBtnSettings');
-  var bL = document.getElementById('profBtnLogout');
-  if(bS) bS.addEventListener('click', function(){
-    if(typeof openSettings === 'function') openSettings();
-  });
-  if(bL) bL.addEventListener('click', function(){
-    if(typeof handleLogout === 'function') handleLogout();
-  });
+function _wireProfNameModal(){
+  var modal = document.getElementById('profNameModal');
+  if(!modal || modal.dataset.wired === '1') return;
+  modal.dataset.wired = '1';
 
-  var editBtn = document.getElementById('profNameEditBtn');
-  if(editBtn && !editBtn.dataset.wired){
-    editBtn.dataset.wired = '1';
-    editBtn.addEventListener('click', openProfNameModal);
-  }
-
-  if(!window.__profNameModalWired){
-    window.__profNameModalWired = true;
-    document.getElementById('profNameModalClose')?.addEventListener('click', closeProfNameModal);
-    document.getElementById('profNameCancelBtn')?.addEventListener('click', closeProfNameModal);
-    document.querySelectorAll('[data-prof-modal-close]').forEach(function(el){
-      el.addEventListener('click', closeProfNameModal);
-    });
-    document.addEventListener('keydown', function(e){
-      if(e.key === 'Escape'){
-        var modal = document.getElementById('profNameModal');
-        if(modal && !modal.hidden) closeProfNameModal();
-      }
-    });
-  }
+  document.getElementById('profNameModalClose')?.addEventListener('click', closeProfNameModal);
+  document.getElementById('profNameCancelBtn')?.addEventListener('click', closeProfNameModal);
+  modal.querySelectorAll('[data-prof-modal-close]').forEach(function(el){
+    el.addEventListener('click', closeProfNameModal);
+  });
 
   var nameInput = document.getElementById('profNameInput');
   if(nameInput && !nameInput.dataset.keyWired){
@@ -955,6 +936,37 @@ function _wireProfileActions(card){
         }
         if(r.ok && input) input.value = val.trim().replace(/\s+/g, ' ');
       });
+    });
+  }
+}
+
+function _wireProfileActions(card){
+  if(card.getAttribute('data-wired') === '1') return;
+  card.setAttribute('data-wired', '1');
+  var bS = document.getElementById('profBtnSettings');
+  var bL = document.getElementById('profBtnLogout');
+  if(bS) bS.addEventListener('click', function(){
+    if(typeof openSettings === 'function') openSettings();
+  });
+  if(bL) bL.addEventListener('click', function(){
+    if(typeof handleLogout === 'function') handleLogout();
+  });
+
+  var editBtn = document.getElementById('profNameEditBtn');
+  if(editBtn && !editBtn.dataset.wired){
+    editBtn.dataset.wired = '1';
+    editBtn.addEventListener('click', openProfNameModal);
+  }
+
+  _wireProfNameModal();
+
+  if(!window.__profNameEscapeWired){
+    window.__profNameEscapeWired = true;
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){
+        var m = document.getElementById('profNameModal');
+        if(m && !m.hidden) closeProfNameModal();
+      }
     });
   }
 }

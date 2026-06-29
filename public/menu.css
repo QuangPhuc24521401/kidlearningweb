@@ -1023,7 +1023,8 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   justify-content:center;
   padding:16px;
 }
-.prof-modal.open{ display:flex; }
+.prof-modal[hidden]{ display:none !important; }
+.prof-modal.open{ display:flex !important; }
 .prof-modal-backdrop{
   position:absolute;
   inset:0;

@@ -363,7 +363,16 @@ function refreshClassData(){
         classData.history = result.history || [];
         classData.error = result.error || '';
         classData.loading = false;
-        setTeacherInfo('Lớp: ' + (classData.classRoom || '—'));
+        var dash = window.__teacherDash || {};
+        var headName = dash.name ? dash.name + ' · ' : '';
+        setTeacherInfo(headName + 'Lớp: ' + (classData.classRoom || '—'));
+        if(classData.classRoom && dash.uid){
+          window.__teacherDash = {
+            uid: dash.uid,
+            classRoom: classData.classRoom,
+            name: dash.name || 'Giáo viên'
+          };
+        }
         loadAll();
         if(document.getElementById('panel1').classList.contains('active')) renderProgress();
         if(document.getElementById('panel2').classList.contains('active')) loadHistory();
@@ -758,6 +767,19 @@ function teacherGamePreview(){
 
 function teacherGameSave(publish){
   var dash = window.__teacherDash || {};
+  if(!dash.classRoom && classData.classRoom){
+    dash.classRoom = classData.classRoom;
+  }
+  if(!dash.classRoom){
+    try{ dash.classRoom = String(localStorage.getItem('classRoom') || '').trim().toUpperCase().replace(/\s+/g, ''); }catch(e){}
+  }
+  if(!dash.uid){
+    try{
+      var u = firebase.auth().currentUser;
+      if(u) dash.uid = u.uid;
+    }catch(e){}
+  }
+  window.__teacherDash = dash;
   if(!dash.uid || !dash.classRoom){
     alert('Chưa có mã lớp — kiểm tra hồ sơ giáo viên');
     return;
@@ -843,18 +865,55 @@ function handleLogout(){
   window.location.href = 'auth/login.html';
 }
 
+function initTeacherDash(user){
+  if(!user) return Promise.resolve(null);
+  var resolveCr = (typeof KidClassSync !== 'undefined' && KidClassSync.resolveTeacherClassRoom)
+    ? KidClassSync.resolveTeacherClassRoom(user.uid)
+    : Promise.resolve(String(localStorage.getItem('classRoom') || '').trim().toUpperCase().replace(/\s+/g, ''));
+  return resolveCr.then(function(classRoom){
+    return firebase.firestore().collection('users').doc(user.uid).get()
+      .then(function(snap){
+        var data = snap && snap.exists ? (snap.data() || {}) : {};
+        var name = String(data.displayName || localStorage.getItem('userDisplayName') || 'Giáo viên').trim() || 'Giáo viên';
+        var cr = classRoom || String(data.classRoom || '').trim().toUpperCase().replace(/\s+/g, '');
+        if(cr.length >= 3){
+          try{ localStorage.setItem('classRoom', cr); }catch(e){}
+        }
+        if(name && name !== 'Giáo viên'){
+          try{ localStorage.setItem('userDisplayName', name); }catch(e){}
+        }
+        window.__teacherDash = { uid: user.uid, classRoom: cr, name: name };
+        setTeacherInfo(name + ' · Lớp: ' + (cr || '—'));
+        return window.__teacherDash;
+      });
+  }).catch(function(err){
+    console.warn('[teacher] initTeacherDash', err);
+    var cr = String(localStorage.getItem('classRoom') || '').trim().toUpperCase().replace(/\s+/g, '');
+    window.__teacherDash = {
+      uid: user.uid,
+      classRoom: cr,
+      name: String(localStorage.getItem('userDisplayName') || 'Giáo viên').trim() || 'Giáo viên'
+    };
+    setTeacherInfo(window.__teacherDash.name + ' · Lớp: ' + (cr || '—'));
+    return window.__teacherDash;
+  });
+}
+
 function startTeacherDashboard(){
   firebase.auth().onAuthStateChanged(function(user){
     if(!user){
       window.location.replace('auth/login.html');
       return;
     }
-    var boot = Promise.resolve();
-    if(typeof KidClassSync !== 'undefined' && KidClassSync.ensureClassroomRegistry){
-      boot = KidClassSync.ensureClassroomRegistry(user.uid);
-    }
-    boot.finally(function(){
-      refreshClassData();
+    initTeacherDash(user).then(function(){
+      var boot = Promise.resolve();
+      if(typeof KidClassSync !== 'undefined' && KidClassSync.ensureClassroomRegistry){
+        boot = KidClassSync.ensureClassroomRegistry(user.uid);
+      }
+      return boot.finally(function(){
+        refreshClassData();
+        if(typeof loadTeacherGameList === 'function') loadTeacherGameList();
+      });
     });
   });
 }
@@ -889,8 +948,12 @@ function startTeacherDashboard(){
           localStorage.setItem('userRole', 'teacher');
           if(data.classRoom) localStorage.setItem('classRoom', data.classRoom);
           if(data.displayName) localStorage.setItem('userDisplayName', data.displayName);
-          setTeacherInfo('Lớp: ' + (data.classRoom || '—'));
-          window.__teacherDash = { uid: user.uid, classRoom: data.classRoom || '', name: data.displayName || 'Giáo viên' };
+          window.__teacherDash = {
+            uid: user.uid,
+            classRoom: String(data.classRoom || '').trim().toUpperCase().replace(/\s+/g, ''),
+            name: data.displayName || 'Giáo viên'
+          };
+          setTeacherInfo((data.displayName || 'Giáo viên') + ' · Lớp: ' + (data.classRoom || '—'));
           startTeacherDashboard();
         } else {
           window.location.replace('index.html');
