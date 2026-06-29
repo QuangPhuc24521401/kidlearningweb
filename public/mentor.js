@@ -47,22 +47,19 @@
 
   loadMentorCooldown();
 
-  function setAskFormDisabled(disabled) {
+  function syncFormWithLimits() {
     var input = $('askInput');
     var btn = $('askSendBtn');
     var mic = $('micBtn');
     var limits = window.KidMentorLimits;
-    var limited = limits && (!limits.isReady() || !limits.canAsk());
-    var off = disabled || limited;
+    var loading = limits && !limits.isReady();
+    var atLimit = limits && limits.isLimited && limits.isLimited() && limits.isReady() && limits.remaining() <= 0;
+    var off = isAsking || loading || atLimit;
+
     if (input) input.disabled = off;
     if (btn) btn.disabled = off;
     if (mic) mic.disabled = off;
     document.querySelectorAll('.mentor-quick-btn').forEach(function (b) { b.disabled = off; });
-  }
-
-  function syncFormWithLimits() {
-    if (isAsking) return;
-    setAskFormDisabled(false);
   }
 
   window.toggleListen = function () {
@@ -144,14 +141,16 @@
     }
 
     isAsking = true;
-    setAskFormDisabled(true);
-    $('micHeard').textContent = '💬 "' + text + '"';
-    setTeacherState('thinking');
-    showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
+    syncFormWithLimits();
 
     var reply = null;
     var apiNote = '';
     try {
+      var heard = $('micHeard');
+      if (heard) heard.textContent = '💬 "' + text + '"';
+      setTeacherState('thinking');
+      showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
+
       var res = await fetch(getMentorChatUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,26 +170,31 @@
         apiNote = ' (dùng câu mẫu)';
         console.warn('[mentor]', String(data.error || res.status || '').slice(0, 80));
       }
+
+      if (!reply) {
+        reply = getFallbackReply(text);
+        if (apiNote) showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt' + apiNote);
+      } else if (!isVietnameseText(reply)) {
+        reply = getFallbackReply(text);
+        showStatus('error', 'Cô trả lời sai ngôn ngữ — đang dùng câu tiếng Việt mẫu');
+      }
+
+      setTeacherState('talking');
+      showBubble(reply);
+      speakTeacher(reply);
+      saveHistory(text, reply);
     } catch (err) {
-      apiNote = ' (mất kết nối API)';
-      console.warn('[mentor] API lỗi:', err);
-    }
-
-    if (!reply) {
+      console.warn('[mentor] askQuestion error:', err);
       reply = getFallbackReply(text);
-      if (apiNote) showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt' + apiNote);
-    } else if (!isVietnameseText(reply)) {
-      reply = getFallbackReply(text);
-      showStatus('error', 'Cô trả lời sai ngôn ngữ — đang dùng câu tiếng Việt mẫu');
+      showStatus('ok', 'Cô trả lời bằng câu mẫu tiếng Việt (mất kết nối API)');
+      setTeacherState('talking');
+      showBubble(reply);
+      speakTeacher(reply);
+      saveHistory(text, reply);
+    } finally {
+      isAsking = false;
+      syncFormWithLimits();
     }
-
-    isAsking = false;
-    syncFormWithLimits();
-
-    setTeacherState('talking');
-    showBubble(reply);
-    speakTeacher(reply);
-    saveHistory(text, reply);
   };
 
   function isVietnameseText(text) {
@@ -358,6 +362,8 @@
     } catch (e) {}
   }
 
+  var limitsBooted = false;
+
   function initMentorPage() {
     var input = $('askInput');
     if (input) {
@@ -368,10 +374,14 @@
 
     function bootLimits() {
       if (window.KidMentorLimits) {
-        window.KidMentorLimits.pullFromCloud().then(function () {
-          window.KidMentorLimits.refreshUI();
+        if (!limitsBooted) {
+          limitsBooted = true;
+          window.KidMentorLimits.pullFromCloud().then(function () {
+            syncFormWithLimits();
+          });
+        } else {
           syncFormWithLimits();
-        });
+        }
       }
       if (typeof mountUserBar === 'function') mountUserBar();
     }

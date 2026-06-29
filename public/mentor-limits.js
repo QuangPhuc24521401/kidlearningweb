@@ -72,8 +72,8 @@
   }
 
   function canAsk() {
-    if (!_ready) return false;
     if (!isLimited()) return true;
+    if (!_ready) return false;
     return getCount() < DAILY_LIMIT;
   }
 
@@ -154,8 +154,8 @@
   }
 
   function pullFromCloud() {
-    _ready = false;
-    refreshUI();
+    /* Không reset _ready — tránh khóa form khi sync lại sau câu hỏi đầu. */
+    if (!_ready) refreshUI();
     return new Promise(function (resolve) {
       function finish(state) {
         _ready = true;
