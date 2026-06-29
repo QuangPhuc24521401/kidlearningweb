@@ -563,3 +563,224 @@
 .page-game.game-pick-sort .sort-ui {
   visibility: visible;
 }
+
+/* ═══════════════════════════════════════════════════
+   MOBILE — Pro, giới hạn lượt, Memory & Sort
+═══════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .page-pro #page-root {
+    padding: calc(var(--topbar-h) + 68px) 12px max(32px, env(safe-area-inset-bottom));
+  }
+
+  .pro-wrap {
+    gap: 14px;
+  }
+
+  .pro-hero {
+    padding: 20px 16px 22px;
+    border-radius: 18px;
+  }
+
+  .pro-hero-badge {
+    font-size: 11px;
+    padding: 5px 12px;
+  }
+
+  .pro-hero-title {
+    font-size: clamp(1.35rem, 6vw, 1.65rem);
+  }
+
+  .pro-hero-sub {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .pro-plan-pill {
+    font-size: 12px;
+    padding: 7px 14px;
+    max-width: 100%;
+    line-height: 1.35;
+  }
+
+  .pro-compare {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .pro-plan-card {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .pro-plan-card h2 {
+    font-size: 1.3rem;
+  }
+
+  .pro-price-amount {
+    font-size: 1.65rem;
+  }
+
+  .pro-price-period {
+    font-size: 14px;
+  }
+
+  .pro-plan-list {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .pro-upgrade-btn {
+    padding: 13px 14px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+
+  .pro-billing-note {
+    font-size: 10px;
+  }
+
+  .pro-games-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .pro-game-chip {
+    padding: 12px 8px;
+  }
+
+  .pro-game-chip strong {
+    font-size: 11px;
+  }
+
+  .pro-footer-actions {
+    flex-direction: column;
+    align-items: stretch;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .pro-footer-actions .profile-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .profile-pro-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .profile-pro-banner .profile-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .play-limit-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .play-limit-card {
+    width: 100%;
+    max-width: none;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px max(20px, env(safe-area-inset-bottom));
+    border-bottom: none;
+  }
+
+  .play-limit-title {
+    font-size: 1.2rem;
+  }
+
+  .play-limit-msg {
+    font-size: 13px;
+  }
+
+  .play-limit-btn {
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  .memory-ui--play,
+  .sort-ui--play {
+    padding: 6px 8px 10px;
+    gap: 8px;
+  }
+
+  .memory-hud,
+  .sort-hud {
+    font-size: 13px;
+  }
+
+  .memory-grid {
+    gap: 6px;
+    max-width: none;
+  }
+
+  .memory-card {
+    border-radius: 12px;
+    min-height: 44px;
+  }
+
+  .sort-stage {
+    padding: 8px;
+  }
+
+  .sort-item {
+    padding: 14px 22px;
+    border-radius: 16px;
+  }
+
+  .sort-item-emoji {
+    font-size: 40px;
+  }
+
+  .sort-item-label {
+    font-size: 14px;
+  }
+
+  .sort-hint {
+    font-size: 11px;
+    padding: 0 8px;
+  }
+
+  .sort-bins {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .sort-bin {
+    min-width: 0;
+    max-width: none;
+    flex-direction: row;
+    justify-content: center;
+    padding: 12px 14px;
+    min-height: 48px;
+  }
+
+  .sort-bin-emoji {
+    font-size: 26px;
+  }
+
+  .sort-bin-label {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pro-price-amount {
+    font-size: 1.45rem;
+  }
+
+  .pro-games-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-hub-plays {
+    display: block;
+  }
+}

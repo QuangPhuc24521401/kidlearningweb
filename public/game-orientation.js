@@ -78,6 +78,12 @@
     try { sessionStorage.setItem(STORAGE_KEY, '1'); } catch (e) { /* ignore */ }
   }
 
+  function exitGameMode() {
+    document.body.classList.remove('game-force-landscape', 'game-virt-landscape');
+    unlockOrientation();
+    try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+  }
+
   function enterGameMode(opts) {
     opts = opts || {};
     if (!isMobileGame()) return;
@@ -121,7 +127,8 @@
     var urlPlay = null;
     try { urlPlay = new URLSearchParams(global.location.search).get('play'); } catch (e) {}
 
-    if (shouldEnter && urlPlay) {
+    var landscapeGames = ['platformer', 'maze', 'digger'];
+    if (shouldEnter && urlPlay && landscapeGames.indexOf(urlPlay) >= 0) {
       enableLandscapeMode();
       var stage = document.querySelector('.game-stage');
       if (stage) {
@@ -162,6 +169,7 @@
 
   global.KidGameOrientation = {
     enter: enterGameMode,
+    exit: exitGameMode,
     refresh: scheduleRefresh
   };
 })(window);

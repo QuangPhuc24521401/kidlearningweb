@@ -30,14 +30,18 @@
     if (global.GameQuizUI) global.GameQuizUI.hide();
   }
 
+  var LANDSCAPE_GAMES = ['platformer', 'maze', 'digger'];
+
   function bootGame(which) {
     if (which === 'maze' && global.GameMaze) global.GameMaze.boot();
     else if (which === 'digger' && global.GameDigger) global.GameDigger.boot();
     else if (which === 'memory' && global.GameMemory) global.GameMemory.boot();
     else if (which === 'sort' && global.GameSort) global.GameSort.boot();
     else if (global.GamePlatformer) global.GamePlatformer.boot();
-    if (global.KidGameOrientation && global.KidGameOrientation.enter) {
+    if (LANDSCAPE_GAMES.indexOf(which) >= 0 && global.KidGameOrientation && global.KidGameOrientation.enter) {
       global.KidGameOrientation.enter({ userGesture: true });
+    } else if (global.KidGameOrientation && global.KidGameOrientation.exit) {
+      global.KidGameOrientation.exit();
     }
   }
 
@@ -69,6 +73,9 @@
       'game-pick-memory', 'game-pick-sort', 'game-force-landscape', 'game-virt-landscape'
     );
     document.body.classList.add('game-hub-visible');
+    if (global.KidGameOrientation && global.KidGameOrientation.exit) {
+      global.KidGameOrientation.exit();
+    }
     try { history.replaceState(null, '', 'game.html'); } catch (e) {}
     if (global.KidPlayLimits) {
       global.KidPlayLimits.pullFromCloud().then(refreshHubBadges);

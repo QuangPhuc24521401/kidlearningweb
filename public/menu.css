@@ -577,6 +577,8 @@ html{ scroll-padding-top:calc(var(--topbar-h) + 16px); }
   .page-progress.page-scroll,
   .page-profile.page-scroll,
   .page-pvp.page-scroll,
+  .page-pro.page-scroll,
+  .page-game.page-scroll,
   .page-mentor.page-scroll,
   .page-social.page-scroll{
     padding-top:calc(var(--topbar-h) + 60px);
