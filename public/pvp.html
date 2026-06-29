@@ -12,8 +12,8 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
-<link rel="stylesheet" href="menu.css">
-<link rel="stylesheet" href="pvp.css">
+<link rel="stylesheet" href="menu.css?v=20260630f">
+<link rel="stylesheet" href="pvp.css?v=20260701b">
 <link rel="stylesheet" href="arena.css">
 <link rel="stylesheet" href="spa.css">
 <script>
@@ -101,64 +101,167 @@
 
 <main id="page-root" data-page="pvp">
 <div class="pvp-wrap">
-  <div id="lobby">
-    <div class="pvp-card">
-      <h1>⚔️ Đấu cùng bạn</h1>
-      <p class="pvp-lead">Hai bé cùng trả lời một màn: <strong>đúng và nhanh hơn</strong> được 1 điểm. Ai tới <strong>5 điểm</strong> trước thắng.</p>
-      <p class="pvp-lead pvp-lead-note">Đăng nhập để tạo phòng, gửi mã cho bạn và chơi cùng nhau nhé!</p>
 
-      <p class="pvp-code-label" style="text-align:center;margin-bottom:8px">Chủ đề câu hỏi</p>
-      <div id="pvpSubjectChips" class="pvp-subject-row"></div>
-
-      <div id="lobbyMain">
-        <div class="pvp-actions">
-          <button type="button" class="pvp-btn pvp-btn-primary" onclick="pvpCreateRoom()">➕ Tạo phòng &amp; lấy mã</button>
-          <button type="button" class="pvp-btn pvp-btn-secondary" onclick="pvpQuickMatch()">⚡ Vào phòng chờ (nhanh)</button>
-        </div>
-        <div class="pvp-input-row">
-          <input id="pvpCodeInput" type="text" maxlength="8" placeholder="MÃ PHÒNG" autocomplete="off">
-          <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpJoinRoom()">Vào phòng</button>
+  <header class="pvp-hero">
+    <div class="pvp-hero-main">
+      <p class="pvp-hero-eyebrow">Thi đấu trí tuệ</p>
+      <h1 class="pvp-hero-title">Sảnh đấu PvP</h1>
+      <p class="pvp-hero-desc">Hai bé cùng trả lời — <strong>đúng và nhanh hơn</strong> được 1 điểm. Ai tới <strong>5 điểm</strong> trước thắng.</p>
+    </div>
+    <div class="pvp-hero-stats" aria-label="Luật chơi nhanh">
+      <div class="pvp-stat-chip">
+        <span class="pvp-stat-icon" aria-hidden="true">⚡</span>
+        <div class="pvp-stat-body">
+          <strong class="pvp-stat-value">Nhanh</strong>
+          <span class="pvp-stat-label">Trả lời sớm hơn</span>
         </div>
       </div>
-
-      <div id="lobbyWaiting" class="pvp-hidden">
-        <div class="pvp-code-box">
-          <div class="pvp-code-label">Mã phòng gửi cho bạn</div>
-          <div id="pvpCodeShow" class="pvp-code-value">——</div>
+      <div class="pvp-stat-chip">
+        <span class="pvp-stat-icon" aria-hidden="true">🎯</span>
+        <div class="pvp-stat-body">
+          <strong class="pvp-stat-value">5 điểm</strong>
+          <span class="pvp-stat-label">Mục tiêu thắng</span>
         </div>
-        <p id="pvpWaitMsg" class="pvp-lead" style="margin-bottom:12px"></p>
-        <p id="pvpWaitHint" class="pvp-wait-hint" hidden></p>
-        <div class="pvp-actions">
-          <button type="button" id="pvpBtnStart" class="pvp-btn pvp-btn-primary pvp-hidden" onclick="pvpStartMatch()">▶ Bắt đầu đấu</button>
-          <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpLeaveRoom()">Rời phòng</button>
+      </div>
+      <div class="pvp-stat-chip">
+        <span class="pvp-stat-icon" aria-hidden="true">👥</span>
+        <div class="pvp-stat-body">
+          <strong class="pvp-stat-value">2 người</strong>
+          <span class="pvp-stat-label">Một phòng</span>
         </div>
       </div>
     </div>
+  </header>
+
+  <div id="lobby" class="pvp-lobby">
+    <div class="pvp-dashboard">
+      <div class="pvp-main-col">
+        <div class="pvp-card pvp-card--lobby">
+
+          <div class="pvp-step">
+            <div class="pvp-step-head">
+              <span class="pvp-step-num">1</span>
+              <div>
+                <h2 class="pvp-step-title">Chọn chủ đề câu hỏi</h2>
+                <p class="pvp-step-sub">Chọn môn hoặc « Tất cả môn » để trộn câu hỏi.</p>
+              </div>
+            </div>
+            <div id="pvpSubjectChips" class="pvp-subject-row"></div>
+          </div>
+
+          <div id="lobbyMain">
+            <div class="pvp-step">
+              <div class="pvp-step-head">
+                <span class="pvp-step-num">2</span>
+                <div>
+                  <h2 class="pvp-step-title">Tạo hoặc vào phòng</h2>
+                  <p class="pvp-step-sub">Đăng nhập để chơi cùng bạn — gửi mã phòng qua Zalo hoặc nhắn tin.</p>
+                </div>
+              </div>
+
+              <div class="pvp-action-grid">
+                <button type="button" class="pvp-btn pvp-btn-primary pvp-btn-block" onclick="pvpCreateRoom()">
+                  <span class="pvp-btn-icon">➕</span>
+                  <span class="pvp-btn-text"><strong>Tạo phòng</strong><small>Lấy mã gửi bạn</small></span>
+                </button>
+                <button type="button" class="pvp-btn pvp-btn-secondary pvp-btn-block" onclick="pvpQuickMatch()">
+                  <span class="pvp-btn-icon">⚡</span>
+                  <span class="pvp-btn-text"><strong>Vào phòng chờ</strong><small>Ghép nhanh nếu có sẵn</small></span>
+                </button>
+              </div>
+
+              <div class="pvp-join-divider"><span>hoặc nhập mã phòng</span></div>
+
+              <div class="pvp-input-row">
+                <input id="pvpCodeInput" type="text" maxlength="8" placeholder="MÃ PHÒNG" autocomplete="off" aria-label="Mã phòng">
+                <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpJoinRoom()">Vào phòng</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="lobbyWaiting" class="pvp-hidden pvp-waiting">
+            <div class="pvp-waiting-badge">⏳ Đang chờ</div>
+            <div class="pvp-code-box">
+              <div class="pvp-code-label">Mã phòng — gửi cho bạn</div>
+              <div class="pvp-code-row">
+                <div id="pvpCodeShow" class="pvp-code-value">——</div>
+                <button type="button" class="pvp-btn pvp-btn-copy" onclick="pvpCopyCode()" title="Sao chép mã">📋</button>
+              </div>
+            </div>
+            <p id="pvpWaitMsg" class="pvp-wait-msg"></p>
+            <p id="pvpWaitHint" class="pvp-wait-hint" hidden></p>
+            <div class="pvp-actions pvp-actions--row">
+              <button type="button" id="pvpBtnStart" class="pvp-btn pvp-btn-primary pvp-hidden" onclick="pvpStartMatch()">▶ Bắt đầu đấu</button>
+              <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpLeaveRoom()">← Rời phòng</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <aside class="pvp-aside" aria-label="Hướng dẫn">
+        <div class="pvp-tip-card">
+          <h3 class="pvp-tip-title">📖 Cách chơi</h3>
+          <ol class="pvp-tip-list">
+            <li>Chọn môn câu hỏi</li>
+            <li>Tạo phòng → gửi mã cho bạn</li>
+            <li>Bạn nhập mã và « Vào phòng »</li>
+            <li>Chủ phòng bấm « Bắt đầu đấu »</li>
+            <li>Trả lời đúng <em>nhanh hơn</em> để ghi điểm</li>
+          </ol>
+        </div>
+        <div class="pvp-tip-card pvp-tip-card--note">
+          <p><strong>Mẹo:</strong> Mở hai tab trình duyệt (hoặc hai máy) để thử PvP ngay khi chưa có bạn online.</p>
+        </div>
+      </aside>
+    </div>
   </div>
 
-  <div id="arena" class="pvp-hidden">
-    <div class="pvp-card">
+  <div id="arena" class="pvp-hidden pvp-arena">
+    <div class="pvp-card pvp-card--arena">
+      <div class="pvp-arena-top">
+        <span class="pvp-arena-label">⚔️ Đang thi đấu</span>
+        <div class="pvp-round-track" aria-hidden="true">
+          <div class="pvp-round-bar-wrap">
+            <div id="pvpRoundBar" class="pvp-round-bar" style="width:100%"></div>
+          </div>
+          <span id="pvpRoundTimer" class="pvp-round-timer">22s</span>
+        </div>
+      </div>
+
       <div class="pvp-scoreboard">
         <div id="pvpPillA" class="pvp-player-pill">
+          <div class="pvp-p-avatar" aria-hidden="true">🧒</div>
           <div class="pvp-p-name" id="pvpNameA">Bạn A</div>
-          <div class="pvp-p-score" id="pvpScoreA">0</div>
+          <div class="pvp-p-score-wrap">
+            <div class="pvp-p-score" id="pvpScoreA">0</div>
+            <span class="pvp-p-target">/ 5</span>
+          </div>
         </div>
-        <div class="pvp-vs">VS</div>
+        <div class="pvp-vs-ring" aria-hidden="true"><span>VS</span></div>
         <div id="pvpPillB" class="pvp-player-pill">
+          <div class="pvp-p-avatar" aria-hidden="true">🧒</div>
           <div class="pvp-p-name" id="pvpNameB">Bạn B</div>
-          <div class="pvp-p-score" id="pvpScoreB">0</div>
+          <div class="pvp-p-score-wrap">
+            <div class="pvp-p-score" id="pvpScoreB">0</div>
+            <span class="pvp-p-target">/ 5</span>
+          </div>
         </div>
       </div>
-      <p id="pvpQMeta" class="pvp-q-meta"></p>
-      <h2 id="pvpQuestion" class="pvp-question"></h2>
+
+      <div class="pvp-question-box">
+        <p id="pvpQMeta" class="pvp-q-meta"></p>
+        <h2 id="pvpQuestion" class="pvp-question"></h2>
+      </div>
       <div id="pvpAnswers" class="pvp-answers"></div>
-      <p id="pvpStatus" class="pvp-status"></p>
+      <p id="pvpStatus" class="pvp-status" role="status"></p>
       <div id="pvpResultBanner" class="pvp-result-banner pvp-hidden"></div>
-      <div class="pvp-actions" style="margin-top:16px">
-        <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpLeaveRoom()">Về sảnh</button>
+      <div class="pvp-actions pvp-actions--center">
+        <button type="button" class="pvp-btn pvp-btn-ghost" onclick="pvpLeaveRoom()">← Về sảnh chờ</button>
       </div>
     </div>
   </div>
+
 </div>
 </main>
 
@@ -168,7 +271,7 @@
 <script src="lessons/data/lessons-data.js"></script>
 <script src="achievements.js"></script>
 <script src="arena.js"></script>
-<script src="pvp.js"></script>
+<script src="pvp.js?v=20260701b"></script>
 <script>
   (function deepRoleGuard(){
     if(localStorage.getItem('userRole')) return;

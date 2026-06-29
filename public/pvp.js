@@ -20,12 +20,22 @@
     my_thuat: 'Mỹ thuật',
     ngon_ngu: 'Ngôn ngữ'
   };
+  var SUBJECT_ICONS = {
+    all: '🎲',
+    nhan_biet: '👀',
+    tu_duy: '🧠',
+    am_nhac: '🎵',
+    ghep_hinh: '🧩',
+    my_thuat: '🎨',
+    ngon_ngu: '📚'
+  };
 
   var ROUND_MS = 22000;
   var TARGET_SCORE = 5;
   var roomRef = null;
   var unsub = null;
   var resolveTimer = null;
+  var roundUiTimer = null;
   var myPickThisRound = false;
   var selectedSubject = 'all';
   var lastRoomData = null;
@@ -71,12 +81,40 @@
     return (localStorage.getItem('userDisplayName') || '').trim() || 'Bé học sinh';
   }
 
-  function showLobby(){ $('arena').classList.add('pvp-hidden'); $('lobby').classList.remove('pvp-hidden'); }
-  function showArena(){ $('lobby').classList.add('pvp-hidden'); $('arena').classList.remove('pvp-hidden'); }
+  function showLobby(){
+    clearRoundUiTimer();
+    $('arena').classList.add('pvp-hidden');
+    $('lobby').classList.remove('pvp-hidden');
+  }
+  function showArena(){
+    $('lobby').classList.add('pvp-hidden');
+    $('arena').classList.remove('pvp-hidden');
+  }
+
+  function clearRoundUiTimer(){
+    if(roundUiTimer){ clearInterval(roundUiTimer); roundUiTimer = null; }
+  }
+
+  function startRoundUiTimer(deadline){
+    clearRoundUiTimer();
+    var bar = $('pvpRoundBar');
+    var timeEl = $('pvpRoundTimer');
+    if(!deadline) return;
+    function tick(){
+      var left = Math.max(0, deadline - Date.now());
+      var pct = Math.min(100, (left / ROUND_MS) * 100);
+      if(bar) bar.style.width = pct + '%';
+      if(timeEl) timeEl.textContent = Math.ceil(left / 1000) + 's';
+      if(left <= 0) clearRoundUiTimer();
+    }
+    tick();
+    roundUiTimer = setInterval(tick, 200);
+  }
 
   function stopListen(){
     if(unsub){ unsub(); unsub = null; }
     if(resolveTimer){ clearInterval(resolveTimer); resolveTimer = null; }
+    clearRoundUiTimer();
     roomRef = null;
     lastRoomData = null;
     myPickThisRound = false;
@@ -90,7 +128,10 @@
     var keys = ['all'].concat(SUBJECTS);
     host.innerHTML = keys.map(function(k){
       var on = k === selectedSubject ? ' is-on' : '';
-      return '<button type="button" class="pvp-chip' + on + '" data-subject="' + k + '">' + (SUBJECT_LABELS[k] || k) + '</button>';
+      var icon = SUBJECT_ICONS[k] || '📘';
+      return '<button type="button" class="pvp-chip' + on + '" data-subject="' + k + '">' +
+        '<span class="pvp-chip-icon" aria-hidden="true">' + icon + '</span>' +
+        (SUBJECT_LABELS[k] || k) + '</button>';
     }).join('');
     host.querySelectorAll('.pvp-chip').forEach(function(btn){
       btn.onclick = function(){
@@ -172,6 +213,7 @@
     }
 
     if(d.status === 'finished'){
+      clearRoundUiTimer();
       showArena();
       renderScoreboard(d, uid);
       $('pvpAnswers').innerHTML = '';
@@ -214,6 +256,7 @@
     $('pvpResultBanner').classList.add('pvp-hidden');
     var q = d.question;
     if(!q){
+      clearRoundUiTimer();
       $('pvpQuestion').textContent = 'Đang tải câu hỏi...';
       return;
     }
@@ -244,6 +287,8 @@
     } else {
       setStatus('Chọn đáp án đúng nhanh nhất có thể!');
     }
+
+    startRoundUiTimer(d.roundDeadline);
   }
 
   function submitPick(answer){
@@ -482,6 +527,24 @@
     }).catch(function(e){
       alert('Không bắt đầu được: ' + (e.message || e));
     });
+  };
+
+  window.pvpCopyCode = function(){
+    var code = ($('pvpCodeShow') && $('pvpCodeShow').textContent) || '';
+    code = code.trim();
+    if(!code || code === '——') return;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(code).then(function(){
+        var hint = $('pvpWaitHint');
+        if(hint && !hint.hidden){
+          var prev = hint.textContent;
+          hint.textContent = '✅ Đã copy mã ' + code + '!';
+          setTimeout(function(){ hint.textContent = prev; }, 2200);
+        }
+      }).catch(function(){ alert('Mã phòng: ' + code); });
+    } else {
+      alert('Mã phòng: ' + code);
+    }
   };
 
   window.pvpLeaveRoom = function(){

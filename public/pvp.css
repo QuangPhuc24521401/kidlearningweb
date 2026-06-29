@@ -1,451 +1,918 @@
-/* PvP — đấu kiến thức */
+/* ═══════════════════════════════════════════════════
+   PVP.CSS — Sảnh đấu PvP (dashboard chuyên nghiệp)
+═══════════════════════════════════════════════════ */
 
-.page-pvp.page-scroll{
-  padding-top:calc(var(--topbar-h) + 24px);
-  padding-bottom:40px;
-}
-
-.pvp-wrap{
-  width:min(560px, calc(100vw - 32px));
-  margin:0 auto;
-  position:relative;
-  z-index:10;
+.page-pvp.page-scroll {
+  padding-top: calc(var(--topbar-h, 60px) + 24px);
+  padding-bottom: 48px;
 }
 
-.pvp-card{
-  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.82));
-  border:1px solid rgba(255,255,255,.65);
-  border-radius:28px;
-  padding:22px 22px 26px;
-  box-shadow:0 14px 40px rgba(15,23,42,.1);
-  backdrop-filter:blur(18px);
+.page-pvp #page-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
-.pvp-card h1{
-  font-family:var(--font-ui,'Nunito',sans-serif);
-  font-weight:800;
-  font-size:22px;
-  color:#0f172a;
-  margin:0 0 6px;
-  text-align:center;
-}
-.pvp-lead{
-  font-family:var(--font-ui,'Nunito',sans-serif);
-  font-size:14px;
-  color:#64748b;
-  text-align:center;
-  margin:0 0 8px;
-  line-height:1.5;
-}
-.pvp-lead-note{
-  margin:0 0 18px;
-  font-size:13px;
-  color:#94a3b8;
+.pvp-wrap {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
 }
 
-.pvp-wait-hint{
-  font-family:var(--font-ui,'Nunito',sans-serif);
-  font-size:13px;
-  color:#64748b;
-  text-align:center;
-  margin:-6px 0 14px;
-  line-height:1.55;
-  max-width:40em;
-  margin-left:auto;
-  margin-right:auto;
+/* ── Hero ── */
+.pvp-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px 24px;
+  padding: 24px 26px;
+  margin-bottom: 18px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #0f766e 0%, #0891b2 40%, #6366f1 100%);
+  box-shadow: 0 16px 48px rgba(8, 145, 178, 0.28);
+  position: relative;
+  overflow: hidden;
 }
 
-.pvp-subject-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  justify-content:center;
-  margin-bottom:16px;
-}
-.pvp-chip{
-  border:2px solid rgba(15,23,42,.12);
-  background:rgba(255,255,255,.8);
-  border-radius:999px;
-  padding:8px 14px;
-  font-family:var(--font-ui,'Nunito',sans-serif);
-  font-size:13px;
-  font-weight:700;
-  cursor:pointer;
-  color:#334155;
-  transition:background .15s, border-color .15s, transform .12s;
-}
-.pvp-chip:hover{ transform:translateY(-1px) }
-.pvp-chip.is-on{
-  background:linear-gradient(135deg,#dbeafe,#e0e7ff);
-  border-color:#2563eb;
-  color:#1d4ed8;
+.pvp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.2), transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(255,255,255,.08), transparent 40%);
+  pointer-events: none;
 }
 
-.pvp-actions{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-top:12px;
-}
-.pvp-btn{
-  border:none;
-  border-radius:16px;
-  padding:14px 18px;
-  font-family:'Baloo 2',cursive;
-  font-size:17px;
-  font-weight:800;
-  cursor:pointer;
-  transition:transform .12s, filter .12s;
-}
-.pvp-btn:active{ transform:translateY(2px) }
-.pvp-btn-primary{
-  background:linear-gradient(135deg,#34d399,#10b981);
-  color:#fff;
-  box-shadow:0 5px 0 #047857, 0 10px 24px rgba(16,185,129,.3);
-}
-.pvp-btn-secondary{
-  background:linear-gradient(135deg,#93c5fd,#3b82f6);
-  color:#fff;
-  box-shadow:0 5px 0 #1d4ed8, 0 10px 24px rgba(37,99,235,.25);
-}
-.pvp-btn-ghost{
-  background:rgba(255,255,255,.9);
-  color:#475569;
-  border:2px solid rgba(15,23,42,.12);
-  box-shadow:none;
-  font-size:15px;
+.pvp-hero-main,
+.pvp-hero-stats {
+  position: relative;
+  z-index: 1;
 }
 
-.pvp-code-box{
-  text-align:center;
-  padding:14px;
-  background:rgba(241,245,249,.9);
-  border-radius:16px;
-  margin:14px 0;
-  border:2px dashed rgba(37,99,235,.35);
-}
-.pvp-code-label{
-  font-family:var(--font-ui,'Nunito',sans-serif);
-  font-size:12px;
-  font-weight:700;
-  color:#64748b;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-}
-.pvp-code-value{
-  font-family:ui-monospace,monospace;
-  font-size:28px;
-  font-weight:900;
-  letter-spacing:.2em;
-  color:#1e40af;
-  margin-top:6px;
+.pvp-hero-eyebrow {
+  display: inline-flex;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.22);
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.92);
 }
 
-.pvp-input-row{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-.pvp-input-row input{
-  flex:1;
-  border:2px solid rgba(15,23,42,.12);
-  border-radius:14px;
-  padding:12px 14px;
-  font-family:ui-monospace,monospace;
-  font-size:18px;
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.12em;
-  text-align:center;
+.pvp-hero-title {
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(1.5rem, 3.2vw, 2rem);
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 8px;
+  letter-spacing: -.02em;
 }
 
-.pvp-hidden{ display:none !important; }
-
-/* Arena */
-.pvp-scoreboard{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:16px;
-}
-.pvp-player-pill{
-  flex:1;
-  text-align:center;
-  padding:12px 10px;
-  border-radius:18px;
-  background:rgba(255,255,255,.75);
-  border:2px solid rgba(15,23,42,.1);
-  font-family:var(--font-ui,'Nunito',sans-serif);
-}
-.pvp-player-pill.is-me{
-  border-color:#10b981;
-  background:rgba(16,185,129,.08);
-}
-.pvp-player-pill.is-lead{ box-shadow:0 0 0 2px rgba(234,179,8,.6); }
-.pvp-p-name{
-  font-size:12px;
-  font-weight:800;
-  color:#64748b;
-  margin-bottom:4px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.pvp-p-score{
-  font-size:26px;
-  font-weight:900;
-  color:#0f172a;
-}
-.pvp-vs{
-  align-self:center;
-  font-weight:900;
-  color:#94a3b8;
-  font-size:14px;
+.pvp-hero-desc {
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 46ch;
 }
 
-.pvp-q-meta{
-  font-family:var(--font-ui,'Nunito',sans-serif);
-  font-size:12px;
-  font-weight:700;
-  color:#64748b;
-  text-align:center;
-  margin-bottom:6px;
-}
-.pvp-question{
-  font-family:'Baloo 2',cursive;
-  font-size:clamp(18px,4vw,22px);
-  font-weight:800;
-  color:#0f172a;
-  text-align:center;
-  margin:0 0 16px;
-  line-height:1.35;
+.pvp-hero-desc strong { color: #fef08a; }
+
+.pvp-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  flex: 1 1 100%;
+  max-width: 480px;
 }
 
-.pvp-answers{
-  display:grid;
-  grid-template-columns:repeat(2, 1fr);
-  gap:10px;
-}
-.pvp-ans{
-  border:2px solid rgba(15,23,42,.1);
-  border-radius:18px;
-  padding:16px 12px;
-  font-size:clamp(22px,5vw,30px);
-  cursor:pointer;
-  background:rgba(255,255,255,.92);
-  color:#0f172a;
-  transition:transform .12s, box-shadow .12s;
-  font-family:inherit;
-}
-.pvp-ans:hover:not(:disabled){
-  transform:translateY(-3px);
-  box-shadow:0 8px 20px rgba(15,23,42,.1);
-}
-.pvp-ans:disabled{
-  opacity:.55;
-  cursor:not-allowed;
-}
-.pvp-ans.is-picked{
-  border-color:#2563eb;
-  background:#eff6ff;
+.pvp-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.94);
+  border: 1px solid rgba(255,255,255,.65);
+  box-shadow: 0 4px 16px rgba(15,23,42,.12);
 }
 
-.pvp-status{
-  margin-top:14px;
-  text-align:center;
-  font-family:var(--font-ui,'Nunito',sans-serif);
-  font-size:14px;
-  font-weight:700;
-  color:#475569;
-  min-height:22px;
+.pvp-stat-icon { font-size: 20px; line-height: 1; }
+
+.pvp-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
-.pvp-result-banner{
-  margin-top:14px;
-  padding:16px;
-  border-radius:18px;
-  text-align:center;
-  font-family:var(--font-ui,'Nunito',sans-serif);
-  font-weight:800;
-  font-size:16px;
-}
-.pvp-result-banner.win{
-  background:linear-gradient(135deg,#d1fae5,#a7f3d0);
-  color:#065f46;
-}
-.pvp-result-banner.lose{
-  background:linear-gradient(135deg,#fee2e2,#fecaca);
-  color:#991b1b;
-}
-.pvp-result-banner.draw{
-  background:linear-gradient(135deg,#f1f5f9,#e2e8f0);
-  color:#334155;
+.pvp-stat-value {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
 }
 
-:root[data-theme="dark"] .pvp-card{
-  background:linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.88));
-  border-color:rgba(255,255,255,.12);
-}
-:root[data-theme="dark"] .pvp-card h1{ color:var(--ink,#f1f5f9); }
-:root[data-theme="dark"] .pvp-lead{ color:#cbd5e1; }
-:root[data-theme="dark"] .pvp-lead-note,
-:root[data-theme="dark"] .pvp-wait-hint{ color:#94a3b8; }
-:root[data-theme="dark"] .pvp-chip{
-  background:rgba(30,41,59,.9);
-  border-color:rgba(255,255,255,.14);
-  color:#e2e8f0;
-}
-:root[data-theme="dark"] .pvp-chip.is-on{
-  background:linear-gradient(135deg,rgba(37,99,235,.35),rgba(79,70,229,.28));
-  border-color:#60a5fa;
-  color:#bfdbfe;
-}
-:root[data-theme="dark"] .pvp-btn-ghost{
-  background:rgba(51,65,85,.85);
-  color:#e2e8f0;
-  border-color:rgba(255,255,255,.16);
-}
-:root[data-theme="dark"] .pvp-code-box{
-  background:rgba(15,23,42,.65);
-  border-color:rgba(96,165,250,.35);
-}
-:root[data-theme="dark"] .pvp-code-label{ color:#94a3b8; }
-:root[data-theme="dark"] .pvp-code-value{ color:#93c5fd; }
-:root[data-theme="dark"] .pvp-input-row input{
-  background:rgba(15,23,42,.75);
-  border-color:rgba(255,255,255,.14);
-  color:var(--ink,#f1f5f9);
-}
-:root[data-theme="dark"] .pvp-input-row input::placeholder{ color:#64748b; }
-:root[data-theme="dark"] .pvp-player-pill{
-  background:rgba(30,41,59,.85);
-  border-color:rgba(255,255,255,.12);
-}
-:root[data-theme="dark"] .pvp-player-pill.is-me{
-  border-color:#34d399;
-  background:rgba(16,185,129,.18);
-}
-:root[data-theme="dark"] .pvp-p-name{ color:#cbd5e1; }
-:root[data-theme="dark"] .pvp-p-score{ color:var(--ink,#f1f5f9); }
-:root[data-theme="dark"] .pvp-vs{ color:#64748b; }
-:root[data-theme="dark"] .pvp-q-meta{ color:#94a3b8; }
-:root[data-theme="dark"] .pvp-question{ color:var(--ink,#f1f5f9); }
-:root[data-theme="dark"] .pvp-ans{
-  background:rgba(51,65,85,.92);
-  border-color:rgba(255,255,255,.16);
-  color:var(--ink,#f1f5f9);
-}
-:root[data-theme="dark"] .pvp-ans:hover:not(:disabled){
-  box-shadow:0 8px 20px rgba(0,0,0,.35);
-}
-:root[data-theme="dark"] .pvp-ans.is-picked{
-  border-color:#60a5fa;
-  background:rgba(37,99,235,.28);
-  color:#dbeafe;
-}
-:root[data-theme="dark"] .pvp-status{ color:#cbd5e1; }
-:root[data-theme="dark"] .pvp-result-banner.win{
-  background:linear-gradient(135deg,rgba(6,95,70,.55),rgba(16,185,129,.35));
-  color:#a7f3d0;
-}
-:root[data-theme="dark"] .pvp-result-banner.lose{
-  background:linear-gradient(135deg,rgba(127,29,29,.5),rgba(239,68,68,.28));
-  color:#fecaca;
-}
-:root[data-theme="dark"] .pvp-result-banner.draw{
-  background:linear-gradient(135deg,rgba(51,65,85,.75),rgba(71,85,105,.55));
-  color:#e2e8f0;
+.pvp-stat-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
 }
 
-/* ═══════════ MOBILE ═══════════ */
-@media (max-width:640px){
-  .page-pvp.page-scroll{
-    padding-top:calc(var(--topbar-h) + 60px);
-    padding-bottom:32px;
-  }
-  .pvp-wrap{
-    width:calc(100vw - 20px);
-  }
-  .pvp-card{
-    border-radius:22px;
-    padding:18px 14px 20px;
-  }
-  .pvp-card h1{
-    font-size:clamp(18px, 5vw, 22px);
-  }
-  .pvp-lead{
-    font-size:13px;
-    margin-bottom:14px;
-  }
-  .pvp-wait-hint{
-    font-size:12.5px;
-  }
-  .pvp-subject-row{
-    gap:6px;
-    margin-bottom:12px;
-  }
-  .pvp-chip{
-    padding:7px 12px;
-    font-size:12.5px;
-  }
-  .pvp-btn{
-    padding:13px 16px;
-    font-size:16px;
-    border-radius:14px;
-  }
-  .pvp-btn-ghost{ font-size:14px; }
-  .pvp-input-row{
-    gap:8px;
-    flex-direction:column;
-  }
-  .pvp-input-row input{
-    padding:12px;
-    font-size:16px;
-    letter-spacing:.18em;
-  }
-  .pvp-code-box{
-    padding:12px;
-    margin:12px 0;
-    border-radius:14px;
-  }
-  .pvp-code-value{
-    font-size:24px;
-    letter-spacing:.16em;
-    word-break:break-all;
-  }
-  .pvp-scoreboard{
-    gap:8px;
-    margin-bottom:12px;
-  }
-  .pvp-player-pill{
-    padding:10px 8px;
-    border-radius:14px;
-  }
-  .pvp-p-name{ font-size:11px; }
-  .pvp-p-score{ font-size:22px; }
-  .pvp-vs{ font-size:12px; }
-  .pvp-q-meta{
-    font-size:11.5px;
-  }
-  .pvp-answers{
-    gap:8px;
-  }
-  .pvp-ans{
-    padding:14px 10px;
-    border-radius:14px;
-  }
-  .pvp-status{
-    font-size:13px;
-    margin-top:10px;
-  }
-  .pvp-result-banner{
-    padding:14px;
-    font-size:15px;
-    border-radius:14px;
-  }
+/* ── Dashboard layout ── */
+.pvp-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+  align-items: start;
 }
 
-@media (max-width:380px){
-  .pvp-card{ padding:16px 12px 18px; }
-  .pvp-code-value{ font-size:22px; }
+.pvp-main-col { min-width: 0; }
+
+.pvp-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: calc(var(--topbar-h, 60px) + 16px);
+}
+
+/* ── Cards ── */
+.pvp-card {
+  background: linear-gradient(165deg, rgba(255,255,255,.96), rgba(248,250,252,.9));
+  border: 1px solid rgba(226,232,240,.9);
+  border-radius: 22px;
+  padding: 22px 22px 24px;
+  box-shadow: 0 12px 40px rgba(15,23,42,.08);
+}
+
+.pvp-card--arena {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ── Steps ── */
+.pvp-step {
+  margin-bottom: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pvp-step:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.pvp-step-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.pvp-step-num {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-family: 'Baloo 2', cursive;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(99,102,241,.3);
+}
+
+.pvp-step-title {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.pvp-step-sub {
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* ── Subject chips ── */
+.pvp-subject-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pvp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #475569;
+  transition: background .15s, border-color .15s, transform .12s, box-shadow .15s;
+}
+
+.pvp-chip:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+}
+
+.pvp-chip.is-on {
+  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+  border-color: #6366f1;
+  color: #4338ca;
+  box-shadow: 0 4px 14px rgba(99,102,241,.18);
+}
+
+.pvp-chip-icon { font-size: 15px; line-height: 1; }
+
+/* ── Actions ── */
+.pvp-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.pvp-btn {
+  border: none;
+  border-radius: 16px;
+  padding: 14px 18px;
+  font-family: 'Baloo 2', cursive;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .12s, filter .12s, box-shadow .15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pvp-btn:active { transform: translateY(2px); }
+
+.pvp-btn-block {
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 16px 18px;
+  min-height: 72px;
+}
+
+.pvp-btn-icon { font-size: 22px; line-height: 1; }
+
+.pvp-btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pvp-btn-text strong {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.pvp-btn-text small {
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: .88;
+}
+
+.pvp-btn-primary {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  box-shadow: 0 4px 0 #047857, 0 10px 24px rgba(16,185,129,.28);
+}
+
+.pvp-btn-secondary {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  color: #fff;
+  box-shadow: 0 4px 0 #1d4ed8, 0 10px 24px rgba(37,99,235,.22);
+}
+
+.pvp-btn-ghost {
+  background: #fff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+  font-size: 14px;
+}
+
+.pvp-btn-copy {
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-size: 18px;
+  box-shadow: none;
+}
+
+.pvp-join-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.pvp-join-divider::before,
+.pvp-join-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.pvp-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.pvp-input-row input {
+  flex: 1;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-family: ui-monospace, monospace;
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  text-align: center;
+  background: #fff;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.pvp-input-row input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99,102,241,.12);
+}
+
+.pvp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pvp-actions--row {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.pvp-actions--row .pvp-btn { flex: 1; min-width: 140px; }
+
+.pvp-actions--center { align-items: center; }
+
+.pvp-hidden { display: none !important; }
+
+/* ── Waiting room ── */
+.pvp-waiting {
+  padding-top: 8px;
+}
+
+.pvp-waiting-badge {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: #b45309;
+}
+
+.pvp-code-box {
+  text-align: center;
+  padding: 18px 16px;
+  background: linear-gradient(135deg, #eff6ff, #eef2ff);
+  border-radius: 18px;
+  margin: 0 0 14px;
+  border: 2px dashed rgba(99,102,241,.35);
+}
+
+.pvp-code-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.pvp-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pvp-code-value {
+  font-family: ui-monospace, monospace;
+  font-size: clamp(24px, 6vw, 32px);
+  font-weight: 900;
+  letter-spacing: .22em;
+  color: #4338ca;
+}
+
+.pvp-wait-msg {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+
+.pvp-wait-hint {
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 16px;
+  line-height: 1.55;
+  max-width: 42em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Tips sidebar ── */
+.pvp-tip-card {
+  background: rgba(255,255,255,.94);
+  border: 1px solid rgba(226,232,240,.9);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 6px 24px rgba(15,23,42,.06);
+}
+
+.pvp-tip-card--note {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-color: #fde68a;
+}
+
+.pvp-tip-title {
+  font-family: 'Baloo 2', cursive;
+  font-size: 15px;
+  font-weight: 800;
+  color: #312e81;
+  margin: 0 0 12px;
+}
+
+.pvp-tip-list {
+  margin: 0;
+  padding-left: 20px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.65;
+}
+
+.pvp-tip-list em {
+  font-style: normal;
+  font-weight: 800;
+  color: #6366f1;
+}
+
+.pvp-tip-card--note p {
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12.5px;
+  color: #92400e;
+  line-height: 1.55;
+}
+
+/* ── Arena ── */
+.pvp-arena { width: 100%; }
+
+.pvp-arena-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.pvp-arena-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.pvp-round-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 120px;
+  max-width: 220px;
+}
+
+.pvp-round-bar-wrap {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.pvp-round-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+  transition: width .2s linear;
+}
+
+.pvp-round-timer {
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  color: #64748b;
+  min-width: 2.5em;
+  text-align: right;
+}
+
+.pvp-scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 20px;
+}
+
+.pvp-player-pill {
+  text-align: center;
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  font-family: 'Nunito', sans-serif;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.pvp-player-pill.is-me {
+  border-color: #10b981;
+  background: linear-gradient(165deg, #ecfdf5, #fff);
+  box-shadow: 0 4px 16px rgba(16,185,129,.12);
+}
+
+.pvp-player-pill.is-lead {
+  box-shadow: 0 0 0 2px rgba(234,179,8,.55), 0 4px 16px rgba(234,179,8,.15);
+}
+
+.pvp-p-avatar {
+  font-size: 24px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.pvp-p-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pvp-p-score-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.pvp-p-score {
+  font-family: 'Baloo 2', cursive;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.pvp-p-target {
+  font-size: 14px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.pvp-vs-ring {
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(99,102,241,.35);
+}
+
+.pvp-vs-ring span {
+  font-family: 'Baloo 2', cursive;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.pvp-question-box {
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.pvp-q-meta {
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.pvp-question {
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(18px, 4vw, 22px);
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.pvp-answers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.pvp-ans {
+  border: 2px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px 12px;
+  font-size: clamp(22px, 5vw, 30px);
+  cursor: pointer;
+  background: #fff;
+  color: #0f172a;
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+  font-family: inherit;
+}
+
+.pvp-ans:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(15,23,42,.1);
+  border-color: #cbd5e1;
+}
+
+.pvp-ans:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.pvp-ans.is-picked {
+  border-color: #6366f1;
+  background: #eef2ff;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.2);
+}
+
+.pvp-status {
+  margin-top: 14px;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #475569;
+  min-height: 22px;
+}
+
+.pvp-result-banner {
+  margin-top: 14px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.pvp-result-banner.win {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+}
+
+.pvp-result-banner.lose {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #991b1b;
+}
+
+.pvp-result-banner.draw {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  color: #334155;
+}
+
+/* ── Dark mode ── */
+:root[data-theme="dark"] .pvp-hero {
+  box-shadow: 0 16px 48px rgba(0,0,0,.35);
+}
+
+:root[data-theme="dark"] .pvp-stat-chip,
+:root[data-theme="dark"] .pvp-card,
+:root[data-theme="dark"] .pvp-tip-card {
+  background: rgba(15,23,42,.78);
+  border-color: rgba(148,163,184,.16);
+}
+
+:root[data-theme="dark"] .pvp-stat-value,
+:root[data-theme="dark"] .pvp-step-title,
+:root[data-theme="dark"] .pvp-wait-msg,
+:root[data-theme="dark"] .pvp-question,
+:root[data-theme="dark"] .pvp-p-score {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .pvp-step-sub,
+:root[data-theme="dark"] .pvp-wait-hint,
+:root[data-theme="dark"] .pvp-q-meta,
+:root[data-theme="dark"] .pvp-status {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .pvp-step { border-color: rgba(148,163,184,.12); }
+
+:root[data-theme="dark"] .pvp-chip {
+  background: rgba(30,41,59,.75);
+  border-color: rgba(148,163,184,.18);
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .pvp-chip.is-on {
+  background: linear-gradient(135deg, rgba(37,99,235,.35), rgba(79,70,229,.28));
+  border-color: #60a5fa;
+  color: #bfdbfe;
+}
+
+:root[data-theme="dark"] .pvp-btn-ghost,
+:root[data-theme="dark"] .pvp-btn-copy {
+  background: rgba(30,41,59,.85);
+  color: #e2e8f0;
+  border-color: rgba(148,163,184,.18);
+}
+
+:root[data-theme="dark"] .pvp-input-row input {
+  background: rgba(15,23,42,.75);
+  border-color: rgba(148,163,184,.18);
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .pvp-code-box {
+  background: rgba(30,27,75,.45);
+  border-color: rgba(129,140,248,.35);
+}
+
+:root[data-theme="dark"] .pvp-code-value { color: #a5b4fc; }
+
+:root[data-theme="dark"] .pvp-player-pill {
+  background: rgba(30,41,59,.85);
+  border-color: rgba(148,163,184,.14);
+}
+
+:root[data-theme="dark"] .pvp-player-pill.is-me {
+  border-color: #34d399;
+  background: rgba(6,78,59,.35);
+}
+
+:root[data-theme="dark"] .pvp-p-name { color: #cbd5e1; }
+
+:root[data-theme="dark"] .pvp-question-box {
+  background: rgba(30,41,59,.55);
+  border-color: rgba(148,163,184,.14);
+}
+
+:root[data-theme="dark"] .pvp-ans {
+  background: rgba(51,65,85,.92);
+  border-color: rgba(148,163,184,.16);
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .pvp-ans.is-picked {
+  border-color: #60a5fa;
+  background: rgba(37,99,235,.28);
+}
+
+:root[data-theme="dark"] .pvp-tip-title { color: #e2e8f0; }
+
+:root[data-theme="dark"] .pvp-tip-list { color: #94a3b8; }
+
+:root[data-theme="dark"] .pvp-tip-card--note {
+  background: rgba(120,53,15,.35);
+  border-color: rgba(251,191,36,.25);
+}
+
+:root[data-theme="dark"] .pvp-tip-card--note p { color: #fde68a; }
+
+:root[data-theme="dark"] .pvp-round-bar-wrap { background: rgba(30,41,59,.85); }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .pvp-dashboard { grid-template-columns: 1fr; }
+  .pvp-aside {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .pvp-tip-card--note { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .page-pvp.page-scroll {
+    padding-top: calc(var(--topbar-h, 60px) + 60px);
+  }
+
+  .pvp-hero {
+    padding: 18px 16px;
+    border-radius: 20px;
+  }
+
+  .pvp-hero-stats {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+
+  .pvp-card { padding: 18px 14px 20px; border-radius: 18px; }
+
+  .pvp-action-grid { grid-template-columns: 1fr; }
+
+  .pvp-input-row { flex-direction: column; }
+
+  .pvp-input-row input { font-size: 16px; }
+
+  .pvp-aside { grid-template-columns: 1fr; }
+
+  .pvp-scoreboard { gap: 8px; }
+
+  .pvp-vs-ring { width: 36px; height: 36px; }
+
+  .pvp-vs-ring span { font-size: 11px; }
+
+  .pvp-p-score { font-size: 1.65rem; }
+
+  .pvp-answers { gap: 8px; }
+
+  .pvp-ans { padding: 14px 10px; border-radius: 14px; }
+
+  .pvp-actions--row { flex-direction: column; }
+
+  .pvp-actions--row .pvp-btn { width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .pvp-code-value { letter-spacing: .12em; font-size: 22px; }
 }
