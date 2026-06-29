@@ -791,6 +791,7 @@ function renderProfilePage(){
   });
   _configureProfileNav(info, false);
 
+  show('profSocialActions', false);
   show('profNameEditBtn', !info.isTeacher);
 
   var proBanner = document.getElementById('profProBanner');
