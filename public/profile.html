@@ -101,108 +101,234 @@
 </div>
 
 <main id="page-root" data-page="profile">
-<div class="profile-dialog-wrap">
-<div class="card menu-card profile-page-card">
-  <header class="profile-head">
-    <div class="profile-avatar-big" id="profAvatar">🧒</div>
-    <div class="profile-name-row">
-      <h1 class="profile-name" id="profName">Bé học sinh</h1>
-      <button type="button" id="profNameEditBtn" class="profile-name-edit" aria-label="Sửa tên hiển thị" title="Sửa tên">✏️</button>
-    </div>
-    <p class="profile-email" id="profEmail"></p>
-    <span class="profile-role-pill" id="profRole">Tài khoản phụ huynh</span>
-    <div id="profSocialActions" class="profile-social-actions" hidden>
-      <button type="button" id="profFollowBtn" class="profile-btn profile-btn-primary profile-btn--sm">👀 Theo dõi</button>
-      <button type="button" id="profFriendBtn" class="profile-btn profile-btn--sm">🤝 Kết bạn</button>
-      <a href="#" id="profMsgBtn" class="profile-btn profile-btn--sm">💬 Nhắn tin</a>
-      <a href="social.html" class="profile-btn profile-btn--sm">🌈 Cộng đồng</a>
-    </div>
-  </header>
+  <div class="profile-shell">
+    <div class="profile-layout card menu-card profile-page-card">
 
-  <div class="profile-stat-grid" id="profStatsGrid" aria-label="Thống kê học tập">
-    <div class="profile-stat-chip profile-stat-stars">
-      <span class="profile-stat-icon" aria-hidden="true">🌟</span>
-      <strong class="profile-stat-value" id="profStars">0</strong>
-      <span class="profile-stat-label">Sao</span>
-    </div>
-    <div class="profile-stat-chip profile-stat-badges">
-      <span class="profile-stat-icon" aria-hidden="true">🏅</span>
-      <strong class="profile-stat-value" id="profBadges">0/0</strong>
-      <span class="profile-stat-label">Huy hiệu</span>
-    </div>
-    <div class="profile-stat-chip profile-stat-streak">
-      <span class="profile-stat-icon" aria-hidden="true">🔥</span>
-      <strong class="profile-stat-value" id="profStreak">0</strong>
-      <span class="profile-stat-label">Chuỗi ngày</span>
-    </div>
-    <div class="profile-stat-chip profile-stat-honor">
-      <span class="profile-stat-icon" aria-hidden="true">🛡️</span>
-      <strong class="profile-stat-value" id="profHonor">0</strong>
-      <span class="profile-stat-label">Vinh dự</span>
-    </div>
-  </div>
+      <aside class="profile-sidebar" id="profSidebar">
+        <div class="profile-sidebar-user">
+          <div class="profile-avatar-big" id="profAvatar">🧒</div>
+          <div class="profile-sidebar-meta">
+            <div class="profile-name-row">
+              <h1 class="profile-name" id="profName">Bé học sinh</h1>
+              <button type="button" id="profNameEditBtn" class="profile-name-edit" aria-label="Sửa tên hiển thị" title="Sửa tên">✏️</button>
+            </div>
+            <p class="profile-email" id="profEmail"></p>
+            <span class="profile-role-pill" id="profRole">Tài khoản phụ huynh</span>
+          </div>
+        </div>
 
-  <div class="profile-sections">
-    <section class="profile-pro-banner" id="profProBanner">
-      <div class="profile-pro-banner-text">
-        <h2 id="profProTitle">Kid Learning Pro</h2>
-        <p id="profProDesc">Nâng cấp để chơi game không giới hạn lượt.</p>
+        <nav class="profile-nav" id="profNav" aria-label="Khu vực hồ sơ">
+          <button type="button" class="profile-nav-item is-active" data-prof-panel="overview">
+            <span class="profile-nav-icon">📊</span>
+            <span class="profile-nav-label">Tổng quan</span>
+          </button>
+          <button type="button" class="profile-nav-item" data-prof-panel="learning">
+            <span class="profile-nav-icon">🎓</span>
+            <span class="profile-nav-label">Học tập</span>
+          </button>
+          <button type="button" class="profile-nav-item" data-prof-panel="class" id="profNavClass">
+            <span class="profile-nav-icon">🏫</span>
+            <span class="profile-nav-label">Lớp học</span>
+          </button>
+          <button type="button" class="profile-nav-item" data-prof-panel="pro" id="profNavPro">
+            <span class="profile-nav-icon">✨</span>
+            <span class="profile-nav-label">Gói Pro</span>
+          </button>
+          <button type="button" class="profile-nav-item" data-prof-panel="settings" id="profNavSettings">
+            <span class="profile-nav-icon">⚙️</span>
+            <span class="profile-nav-label">Cài đặt</span>
+          </button>
+          <button type="button" class="profile-nav-item" data-prof-panel="account" id="profNavAccount">
+            <span class="profile-nav-icon">👤</span>
+            <span class="profile-nav-label">Tài khoản</span>
+          </button>
+        </nav>
+
+        <div class="profile-sidebar-foot" id="profSidebarFoot">
+          <a href="progress.html" class="profile-sidebar-link">📊 Tiến độ</a>
+          <a href="game.html" class="profile-sidebar-link">🎮 Game</a>
+          <a href="social.html" class="profile-sidebar-link">🌈 Cộng đồng</a>
+        </div>
+      </aside>
+
+      <div class="profile-main">
+        <header class="profile-main-head">
+          <div class="profile-main-head-text">
+            <h2 class="profile-main-title" id="profPanelTitle">Tổng quan</h2>
+            <p class="profile-main-sub" id="profPanelSub">Thống kê học tập và lối tắt nhanh</p>
+          </div>
+          <div id="profSocialActions" class="profile-social-actions" hidden>
+            <button type="button" id="profFollowBtn" class="profile-btn profile-btn-primary profile-btn--sm">👀 Theo dõi</button>
+            <button type="button" id="profFriendBtn" class="profile-btn profile-btn--sm">🤝 Kết bạn</button>
+            <a href="#" id="profMsgBtn" class="profile-btn profile-btn--sm">💬 Nhắn tin</a>
+            <a href="social.html" class="profile-btn profile-btn--sm">🌈 Cộng đồng</a>
+          </div>
+        </header>
+
+        <!-- Tổng quan -->
+        <section class="profile-panel is-active" id="profPanelOverview" data-panel="overview">
+          <div class="profile-stat-grid" id="profStatsGrid" aria-label="Thống kê học tập">
+            <div class="profile-stat-chip profile-stat-stars">
+              <span class="profile-stat-icon" aria-hidden="true">🌟</span>
+              <strong class="profile-stat-value" id="profStars">0</strong>
+              <span class="profile-stat-label">Sao</span>
+            </div>
+            <div class="profile-stat-chip profile-stat-badges">
+              <span class="profile-stat-icon" aria-hidden="true">🏅</span>
+              <strong class="profile-stat-value" id="profBadges">0/0</strong>
+              <span class="profile-stat-label">Huy hiệu</span>
+            </div>
+            <div class="profile-stat-chip profile-stat-streak">
+              <span class="profile-stat-icon" aria-hidden="true">🔥</span>
+              <strong class="profile-stat-value" id="profStreak">0</strong>
+              <span class="profile-stat-label">Chuỗi ngày</span>
+            </div>
+            <div class="profile-stat-chip profile-stat-honor">
+              <span class="profile-stat-icon" aria-hidden="true">🛡️</span>
+              <strong class="profile-stat-value" id="profHonor">0</strong>
+              <span class="profile-stat-label">Vinh dự</span>
+            </div>
+          </div>
+          <div class="profile-quick-grid">
+            <a href="game.html" class="profile-quick-card profile-quick-card--game">
+              <span class="profile-quick-icon">🎮</span>
+              <strong>Chơi game</strong>
+              <span>5 trò chơi học tập</span>
+            </a>
+            <a href="progress.html" class="profile-quick-card profile-quick-card--progress">
+              <span class="profile-quick-icon">📊</span>
+              <strong>Tiến độ</strong>
+              <span>Sao &amp; huy hiệu</span>
+            </a>
+            <a href="pvp.html" class="profile-quick-card profile-quick-card--pvp">
+              <span class="profile-quick-icon">⚔️</span>
+              <strong>PvP</strong>
+              <span>Thi đấu bạn bè</span>
+            </a>
+            <a href="mentor.html" class="profile-quick-card profile-quick-card--mentor">
+              <span class="profile-quick-icon">👩‍🏫</span>
+              <strong>Cô giáo AI</strong>
+              <span>Hỏi đáp học tập</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Học tập -->
+        <section class="profile-panel" id="profPanelLearning" data-panel="learning">
+          <div class="profile-info-cards">
+            <article class="profile-info-card">
+              <h3>🌟 Tổng sao</h3>
+              <p class="profile-info-big" id="profLearnStars">0</p>
+              <p class="profile-info-desc">Sao tích lũy từ bài học và game</p>
+            </article>
+            <article class="profile-info-card">
+              <h3>🏅 Huy hiệu</h3>
+              <p class="profile-info-big" id="profLearnBadges">0/0</p>
+              <p class="profile-info-desc">Hoàn thành thử thách để mở thêm</p>
+            </article>
+            <article class="profile-info-card">
+              <h3>🔥 Chuỗi ngày</h3>
+              <p class="profile-info-big" id="profLearnStreak">0</p>
+              <p class="profile-info-desc">Học đều mỗi ngày để giữ lửa</p>
+            </article>
+            <article class="profile-info-card">
+              <h3>🛡️ Vinh dự</h3>
+              <p class="profile-info-big" id="profLearnHonor">0</p>
+              <p class="profile-info-desc">Điểm từ đấu trường Arena</p>
+            </article>
+          </div>
+          <div class="profile-panel-actions">
+            <a href="progress.html" class="profile-btn profile-btn-primary">📊 Xem tiến độ chi tiết</a>
+            <a href="index.html" class="profile-btn">📚 Về bài học</a>
+          </div>
+        </section>
+
+        <!-- Lớp học -->
+        <section class="profile-panel" id="profPanelClass" data-panel="class">
+          <div class="profile-section profile-section--class" id="profClassBox">
+            <h3 class="profile-section-title">🏫 Mã lớp</h3>
+            <p class="profile-section-desc">Nhập mã lớp giáo viên cung cấp để đồng bộ tiến độ và danh sách lớp.</p>
+            <div class="profile-field-row">
+              <input type="text" id="profClassInput" class="profile-field-input" maxlength="32"
+                     autocomplete="off" placeholder="VD: LOP1234" aria-label="Mã lớp">
+              <button type="button" id="profClassSaveBtn" class="profile-field-save">Lưu mã lớp</button>
+            </div>
+            <p id="profClassTeacher" class="profile-class-teacher" hidden></p>
+            <p id="profClassMsg" class="profile-field-msg" hidden></p>
+          </div>
+        </section>
+
+        <!-- Gói Pro -->
+        <section class="profile-panel" id="profPanelPro" data-panel="pro">
+          <section class="profile-pro-banner profile-pro-banner--wide" id="profProBanner">
+            <div class="profile-pro-banner-text">
+              <h2 id="profProTitle">Kid Learning Pro</h2>
+              <p id="profProDesc">Nâng cấp để chơi game không giới hạn lượt.</p>
+            </div>
+            <a href="pro.html" class="profile-btn profile-btn-primary" id="profProBtn">✨ Xem gói Pro</a>
+          </section>
+          <ul class="profile-pro-list">
+            <li>✓ Chơi <strong>không giới hạn</strong> — 6 game học tập</li>
+            <li>✓ Mở khóa màn mới &amp; tính năng ưu tiên</li>
+            <li>✓ Chỉ <strong>300.000đ/năm</strong> — thanh toán một lần</li>
+          </ul>
+        </section>
+
+        <!-- Cài đặt -->
+        <section class="profile-panel" id="profPanelSettings" data-panel="settings">
+          <div class="profile-settings-block">
+            <div class="profile-settings-icon">🎙️</div>
+            <div class="profile-settings-body">
+              <h3>Giọng đọc FPT.AI</h3>
+              <p>Chọn giọng Tiếng Việt tự nhiên cho bài học và câu hỏi. API key được lưu cục bộ trên thiết bị.</p>
+              <button type="button" class="profile-btn profile-btn-primary" id="profBtnSettings">Mở cài đặt giọng đọc</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tài khoản -->
+        <section class="profile-panel" id="profPanelAccount" data-panel="account">
+          <dl class="profile-dl profile-dl--account">
+            <div class="profile-dl-row">
+              <dt>Email</dt>
+              <dd id="profAccountEmail">—</dd>
+            </div>
+            <div class="profile-dl-row">
+              <dt>Tham gia</dt>
+              <dd><span id="profJoin">—</span> <span class="profile-meta-sub" id="profAge"></span></dd>
+            </div>
+            <div class="profile-dl-row" id="profClassRow" hidden>
+              <dt>Lớp</dt>
+              <dd id="profClass">—</dd>
+            </div>
+            <div class="profile-dl-row" id="profUidRow" hidden>
+              <dt>Mã tài khoản</dt>
+              <dd><code id="profUid">—</code></dd>
+            </div>
+          </dl>
+          <div class="profile-panel-actions profile-panel-actions--danger">
+            <button type="button" class="profile-btn profile-btn-danger" id="profBtnLogout">🚪 Đăng xuất</button>
+          </div>
+        </section>
       </div>
-      <a href="pro.html" class="profile-btn profile-btn-primary profile-btn--sm" id="profProBtn">✨ Xem gói Pro</a>
-    </section>
-
-    <section class="profile-section profile-section--class" id="profClassBox">
-      <h2 class="profile-section-title">🏫 Mã lớp</h2>
-      <input type="text" id="profClassInput" class="profile-field-input profile-field-input--sm" maxlength="32"
-             autocomplete="off" placeholder="VD: LOP1234" aria-label="Mã lớp">
-      <button type="button" id="profClassSaveBtn" class="profile-field-save profile-field-save--sm">Lưu mã lớp</button>
-      <p id="profClassTeacher" class="profile-class-teacher" hidden></p>
-      <p id="profClassMsg" class="profile-field-msg" hidden></p>
-    </section>
-
-    <section class="profile-section profile-section--meta">
-      <dl class="profile-dl profile-dl--compact">
-        <div class="profile-dl-row">
-          <dt>Tham gia</dt>
-          <dd><span id="profJoin">—</span> <span class="profile-meta-sub" id="profAge"></span></dd>
-        </div>
-        <div class="profile-dl-row" id="profClassRow" hidden>
-          <dt>Lớp</dt>
-          <dd id="profClass">—</dd>
-        </div>
-        <div class="profile-dl-row" id="profUidRow" hidden>
-          <dt>Tài khoản</dt>
-          <dd><code id="profUid">—</code></dd>
-        </div>
-      </dl>
-    </section>
-  </div>
-
-  <div class="profile-actions">
-    <a href="pro.html" class="profile-btn profile-btn-primary profile-btn--sm" id="profProLink">✨ Kid Pro</a>
-    <a href="progress.html" class="profile-btn profile-btn--sm">📊 Tiến độ</a>
-    <a href="social.html" class="profile-btn profile-btn--sm">🌈 Cộng đồng</a>
-    <button type="button" class="profile-btn profile-btn--sm" id="profBtnSettings">⚙️ Giọng đọc</button>
-    <button type="button" class="profile-btn profile-btn-danger profile-btn--sm" id="profBtnLogout">🚪 Đăng xuất</button>
-  </div>
-</div>
-</div>
-
-<div id="profNameModal" class="prof-modal" role="dialog" aria-labelledby="profNameModalTitle" aria-modal="true" hidden>
-  <div class="prof-modal-backdrop" data-prof-modal-close="1"></div>
-  <div class="prof-modal-card">
-    <button type="button" class="prof-modal-close" id="profNameModalClose" aria-label="Đóng">×</button>
-    <h2 class="prof-modal-title" id="profNameModalTitle">✏️ Sửa tên hiển thị</h2>
-    <p class="prof-modal-hint">Tên bé hiện trên lớp, PvP và Cô giáo AI.</p>
-    <input type="text" id="profNameInput" class="profile-field-input" maxlength="32"
-           autocomplete="nickname" placeholder="VD: Bé Minh" aria-label="Tên hiển thị">
-    <div class="prof-modal-actions">
-      <button type="button" id="profNameCancelBtn" class="prof-modal-btn prof-modal-btn--ghost">Hủy</button>
-      <button type="button" id="profNameSaveBtn" class="prof-modal-btn prof-modal-btn--primary">Lưu tên</button>
     </div>
-    <p id="profNameMsg" class="profile-field-msg" hidden></p>
   </div>
-</div>
+
+  <div id="profNameModal" class="prof-modal" role="dialog" aria-labelledby="profNameModalTitle" aria-modal="true" hidden>
+    <div class="prof-modal-backdrop" data-prof-modal-close="1"></div>
+    <div class="prof-modal-card">
+      <button type="button" class="prof-modal-close" id="profNameModalClose" aria-label="Đóng">×</button>
+      <h2 class="prof-modal-title" id="profNameModalTitle">✏️ Sửa tên hiển thị</h2>
+      <p class="prof-modal-hint">Tên bé hiện trên lớp, PvP và Cô giáo AI.</p>
+      <input type="text" id="profNameInput" class="profile-field-input" maxlength="32"
+             autocomplete="nickname" placeholder="VD: Bé Minh" aria-label="Tên hiển thị">
+      <div class="prof-modal-actions">
+        <button type="button" id="profNameCancelBtn" class="prof-modal-btn prof-modal-btn--ghost">Hủy</button>
+        <button type="button" id="profNameSaveBtn" class="prof-modal-btn prof-modal-btn--primary">Lưu tên</button>
+      </div>
+      <p id="profNameMsg" class="profile-field-msg" hidden></p>
+    </div>
+  </div>
 </main>
 
 <script src="firebase.js"></script>

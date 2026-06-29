@@ -484,6 +484,77 @@ function _profileViewUid(){
   }catch(e){ return ''; }
 }
 
+var PROF_PANEL_META = {
+  overview:  { title: 'Tổng quan', sub: 'Thống kê học tập và lối tắt nhanh' },
+  learning:  { title: 'Học tập', sub: 'Sao, huy hiệu và tiến độ chi tiết' },
+  class:     { title: 'Lớp học', sub: 'Mã lớp và giáo viên phụ trách' },
+  pro:       { title: 'Gói Pro', sub: 'Nâng cấp để chơi không giới hạn' },
+  settings:  { title: 'Cài đặt', sub: 'Giọng đọc và trải nghiệm học tập' },
+  account:   { title: 'Tài khoản', sub: 'Thông tin đăng nhập và bảo mật' }
+};
+
+function switchProfPanel(panelId){
+  panelId = panelId || 'overview';
+  var meta = PROF_PANEL_META[panelId] || PROF_PANEL_META.overview;
+  document.querySelectorAll('.profile-nav-item').forEach(function(btn){
+    btn.classList.toggle('is-active', btn.getAttribute('data-prof-panel') === panelId);
+  });
+  document.querySelectorAll('.profile-panel').forEach(function(p){
+    p.classList.toggle('is-active', p.getAttribute('data-panel') === panelId);
+  });
+  var titleEl = document.getElementById('profPanelTitle');
+  var subEl = document.getElementById('profPanelSub');
+  if(titleEl) titleEl.textContent = meta.title;
+  if(subEl) subEl.textContent = meta.sub;
+  try{ history.replaceState(null, '', location.pathname + location.search + '#panel-' + panelId); }catch(e){}
+}
+
+function _wireProfilePanels(){
+  var nav = document.getElementById('profNav');
+  if(!nav || nav.dataset.wired === '1') return;
+  nav.dataset.wired = '1';
+  nav.querySelectorAll('.profile-nav-item').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      switchProfPanel(btn.getAttribute('data-prof-panel'));
+    });
+  });
+  var hash = (location.hash || '').replace('#panel-', '');
+  if(hash && PROF_PANEL_META[hash]) switchProfPanel(hash);
+}
+
+function _syncProfileLearningStats(info){
+  var set = function(id, val){
+    var el = document.getElementById(id);
+    if(el) el.textContent = val;
+  };
+  set('profLearnStars', info.stars);
+  set('profLearnBadges', info.unlocked + '/' + info.totalBadges);
+  set('profLearnStreak', info.streak);
+  set('profLearnHonor', info.honor);
+  set('profAccountEmail', info.email || '—');
+}
+
+function _configureProfileNav(info, isOther){
+  var show = function(id, visible){
+    var el = document.getElementById(id);
+    if(el) el.hidden = !visible;
+  };
+  show('profNavClass', !isOther && !info.isTeacher);
+  show('profNavPro', !isOther && !info.isTeacher);
+  show('profNavSettings', !isOther);
+  show('profNavAccount', !isOther);
+  show('profSidebarFoot', !isOther);
+  if(isOther){
+    document.querySelectorAll('.profile-nav-item').forEach(function(btn){
+      var p = btn.getAttribute('data-prof-panel');
+      btn.hidden = p !== 'overview' && p !== 'learning';
+    });
+    switchProfPanel('overview');
+  } else {
+    document.querySelectorAll('.profile-nav-item').forEach(function(btn){ btn.hidden = false; });
+  }
+}
+
 function _applyProfileInfo(info, isOther){
   var set = function(id, text){
     var el = document.getElementById(id);
@@ -528,6 +599,9 @@ function _applyProfileInfo(info, isOther){
   set('profHonor', info.honor);
   set('profJoin', _formatJoinDate(info.createdAt));
   set('profAge', info.createdAt ? '(' + _formatAccountAge(info.createdAt) + ')' : '');
+
+  _syncProfileLearningStats(info);
+  _configureProfileNav(info, !!isOther);
 
   show('profNameEditBtn', !info.isTeacher && !isOther);
   show('profClassBox', !isOther && !info.isTeacher);
@@ -635,6 +709,7 @@ function renderOtherProfile(uid){
         avatarEmoji: prof.avatarEmoji,
         avatarRing: prof.avatarRing
       }, true);
+      _wireProfilePanels();
     });
   }).catch(function(err){
     var set = function(id, text){ var el = document.getElementById(id); if(el) el.textContent = text; };
@@ -705,6 +780,16 @@ function renderProfilePage(){
   set('profHonor',  info.honor);
   set('profJoin',   _formatJoinDate(info.createdAt));
   set('profAge',    info.createdAt ? '(' + _formatAccountAge(info.createdAt) + ')' : '');
+
+  _syncProfileLearningStats({
+    stars: info.stars,
+    unlocked: info.unlocked,
+    totalBadges: info.totalBadges,
+    streak: info.streak,
+    honor: info.honor,
+    email: info.email || ''
+  });
+  _configureProfileNav(info, false);
 
   show('profNameEditBtn', !info.isTeacher);
 
@@ -819,6 +904,7 @@ function renderProfilePage(){
   }
 
   // Wire action buttons (idempotent)
+  _wireProfilePanels();
   _wireProfileActions(card);
 }
 
@@ -941,6 +1027,8 @@ function _wireProfNameModal(){
 }
 
 function _wireProfileActions(card){
+  if(!card) card = document.querySelector('.profile-page-card');
+  if(!card) return;
   if(card.getAttribute('data-wired') === '1') return;
   card.setAttribute('data-wired', '1');
   var bS = document.getElementById('profBtnSettings');
