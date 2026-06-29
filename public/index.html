@@ -12,7 +12,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css?v=20260528d">
-<link rel="stylesheet" href="menu.css?v=20260630b">
+<link rel="stylesheet" href="menu.css?v=20260630c">
 <link rel="stylesheet" href="arena.css?v=20260528d">
 <link rel="stylesheet" href="pvp.css?v=20260528d">
 <link rel="stylesheet" href="spa.css?v=20260528d">
@@ -106,54 +106,49 @@
 </div>
 
 <main id="page-root" data-page="index">
-<!-- Menu card -->
-<div class="card menu-card">
-  <div class="menu-hero-block" id="subjects-anchor">
-  <svg class="mascot-wrap" width="120" height="118" viewBox="0 0 130 120">
-    <circle cx="28" cy="28" r="18" fill="#c47a5a"/><circle cx="102" cy="28" r="18" fill="#c47a5a"/>
-    <circle cx="28" cy="28" r="11" fill="#b06040"/><circle cx="102" cy="28" r="11" fill="#b06040"/>
-    <ellipse cx="65" cy="98" rx="36" ry="26" fill="#d4956a"/>
-    <ellipse cx="65" cy="100" rx="22" ry="18" fill="#e8b880"/>
-    <circle class="bear-paw-r" cx="105" cy="88" r="16" fill="#d4956a"/>
-    <circle cx="25" cy="88" r="16" fill="#d4956a"/>
-    <circle cx="65" cy="52" r="40" fill="#d4956a"/>
-    <ellipse cx="65" cy="66" rx="18" ry="14" fill="#c47a5a"/>
-    <circle cx="50" cy="44" r="9" fill="#1a1a2e"/><circle cx="80" cy="44" r="9" fill="#1a1a2e"/>
-    <circle cx="53" cy="41" r="3.5" fill="white"/><circle cx="83" cy="41" r="3.5" fill="white"/>
-    <ellipse cx="65" cy="62" rx="7" ry="5" fill="#1a1a2e"/>
-    <path d="M56,70 Q65,80 74,70" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <circle cx="42" cy="60" r="10" fill="#e89888" opacity="0.55"/>
-    <circle cx="88" cy="60" r="10" fill="#e89888" opacity="0.55"/>
-  </svg>
+<div class="card menu-card home-learn-card">
 
-  <h1 class="menu-title">Chương trình học hôm nay</h1>
-  </div>
-
-  <div class="menu-progress-stack" style="margin-top:8px">
-    <div id="overallProgress" class="overall-progress" hidden>
-      <div class="op-row">
-        <span class="op-icon">🌟</span>
-        <span class="op-label">Tổng sao:</span>
-        <span class="op-value" id="opStars">0</span>
+  <header class="home-learn-header" id="subjects-anchor">
+    <div class="home-learn-intro">
+      <p class="home-learn-eyebrow">Chương trình học tập</p>
+      <h1 class="menu-title home-learn-title">Học tập hôm nay</h1>
+      <p class="home-learn-desc">6 môn phát triển toàn diện — bài học tương tác, có giọng đọc và theo dõi tiến độ tự động.</p>
+    </div>
+    <div class="home-learn-stats" id="overallProgress" aria-label="Tổng quan tiến độ">
+      <div class="home-stat-chip home-stat-chip--stars">
+        <span class="home-stat-icon" aria-hidden="true">🌟</span>
+        <div class="home-stat-body">
+          <strong class="home-stat-value" id="opStars">0</strong>
+          <span class="home-stat-label">Tổng sao</span>
+        </div>
       </div>
-      <div class="op-row">
-        <span class="op-icon">✅</span>
-        <span class="op-label">Đã hoàn thành:</span>
-        <span class="op-value"><span id="opDone">0</span>/6 môn</span>
+      <div class="home-stat-chip home-stat-chip--done">
+        <span class="home-stat-icon" aria-hidden="true">✅</span>
+        <div class="home-stat-body">
+          <strong class="home-stat-value"><span id="opDone">0</span><span class="home-stat-denom">/6</span></strong>
+          <span class="home-stat-label">Môn hoàn thành</span>
+        </div>
+      </div>
+      <div class="home-stat-chip home-stat-chip--subjects">
+        <span class="home-stat-icon" aria-hidden="true">📚</span>
+        <div class="home-stat-body">
+          <strong class="home-stat-value">6</strong>
+          <span class="home-stat-label">Môn học chính</span>
+        </div>
       </div>
     </div>
-  </div>
+  </header>
 
-  <button type="button" class="game-cta" onclick="goGame()" style="margin-top:14px">
-    <span class="game-cta-emoji" aria-hidden="true">🎮</span>
-    <span class="game-cta-text">
-      <span class="game-cta-title">Cuộc phiêu lưu học tập</span>
-      <span class="game-cta-sub">Chơi game platformer, vượt màn và trả lời câu hỏi để thắng!</span>
-    </span>
-    <span class="game-cta-go" aria-hidden="true">▶</span>
-  </button>
+  <section class="home-learn-section" aria-labelledby="homeSubjectsTitle">
+    <div class="home-learn-section-head">
+      <div>
+        <h2 class="home-learn-section-title" id="homeSubjectsTitle">Môn học</h2>
+        <p class="home-learn-section-sub">Chọn môn để bắt đầu — tiến độ được lưu trên thiết bị và đồng bộ khi đăng nhập.</p>
+      </div>
+      <a href="progress.html" class="home-learn-link">Xem tiến độ chi tiết →</a>
+    </div>
 
-  <div class="menu-grid" style="margin-top:12px">
+    <div class="menu-grid home-learn-grid">
     <button class="menu-item mi-language" data-subject="nhan_biet" onclick="goLesson('nhan_biet')">
       <div class="mi-top">
         <span class="mi-badge">Cơ bản</span>
@@ -214,6 +209,19 @@
       <div class="mi-progress" data-progress-for="ngon_ngu"></div>
     </button>
   </div>
+  </section>
+
+  <section class="home-learn-extra" aria-label="Hoạt động bổ sung">
+    <button type="button" class="game-cta home-game-cta" onclick="goGame()">
+      <span class="game-cta-emoji" aria-hidden="true">🎮</span>
+      <span class="game-cta-text">
+        <span class="game-cta-title">Game học tập</span>
+        <span class="game-cta-sub">6 trò chơi: phiêu lưu, mê cung, ghép cặp… ôn kiến thức qua chơi.</span>
+      </span>
+      <span class="game-cta-go" aria-hidden="true">▶</span>
+    </button>
+  </section>
+
 </div>
 </main>
 
