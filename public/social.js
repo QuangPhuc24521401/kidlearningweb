@@ -504,19 +504,35 @@
     });
     root.querySelectorAll('[data-friend]').forEach(function (btn) {
       var uid = btn.getAttribute('data-friend');
+      var displayName = '';
+      var nameEl = btn.closest('.soc-user-card') && btn.closest('.soc-user-card').querySelector('.soc-user-card-name');
+      if (nameEl) displayName = nameEl.textContent || '';
       KidSocial.getFriendStatus(uid).then(function (st) {
         if (st === 'friends') { btn.textContent = '✓ Bạn bè'; btn.disabled = true; }
         else if (st === 'pending_sent') { btn.textContent = 'Đã gửi'; btn.disabled = true; }
-        else if (st === 'pending_received') { btn.textContent = 'Chấp nhận'; }
-      });
+        else if (st === 'pending_received') { btn.textContent = 'Chấp nhận'; btn.classList.add('soc-btn--green'); }
+      }).catch(function () {});
       btn.onclick = function () {
+        if (btn.disabled) return;
         KidSocial.getFriendStatus(uid).then(function (st) {
-          if (st === 'pending_received') { switchPanel('friends'); loadFriendsPanel(); return; }
-          KidSocial.sendFriendRequest(uid).then(function () {
+          if (st === 'pending_received') {
+            KidSocial.acceptFriendRequestFrom(uid).then(function () {
+              btn.textContent = '✓ Bạn bè';
+              btn.disabled = true;
+            }).catch(function (e) { alert(e.message); });
+            return;
+          }
+          if (st === 'friends' || st === 'pending_sent') return;
+          btn.disabled = true;
+          btn.textContent = 'Đang gửi…';
+          KidSocial.sendFriendRequest(uid, { toName: displayName }).then(function () {
             btn.textContent = 'Đã gửi';
-            btn.disabled = true;
-          }).catch(function (e) { alert(e.message); });
-        });
+          }).catch(function (e) {
+            btn.disabled = false;
+            btn.textContent = 'Kết bạn';
+            alert(e.message);
+          });
+        }).catch(function (e) { alert(e.message || 'Không kiểm tra được trạng thái kết bạn'); });
       };
     });
     root.querySelectorAll('[data-msg]').forEach(function (btn) {

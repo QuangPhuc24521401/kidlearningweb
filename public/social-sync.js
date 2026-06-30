@@ -830,6 +830,10 @@
     return [uidA, uidB].sort().join('__');
   }
 
+  function friendRequestDocId(fromUid, toUid) {
+    return String(fromUid || '') + '__' + String(toUid || '');
+  }
+
   function isFriend(targetUid) {
     var user = authUser();
     if (!user || !targetUid) return Promise.resolve(false);
@@ -844,39 +848,58 @@
     if (!user || !targetUid || user.uid === targetUid) return Promise.resolve('none');
     return isFriend(targetUid).then(function (f) {
       if (f) return 'friends';
-      return db().collection('friend_requests')
-        .where('fromUid', '==', user.uid).where('toUid', '==', targetUid).where('status', '==', 'pending')
-        .limit(1).get()
-        .then(function (snap) {
-          if (!snap.empty) return 'pending_sent';
-          return db().collection('friend_requests')
-            .where('fromUid', '==', targetUid).where('toUid', '==', user.uid).where('status', '==', 'pending')
-            .limit(1).get()
-            .then(function (snap2) { return snap2.empty ? 'none' : 'pending_received'; });
+      var sentRef = db().collection('friend_requests').doc(friendRequestDocId(user.uid, targetUid));
+      var recvRef = db().collection('friend_requests').doc(friendRequestDocId(targetUid, user.uid));
+      return sentRef.get().then(function (snap) {
+        if (snap.exists && snap.data().status === 'pending') return 'pending_sent';
+        return recvRef.get().then(function (snap2) {
+          if (snap2.exists && snap2.data().status === 'pending') return 'pending_received';
+          return 'none';
         });
+      });
+    }).catch(function (err) {
+      console.warn('[KidSocial] getFriendStatus', err);
+      return 'none';
     });
   }
 
-  function sendFriendRequest(toUid) {
+  function sendFriendRequest(toUid, opts) {
+    opts = opts || {};
     return whenAuthReady().then(function (user) {
       if (!user) return Promise.reject(new Error('Cần đăng nhập'));
       if (user.uid === toUid) return Promise.reject(new Error('Không thể kết bạn với chính mình'));
       return getFriendStatus(toUid).then(function (st) {
         if (st === 'friends') return Promise.reject(new Error('Đã là bạn bè'));
         if (st === 'pending_sent') return Promise.reject(new Error('Đã gửi lời mời'));
-        if (st === 'pending_received') return Promise.reject(new Error('Người này đã gửi lời mời — hãy chấp nhận'));
-        return Promise.all([getPublicProfile(user.uid), getPublicProfile(toUid)]).then(function (arr) {
-          return db().collection('friend_requests').add({
-            fromUid: user.uid,
-            toUid: toUid,
-            fromName: arr[0].displayName,
-            toName: arr[1].displayName,
-            status: 'pending',
-            createdAt: ts()
+        if (st === 'pending_received') {
+          return Promise.reject(new Error('Người này đã gửi lời mời — bấm Chấp nhận'));
+        }
+        return getPublicProfile(user.uid).then(function (fromProf) {
+          var toName = opts.toName ? String(opts.toName).trim() : '';
+          var toNamePromise = toName
+            ? Promise.resolve(toName)
+            : getPublicProfile(toUid).then(function (p) { return p.displayName; })
+                .catch(function () { return 'Bé học sinh'; });
+          return toNamePromise.then(function (resolvedToName) {
+            var reqId = friendRequestDocId(user.uid, toUid);
+            return db().collection('friend_requests').doc(reqId).set({
+              fromUid: user.uid,
+              toUid: toUid,
+              fromName: fromProf.displayName || 'Bé học sinh',
+              toName: resolvedToName || 'Bé học sinh',
+              status: 'pending',
+              createdAt: ts()
+            });
           });
         });
       });
     }).catch(function (err) {
+      if (err && err.message && err.message.indexOf('Cần đăng nhập') >= 0) {
+        return Promise.reject(err);
+      }
+      if (err && err.message && /Đã là bạn|Đã gửi|Chấp nhận|chính mình/.test(err.message)) {
+        return Promise.reject(err);
+      }
       return Promise.reject(new Error(friendlyFirestoreError(err)));
     });
   }
@@ -906,6 +929,12 @@
     });
   }
 
+  function acceptFriendRequestFrom(fromUid) {
+    var user = authUser();
+    if (!user || !fromUid) return Promise.reject(new Error('Thiếu thông tin'));
+    return acceptFriendRequest(friendRequestDocId(fromUid, user.uid));
+  }
+
   function declineFriendRequest(requestId) {
     return whenAuthReady().then(function (user) {
       if (!user) return Promise.reject(new Error('Cần đăng nhập'));
@@ -923,15 +952,21 @@
     return whenAuthReady().then(function (user) {
       if (!user) return [];
       return db().collection('friend_requests')
-        .where('toUid', '==', user.uid).where('status', '==', 'pending')
-        .limit(20).get()
+        .where('toUid', '==', user.uid)
+        .limit(40)
+        .get()
         .then(function (snap) {
-          return snap.docs.map(function (d) {
-            var x = d.data();
-            return { id: d.id, fromUid: x.fromUid, fromName: x.fromName, timeAgo: timeAgo(docTime(x)) };
-          });
+          return snap.docs
+            .filter(function (d) { return d.data().status === 'pending'; })
+            .map(function (d) {
+              var x = d.data();
+              return { id: d.id, fromUid: x.fromUid, fromName: x.fromName, timeAgo: timeAgo(docTime(x)) };
+            });
         });
-    }).catch(function () { return []; });
+    }).catch(function (err) {
+      console.warn('[KidSocial] listIncomingFriendRequests', err);
+      return [];
+    });
   }
 
   function listFriends() {
@@ -1176,6 +1211,7 @@
     getFriendStatus: getFriendStatus,
     sendFriendRequest: sendFriendRequest,
     acceptFriendRequest: acceptFriendRequest,
+    acceptFriendRequestFrom: acceptFriendRequestFrom,
     declineFriendRequest: declineFriendRequest,
     listIncomingFriendRequests: listIncomingFriendRequests,
     listFriends: listFriends,
