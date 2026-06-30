@@ -339,3 +339,7 @@ Tự động mở theo sao, chủ đề / môn hoàn thành, streak học tập 
 ## Giấy phép
 
 ISC — dùng cho mục đích học tập và đồ án.
+
+---
+
+Chúng em đã biết làm web và hiểu hệ thống web hoạt động như thế nào.
