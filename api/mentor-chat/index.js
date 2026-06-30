@@ -24,8 +24,8 @@ const MODEL_PREFER = [
 ];
 
 const MAX_MODEL_TRIES = 1;
-const GEMINI_CALL_TIMEOUT_MS = 12000;
-const HANDLER_BUDGET_MS = 13000;
+const GEMINI_CALL_TIMEOUT_MS = 22000;
+const HANDLER_BUDGET_MS = 26000;
 
 const MODEL_SKIP = new Set([
   "gemini-2.0-flash",

@@ -17,7 +17,7 @@
   function $(id) { return document.getElementById(id); }
 
   var MENTOR_API_REMOTE = 'https://kidlearningweb.vercel.app/api/mentor-chat';
-  var MENTOR_FETCH_TIMEOUT_MS = 60000;
+  var MENTOR_FETCH_TIMEOUT_MS = 90000;
 
   function getMentorChatUrl() {
     var custom = typeof window.__MENTOR_CHAT_URL__ === 'string' ? window.__MENTOR_CHAT_URL__.trim() : '';
@@ -70,39 +70,56 @@
 
   async function postMentorChat(message) {
     var url = getMentorChatUrl();
-    var body = JSON.stringify({ message: message });
-    var lastErr = null;
-    for (var attempt = 0; attempt < 2; attempt++) {
+    var opts = {
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message })
+    };
+
+    function parseRes(res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (res.ok && data && data.reply) return data;
+        throw new Error((data && data.error) || ('HTTP ' + res.status));
+      });
+    }
+
+    try {
+      var res = await fetchWithTimeout(url, opts, MENTOR_FETCH_TIMEOUT_MS);
+      return await parseRes(res);
+    } catch (err1) {
+      console.warn('[mentor] POST timeout/retry:', err1);
       try {
-        var res = await fetchWithTimeout(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: body
-        }, MENTOR_FETCH_TIMEOUT_MS);
-        var data = await res.json().catch(function () { return {}; });
-        if (res.ok && data.reply) return data;
-        lastErr = new Error(data.error || ('HTTP ' + res.status));
-      } catch (err) {
-        lastErr = err;
-        console.warn('[mentor] POST attempt ' + (attempt + 1) + ' failed:', err);
+        var res2 = await fetch(url, opts);
+        return await parseRes(res2);
+      } catch (err2) {
+        console.warn('[mentor] POST failed:', url, err2);
+        throw err2;
       }
     }
-    throw lastErr || new Error('Không nhận được phản hồi API');
   }
 
   function deliverAnswer(question, reply, apiData) {
-    var fromGemini = apiData && apiData.provider === 'gemini' && !apiData.geminiUnavailable;
-    showBubble(reply);
+    var plain = String(reply || '').trim();
+    if (!plain) plain = getFallbackReply(question);
+    showBubble(plain.indexOf('<') >= 0 ? plain : plain.replace(/\n/g, '<br>'));
     setTeacherState('talking');
+
+    var fromGemini = apiData && apiData.provider === 'gemini' && !apiData.geminiUnavailable;
     if (fromGemini) {
-      updateGeminiStatus('ok', '✨ Đã kết nối Gemini · ' + (apiData.model || 'Google AI'));
+      updateGeminiStatus('ok', '✨ Gemini AI · ' + (apiData.model || 'Google'));
       showStatus('ok', '✨ Cô Mai trả lời bằng Gemini AI');
       try { sessionStorage.removeItem('mentorCooldownUntil'); mentorCooldownUntil = 0; } catch (e) {}
+    } else if (apiData && apiData.reply) {
+      updateGeminiStatus('warn', '⏳ Gemini bận · Cô trả lời mẫu');
+      showStatus('ok', '💬 Cô trả lời mẫu (Gemini đang bận, thử lại sau)');
     } else {
-      showStatus('ok', '💬 Cô Mai đã trả lời con');
+      updateGeminiStatus('warn', '⚠️ Chưa gọi được server · Cô trả lời mẫu');
+      showStatus('ok', '💬 Cô trả lời mẫu (kiểm tra mạng hoặc Ctrl+F5)');
     }
-    speakTeacher(reply);
-    saveHistory(question, reply);
+    speakTeacher(plain.replace(/<[^>]+>/g, ''));
+    saveHistory(question, plain.replace(/<[^>]+>/g, ''));
   }
 
   function loadMentorCooldown() {
@@ -233,11 +250,14 @@
       var heard = $('micHeard');
       if (heard) heard.textContent = '💬 "' + text + '"';
       setTeacherState('thinking');
+      showStatus('thinking', '🤔 Cô đang hỏi Gemini AI... (10–30 giây)');
       showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
 
       apiData = await postMentorChat(text.trim());
       reply = apiData.reply;
-      if (!isVietnameseText(reply)) reply = getFallbackReply(text);
+      if (apiData.provider !== 'gemini' && !isVietnameseText(reply)) {
+        reply = getFallbackReply(text);
+      }
       deliverAnswer(text, reply, apiData);
     } catch (err) {
       console.warn('[mentor] askQuestion fallback:', err);
@@ -275,7 +295,6 @@
     if (state === 'thinking') {
       svg.className = 'teacher-svg';
       if (wave) wave.classList.remove('active');
-      showStatus('thinking', '🤔 Cô đang suy nghĩ...');
       if (mouth) mouth.setAttribute('d', 'M58,67 Q65,67 72,67');
     } else if (state === 'talking') {
       svg.className = 'teacher-svg talking';
