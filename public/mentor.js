@@ -11,7 +11,6 @@
   var mentorVoicesReady = false;
   var mentorCooldownUntil = 0;
   var mentorCooldownTimer = null;
-  var statusTimer = null;
   var micAskSent = false;
 
   function $(id) { return document.getElementById(id); }
@@ -109,14 +108,11 @@
     var fromGemini = apiData && apiData.provider === 'gemini' && !apiData.geminiUnavailable;
     if (fromGemini) {
       updateGeminiStatus('ok', '✨ Gemini AI · ' + (apiData.model || 'Google'));
-      showStatus('ok', '✨ Cô Mai trả lời bằng Gemini AI');
       try { sessionStorage.removeItem('mentorCooldownUntil'); mentorCooldownUntil = 0; } catch (e) {}
     } else if (apiData && apiData.reply) {
       updateGeminiStatus('warn', '⏳ Gemini bận · Cô trả lời mẫu');
-      showStatus('ok', '💬 Cô trả lời mẫu (Gemini đang bận, thử lại sau)');
     } else {
       updateGeminiStatus('warn', '⚠️ Chưa gọi được server · Cô trả lời mẫu');
-      showStatus('ok', '💬 Cô trả lời mẫu (kiểm tra mạng hoặc Ctrl+F5)');
     }
     speakTeacher(plain.replace(/<[^>]+>/g, ''));
     saveHistory(question, plain.replace(/<[^>]+>/g, ''));
@@ -178,7 +174,7 @@
       }
     }
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { showStatus('error', '⚠️ Dùng Chrome để dùng mic!'); return; }
+    if (!SR) return;
 
     recognition = new SR();
     recognition.lang = 'vi-VN';
@@ -250,7 +246,6 @@
       var heard = $('micHeard');
       if (heard) heard.textContent = '💬 "' + text + '"';
       setTeacherState('thinking');
-      showStatus('thinking', '🤔 Cô đang hỏi Gemini AI... (10–30 giây)');
       showBubble('<span class="typing-dots"><span></span><span></span><span></span></span>');
 
       apiData = await postMentorChat(text.trim());
@@ -304,12 +299,10 @@
     } else if (state === 'talking') {
       setSvgClass(svg, 'teacher-svg talking');
       if (wave) wave.classList.add('active');
-      showStatus('ok', '🎙️ Cô Mai đang nói...');
       if (mouth) mouth.setAttribute('d', 'M56,67 Q65,75 74,67');
     } else {
       setSvgClass(svg, 'teacher-svg');
       if (wave) wave.classList.remove('active');
-      hideStatus();
       if (mouth) mouth.setAttribute('d', 'M56,67 Q65,75 74,67');
     }
   }
@@ -395,18 +388,6 @@
     else ensureMentorVoices(runWebSpeech);
   }
 
-  function showStatus(type, msg) {
-    var pill = $('aiStatus');
-    var dot = $('statusDot');
-    var txt = $('statusMsg');
-    dot.className = 'status-dot' + (type === 'thinking' ? ' thinking' : '');
-    txt.textContent = msg;
-    pill.classList.add('show');
-    clearTimeout(statusTimer);
-    if (type !== 'thinking') statusTimer = setTimeout(function () { pill.classList.remove('show'); }, 2500);
-  }
-
-  function hideStatus() { $('aiStatus').classList.remove('show'); }
 
   function saveHistory(q, a) {
     var student = '';
