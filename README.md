@@ -1,5 +1,14 @@
 # Kid Learning Web
 
+## Danh sách thành viên
+
+| STT | MSSV | Họ và tên | Tỉ lệ đóng góp |
+|-----|------|-----------|----------------|
+| 1 | 24521608 | Nguyễn Quang Thắng | 100% |
+| 2 | 24521401 | Trần Quang Phúc | 100% |
+
+---
+
 Website học tập dành cho trẻ mầm non và tiểu học: bài học tương tác, trò chơi học tập, theo dõi tiến độ, cộng đồng lớp học, đối kháng và trợ giảng AI. Ứng dụng chạy trên trình duyệt (HTML, CSS, JavaScript thuần, không build), đồng bộ dữ liệu qua Firebase (Auth + Firestore) và triển khai tĩnh trên Vercel.
 
 Repository: [github.com/QuangPhuc24521401/kidlearningweb](https://github.com/QuangPhuc24521401/kidlearningweb)
