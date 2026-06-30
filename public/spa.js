@@ -244,11 +244,20 @@
     if(!href) return;
     if(/^(#|mailto:|tel:|javascript:|data:)/i.test(href)) return;
     if(!isSpaUrl(href)){ debug('click → real nav (non-SPA url)', href); return; }
-    // Self-link: vẫn preventDefault để không reload, nhưng skip navigate.
-    var nextPage = routeName(new URL(href, location.href).pathname);
+    var dest = new URL(href, location.href);
+    var nextPage = routeName(dest.pathname);
     if(nextPage === currentPage){
+      if(dest.search === location.search && dest.hash === location.hash){
+        e.preventDefault();
+        debug('click self-link, skip', href);
+        return;
+      }
       e.preventDefault();
-      debug('click self-link, skip', href);
+      debug('click same route, new query', href);
+      try { history.pushState({ spa: true, page: nextPage }, '', href); } catch(err) {}
+      currentPage = nextPage;
+      updateActiveNav();
+      try { if(MOUNTS[nextPage]) MOUNTS[nextPage](); } catch(mErr){ console.warn('[spa] remount', nextPage, mErr); }
       return;
     }
     e.preventDefault();

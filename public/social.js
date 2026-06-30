@@ -278,10 +278,10 @@
   function postAuthorProf(p) {
     return {
       role: p.authorRole,
-      avatarMode: p.avatarMode,
-      avatarEmoji: p.avatarEmoji,
-      avatarRing: p.avatarRing,
-      avatarPhoto: p.avatarPhoto
+      avatarMode: p.authorAvatarMode || p.avatarMode,
+      avatarEmoji: p.authorAvatarEmoji || p.avatarEmoji,
+      avatarRing: p.authorAvatarRing || p.avatarRing,
+      avatarPhoto: p.authorAvatarPhoto || p.avatarPhoto
     };
   }
 

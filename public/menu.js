@@ -791,16 +791,23 @@ function renderOtherProfile(uid){
    được load trực tiếp (qua DOMContentLoaded listener bên dưới). */
 function renderProfilePage(){
   var card = document.querySelector('.profile-page-card');
-  if(!card) return; // không phải trang hồ sơ → skip
+  if(!card) return;
 
   var viewUid = _profileViewUid();
-  try{
-    var me = firebase.auth && firebase.auth().currentUser;
-    if(viewUid && me && viewUid !== me.uid){
+  var me = null;
+  try { me = firebase.auth && firebase.auth().currentUser; } catch (e) {}
+
+  if (viewUid) {
+    if (!me) {
+      var nameEl = document.getElementById('profName');
+      if (nameEl) nameEl.textContent = 'Đang tải hồ sơ…';
+      return;
+    }
+    if (viewUid !== me.uid) {
       renderOtherProfile(viewUid);
       return;
     }
-  }catch(e){}
+  }
 
   var info = _readProfileInfo();
 

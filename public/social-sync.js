@@ -147,7 +147,7 @@
     var uid = item[uidKey];
     var live = uid && profileMap ? profileMap[uid] : null;
     var stored = avatarFromStoredFields(item, prefix);
-    if (live) {
+    if (live && live.uid === uid) {
       item.avatarMode = live.avatarMode;
       item.avatarEmoji = live.avatarEmoji;
       item.avatarRing = live.avatarRing;
@@ -180,6 +180,18 @@
 
   function profileFromLocal(uid) {
     var user = authUser();
+    if (!user || user.uid !== uid) {
+      return {
+        uid: uid,
+        displayName: 'Bé học sinh',
+        role: 'parent',
+        classRoom: '',
+        avatarEmoji: '🧒',
+        avatarMode: 'emoji',
+        avatarRing: '#fbbf24',
+        avatarPhoto: ''
+      };
+    }
     var name = '';
     try { name = (localStorage.getItem('userDisplayName') || '').trim(); } catch (e) {}
     if (!name && user && user.displayName) name = user.displayName;

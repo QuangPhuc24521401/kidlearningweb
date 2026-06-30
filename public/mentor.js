@@ -287,22 +287,27 @@
     return 'Cô nghe câu hỏi của con rồi! 😊 Con thử hỏi về hình tròn, màu sắc hoặc đếm số nhé!';
   }
 
+  function setSvgClass(el, cls) {
+    if (!el) return;
+    el.setAttribute('class', cls);
+  }
+
   function setTeacherState(state) {
     var svg = $('teacherSvg');
     var wave = $('aiWave');
     var mouth = $('teacherMouth');
     if (!svg) return;
     if (state === 'thinking') {
-      svg.className = 'teacher-svg';
+      setSvgClass(svg, 'teacher-svg');
       if (wave) wave.classList.remove('active');
       if (mouth) mouth.setAttribute('d', 'M58,67 Q65,67 72,67');
     } else if (state === 'talking') {
-      svg.className = 'teacher-svg talking';
+      setSvgClass(svg, 'teacher-svg talking');
       if (wave) wave.classList.add('active');
       showStatus('ok', '🎙️ Cô Mai đang nói...');
       if (mouth) mouth.setAttribute('d', 'M56,67 Q65,75 74,67');
     } else {
-      svg.className = 'teacher-svg';
+      setSvgClass(svg, 'teacher-svg');
       if (wave) wave.classList.remove('active');
       hideStatus();
       if (mouth) mouth.setAttribute('d', 'M56,67 Q65,75 74,67');
