@@ -6,6 +6,13 @@ Repository: [github.com/QuangPhuc24521401/kidlearningweb](https://github.com/Qua
 
 Demo: [kidlearningweb.vercel.app](https://kidlearningweb.vercel.app)
 
+**Video dự án (Google Drive):** [LTUDW — thư mục video](https://drive.google.com/drive/folders/1ai1-7LJ7ZTkjiW4BNurX_w9LaZ6Q-IUw?usp=drive_link)
+
+| Video | Nội dung |
+|-------|----------|
+| Video khảo sát | Khảo sát người dùng — thư mục `vid khao sat nguoi dung` |
+| Video giới thiệu tính năng | Giới thiệu các tính năng hệ thống — thư mục `vid tinh nang` |
+
 ---
 
 ## Tóm tắt
