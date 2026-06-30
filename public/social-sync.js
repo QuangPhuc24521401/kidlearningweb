@@ -47,6 +47,28 @@
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function normalizeClassRoom(raw) {
+    return String(raw || '').trim().toUpperCase().replace(/\s+/g, '');
+  }
+
+  function readLocalClassRoom() {
+    try { return normalizeClassRoom(localStorage.getItem('classRoom') || ''); } catch (e) { return ''; }
+  }
+
+  function registerInClassroomRegistry(classRoom, uid) {
+    classRoom = normalizeClassRoom(classRoom);
+    if (classRoom.length < 3 || !uid) return Promise.resolve();
+    if (global.KidClassSync && typeof global.KidClassSync.registerStudentInClassroom === 'function') {
+      return global.KidClassSync.registerStudentInClassroom(classRoom, uid);
+    }
+    return db().collection('classrooms').doc(classRoom).set({
+      studentUids: firebase.firestore.FieldValue.arrayUnion(uid),
+      updatedAt: ts()
+    }, { merge: true }).catch(function (err) {
+      console.warn('[KidSocial] registerInClassroomRegistry', err);
+    });
+  }
+
   function isSafePhotoUrl(u) {
     return typeof u === 'string'
       && u.indexOf('data:image/jpeg;base64,') === 0
@@ -198,8 +220,7 @@
     if (!name) name = 'Bé học sinh';
     var role = 'parent';
     try { role = localStorage.getItem('userRole') || 'parent'; } catch (e) {}
-    var classRoom = '';
-    try { classRoom = localStorage.getItem('classRoom') || ''; } catch (e) {}
+    var classRoom = readLocalClassRoom();
     return {
       uid: uid,
       displayName: name,
@@ -224,8 +245,9 @@
       return {
         uid: uid,
         displayName: d.displayName || d.nickname || d.childName || local.displayName,
+        searchName: String(d.searchName || d.displayName || d.nickname || local.displayName || '').toLowerCase().trim(),
         role: d.role || local.role,
-        classRoom: d.classRoom || local.classRoom,
+        classRoom: normalizeClassRoom(d.classRoom || local.classRoom),
         avatarEmoji: av.avatarEmoji,
         avatarMode: av.avatarMode,
         avatarRing: av.avatarRing,
@@ -236,36 +258,137 @@
     });
   }
 
-  /** Tạo doc users tối thiểu nếu chưa có (tránh lỗi khi mới đăng ký). */
-  function ensureUserDoc() {
+  /** Đồng bộ mã lớp + searchName lên Firestore (rules cần classRoom trên doc để đọc bạn cùng lớp). */
+  function syncMySocialProfile() {
     return whenAuthReady().then(function (user) {
       if (!user) return null;
       var ref = db().collection('users').doc(user.uid);
       return ref.get().then(function (snap) {
-        if (snap.exists) return snap.data();
+        var data = snap.exists ? (snap.data() || {}) : {};
         var prof = profileFromLocal(user.uid);
         var avLocal = readLocalAvatar();
+        var docCr = normalizeClassRoom(data.classRoom);
+        var localCr = readLocalClassRoom();
+        var classRoom = docCr || localCr || normalizeClassRoom(prof.classRoom);
+        var displayName = (data.displayName || data.nickname || data.childName || prof.displayName || 'Bé học sinh').trim();
         var patch = {
-          displayName: prof.displayName,
-          nickname: prof.displayName,
-          searchName: String(prof.displayName || '').toLowerCase().trim(),
-          role: prof.role,
-          classRoom: prof.classRoom || '',
-          avatarMode: avLocal.avatarMode,
-          avatarEmoji: avLocal.avatarEmoji,
-          avatarRing: avLocal.avatarRing,
-          studentAvatarMode: avLocal.avatarMode,
-          studentAvatarEmoji: avLocal.avatarEmoji,
-          studentAvatarRing: avLocal.avatarRing,
+          displayName: displayName,
+          nickname: data.nickname || displayName,
+          searchName: String(displayName).toLowerCase().trim(),
+          role: data.role || prof.role || 'parent',
           updatedAt: ts()
         };
-        if (avLocal.avatarMode === 'photo' && avLocal.avatarPhoto) {
-          patch.avatarPhoto = avLocal.avatarPhoto;
-          patch.studentAvatarPhoto = avLocal.avatarPhoto;
+        if (classRoom.length >= 3) patch.classRoom = classRoom;
+        if (!snap.exists) {
+          patch.avatarMode = avLocal.avatarMode;
+          patch.avatarEmoji = avLocal.avatarEmoji;
+          patch.avatarRing = avLocal.avatarRing;
+          patch.studentAvatarMode = avLocal.avatarMode;
+          patch.studentAvatarEmoji = avLocal.avatarEmoji;
+          patch.studentAvatarRing = avLocal.avatarRing;
+          if (avLocal.avatarMode === 'photo' && avLocal.avatarPhoto) {
+            patch.avatarPhoto = avLocal.avatarPhoto;
+            patch.studentAvatarPhoto = avLocal.avatarPhoto;
+          }
         }
-        return ref.set(patch, { merge: true }).then(function () { return patch; });
+        return ref.set(patch, { merge: true }).then(function () {
+          if (classRoom.length >= 3) {
+            try { localStorage.setItem('classRoom', classRoom); } catch (e) {}
+            return registerInClassroomRegistry(classRoom, user.uid).then(function () {
+              return Object.assign({}, patch, { classRoom: classRoom });
+            });
+          }
+          return patch;
+        });
       });
     });
+  }
+
+  /** Tạo / cập nhật doc users tối thiểu nếu chưa có (tránh lỗi khi mới đăng ký). */
+  function ensureUserDoc() {
+    return syncMySocialProfile();
+  }
+
+  function collectClassmateUids(classRoom, myUid) {
+    classRoom = normalizeClassRoom(classRoom);
+    if (classRoom.length < 3) return Promise.resolve([]);
+    var uidSet = {};
+    var tasks = [
+      db().collection('users').where('classRoom', '==', classRoom).limit(40).get()
+        .then(function (snap) {
+          snap.docs.forEach(function (d) { uidSet[d.id] = true; });
+        })
+        .catch(function (err) {
+          console.warn('[KidSocial] users classRoom query', err);
+        }),
+      db().collection('classrooms').doc(classRoom).get()
+        .then(function (snap) {
+          if (!snap.exists) return;
+          var list = snap.data().studentUids;
+          if (Array.isArray(list)) {
+            list.forEach(function (uid) { if (uid) uidSet[uid] = true; });
+          }
+          var teacherUid = snap.data().teacherUid;
+          if (teacherUid) uidSet[teacherUid] = true;
+        })
+        .catch(function (err) {
+          console.warn('[KidSocial] classrooms registry', err);
+        })
+    ];
+    return Promise.all(tasks).then(function () {
+      delete uidSet[myUid];
+      return Object.keys(uidSet);
+    });
+  }
+
+  function profilesFromUids(uids) {
+    uids = (uids || []).filter(function (u, i, arr) { return u && arr.indexOf(u) === i; });
+    if (!uids.length) return Promise.resolve([]);
+    return enrichProfiles(uids).then(function (map) {
+      return uids.map(function (uid) {
+        var p = map[uid];
+        if (!p) return null;
+        return {
+          uid: uid,
+          displayName: p.displayName,
+          searchName: p.searchName || String(p.displayName || '').toLowerCase(),
+          role: p.role || 'parent',
+          classRoom: normalizeClassRoom(p.classRoom),
+          avatarMode: p.avatarMode,
+          avatarEmoji: p.avatarEmoji,
+          avatarRing: p.avatarRing,
+          avatarPhoto: p.avatarPhoto
+        };
+      }).filter(Boolean);
+    });
+  }
+
+  function listClassmates() {
+    return whenAuthReady().then(function (user) {
+      if (!user) return [];
+      return syncMySocialProfile().then(function () {
+        return getPublicProfile(user.uid);
+      }).then(function (me) {
+        var cr = normalizeClassRoom(me.classRoom);
+        if (!cr) return [];
+        return collectClassmateUids(cr, user.uid).then(function (uids) {
+          return profilesFromUids(uids);
+        });
+      });
+    }).catch(function (err) {
+      console.warn('[KidSocial] listClassmates', err);
+      return [];
+    });
+  }
+
+  function userMatchesQuery(u, query, classRoom) {
+    query = String(query || '').trim().toLowerCase();
+    if (!query) return true;
+    var name = String(u.displayName || '').toLowerCase();
+    var search = String(u.searchName || name).toLowerCase();
+    if (name.indexOf(query) >= 0 || search.indexOf(query) >= 0) return true;
+    if (classRoom && query === classRoom.toLowerCase()) return true;
+    return false;
   }
 
   function computeStarsFromProgress(prog) {
@@ -643,27 +766,7 @@
   }
 
   function suggestClassmates() {
-    var user = authUser();
-    if (!user) return Promise.resolve([]);
-    return getPublicProfile(user.uid).then(function (prof) {
-      if (!prof.classRoom) return [];
-      return db().collection('users').where('classRoom', '==', prof.classRoom).limit(20).get()
-        .then(function (snap) {
-          return snap.docs.filter(function (d) { return d.id !== user.uid; }).map(function (d) {
-            var x = d.data();
-            var av = avatarFromUserDoc(x);
-            return {
-              uid: d.id,
-              displayName: x.displayName || x.nickname || x.childName || 'Bé',
-              role: x.role || 'parent',
-              avatarMode: av.avatarMode,
-              avatarEmoji: av.avatarEmoji,
-              avatarRing: av.avatarRing,
-              avatarPhoto: av.avatarPhoto
-            };
-          });
-        });
-    }).catch(function () { return []; });
+    return listClassmates();
   }
 
   function mapUserDoc(d) {
@@ -681,45 +784,46 @@
     };
   }
 
-  /** Tìm người dùng theo tên (ưu tiên cùng lớp). */
+  /** Tìm người dùng theo tên hoặc mã lớp (ưu tiên bạn cùng lớp). */
   function searchUsers(query) {
     return whenAuthReady().then(function (user) {
       if (!user) return [];
-      query = String(query || '').trim().toLowerCase();
+      query = String(query || '').trim();
       if (query.length < 2) return [];
-      return getPublicProfile(user.uid).then(function (me) {
-        var pool = [];
-        var tasks = [];
-        if (me.classRoom) {
-          tasks.push(
-            db().collection('users').where('classRoom', '==', me.classRoom).limit(40).get()
-              .then(function (snap) {
-                snap.docs.forEach(function (d) {
-                  if (d.id !== user.uid) pool.push(mapUserDoc(d));
-                });
-              })
-          );
-        }
-        tasks.push(
-          listFriends().then(function (friends) {
-            friends.forEach(function (f) { pool.push(f); });
-          })
-        );
-        return Promise.all(tasks).then(function () {
-          var seen = {};
-          var out = [];
-          pool.forEach(function (u) {
-            if (!u || !u.uid || seen[u.uid]) return;
-            var name = (u.displayName || '').toLowerCase();
-            if (name.indexOf(query) >= 0) {
-              seen[u.uid] = true;
-              out.push(u);
+      var qLower = query.toLowerCase();
+      return syncMySocialProfile().then(function () {
+        return getPublicProfile(user.uid);
+      }).then(function (me) {
+        var classRoom = normalizeClassRoom(me.classRoom);
+        return listClassmates().then(function (classmates) {
+          var pool = classmates.slice();
+          return listFriends().then(function (friends) {
+            friends.forEach(function (f) {
+              if (!f || !f.uid) return;
+              if (!pool.some(function (u) { return u.uid === f.uid; })) pool.push(f);
+            });
+            var seen = {};
+            var out = [];
+            pool.forEach(function (u) {
+              if (!u || !u.uid || seen[u.uid]) return;
+              if (userMatchesQuery(u, qLower, classRoom)) {
+                seen[u.uid] = true;
+                out.push(u);
+              }
+            });
+            if (!out.length && classRoom && qLower === classRoom.toLowerCase()) {
+              classmates.forEach(function (u) {
+                if (u && u.uid && !seen[u.uid]) out.push(u);
+              });
             }
+            return out.slice(0, 20);
           });
-          return out.slice(0, 20);
         });
       });
-    }).catch(function () { return []; });
+    }).catch(function (err) {
+      console.warn('[KidSocial] searchUsers', err);
+      return [];
+    });
   }
 
   function chatIdFor(uidA, uidB) {
@@ -1046,6 +1150,8 @@
     timeAgo: timeAgo,
     whenAuthReady: whenAuthReady,
     ensureUserDoc: ensureUserDoc,
+    syncMySocialProfile: syncMySocialProfile,
+    listClassmates: listClassmates,
     friendlyFirestoreError: friendlyFirestoreError,
     getPublicProfile: getPublicProfile,
     renderAvatarHtml: renderAvatarHtml,

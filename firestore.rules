@@ -36,6 +36,30 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.classRoom.size() >= 3;
     }
 
+    function myClassRoomCode() {
+      return isSignedIn()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.classRoom
+        : '';
+    }
+
+    /** Cùng lớp qua registry classrooms/{mã} (khi user doc thiếu classRoom). */
+    function classmateViaRegistry(userId) {
+      return isSignedIn()
+        && myClassRoomCode() is string
+        && myClassRoomCode().size() >= 3
+        && exists(/databases/$(database)/documents/classrooms/$(myClassRoomCode()))
+        && (
+          (
+            get(/databases/$(database)/documents/classrooms/$(myClassRoomCode())).data.keys().hasAll(['studentUids'])
+            && userId in get(/databases/$(database)/documents/classrooms/$(myClassRoomCode())).data.studentUids
+          )
+          || (
+            get(/databases/$(database)/documents/classrooms/$(myClassRoomCode())).data.keys().hasAll(['teacherUid'])
+            && userId == get(/databases/$(database)/documents/classrooms/$(myClassRoomCode())).data.teacherUid
+          )
+        );
+    }
+
     function isFriendWith(userId) {
       return isSignedIn()
         && exists(/databases/$(database)/documents/friends/$(request.auth.uid)/list/$(userId));
@@ -82,6 +106,7 @@ service cloud.firestore {
         && resource.data.classRoom is string
         && resource.data.classRoom.size() >= 3;
       allow read: if sameClassAs(userId);
+      allow read: if classmateViaRegistry(userId);
       allow read: if isFriendWith(userId);
     }
 

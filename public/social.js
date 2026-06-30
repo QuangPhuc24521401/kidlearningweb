@@ -529,9 +529,17 @@
   /* ── Search tab ── */
   function renderSearchHint() {
     var box = $('socSearchResults');
-    if (box && !box.innerHTML.trim()) {
-      box.innerHTML = '<div class="soc-empty"><span class="soc-empty-icon">🔍</span>Gõ tên bạn để tìm trong lớp</div>';
-    }
+    if (!box) return;
+    box.innerHTML = '<div class="soc-loading">Đang tải bạn cùng lớp…</div>';
+    KidSocial.listClassmates().then(function (list) {
+      if (!list.length) {
+        box.innerHTML = '<div class="soc-empty"><span class="soc-empty-icon">🏫</span>Chưa thấy ai trong lớp — vào <a href="profile.html">Hồ sơ</a> lưu mã lớp (vd: LOP1234) rồi tải lại trang.</div>';
+        return;
+      }
+      box.innerHTML = '<p class="soc-search-hint">Bạn cùng lớp (' + list.length + ') — gõ tên để lọc:</p>' +
+        list.slice(0, 8).map(renderUserCard).join('');
+      wireUserCards(box);
+    });
   }
 
   function wireSearch() {
@@ -549,7 +557,7 @@
         box.innerHTML = '<div class="soc-loading">Đang tìm…</div>';
         KidSocial.searchUsers(q).then(function (list) {
           if (!list.length) {
-            box.innerHTML = '<div class="soc-empty"><span class="soc-empty-icon">😔</span>Không tìm thấy trong lớp của bạn</div>';
+            box.innerHTML = '<div class="soc-empty"><span class="soc-empty-icon">😔</span>Không tìm thấy “' + KidSocial.esc(q) + '”. Thử gõ tên hoặc mã lớp (vd: LOP1234).</div>';
             return;
           }
           box.innerHTML = list.map(renderUserCard).join('');
@@ -621,12 +629,14 @@
     }
 
     if (suggestBox) {
+      suggestBox.innerHTML = '<div class="soc-loading">Đang tải bạn cùng lớp…</div>';
       KidSocial.suggestClassmates().then(function (list) {
         if (!list.length) {
-          suggestBox.innerHTML = '<div class="soc-empty">Lưu mã lớp ở Hồ sơ để thấy bạn cùng lớp</div>';
+          suggestBox.innerHTML = '<div class="soc-empty">Vào <a href="profile.html">Hồ sơ</a> → Lớp học, nhập mã lớp (vd: LOP1234) và bấm Lưu, rồi tải lại trang này.</div>';
           return;
         }
-        suggestBox.innerHTML = list.slice(0, 12).map(renderUserCard).join('');
+        suggestBox.innerHTML = '<p class="soc-search-hint">Gợi ý bạn cùng lớp (' + list.length + ')</p>' +
+          list.slice(0, 12).map(renderUserCard).join('');
         wireUserCards(suggestBox);
       });
     }
