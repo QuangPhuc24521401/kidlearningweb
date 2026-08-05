@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Đăng ký – Kid Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="auth.css">
+<style>
+.auth-msg{display:none;margin-top:14px;padding:12px 18px;border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700}
+.auth-msg.error{background:#fff0f0;color:#c62828;border:2px solid #ffcdd2}
+.auth-msg.success{background:#e8f5e9;color:#2e7d32;border:2px solid #c8e6c9}
+</style>
+</head>
+<body>
+
+<div class="sky">
+  <div class="sun">
+    <div class="sun-ray" style="transform:rotate(0deg)"></div><div class="sun-ray" style="transform:rotate(45deg)"></div>
+    <div class="sun-ray" style="transform:rotate(90deg)"></div><div class="sun-ray" style="transform:rotate(135deg)"></div>
+    <div class="sun-ray" style="transform:rotate(180deg)"></div><div class="sun-ray" style="transform:rotate(225deg)"></div>
+    <div class="sun-ray" style="transform:rotate(270deg)"></div><div class="sun-ray" style="transform:rotate(315deg)"></div>
+  </div>
+  <div class="cloud c1"></div><div class="cloud c2"></div>
+  <div class="cloud c3"></div><div class="cloud c4"></div>
+</div>
+<div class="ground"></div>
+<div class="sprinkles" id="sprinkles"></div>
+<button id="musicBtn">🎵</button>
+<button id="settingsBtn">⚙️</button>
+<div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
+
+<div id="settingsModal">
+  <div class="settings-card">
+    <button class="settings-close" onclick="closeSettings()">×</button>
+    <h2>🎙️ Cài đặt giọng đọc</h2>
+    <p>Dùng <strong>FPT.AI</strong> để có giọng Tiếng Việt tự nhiên nhất.</p>
+    <div class="key-input-wrap">
+      <input class="key-input" id="fptKeyInput" type="password" placeholder="Paste FPT.AI API key...">
+      <button class="save-btn" onclick="saveKey()">💾 Lưu</button>
+    </div>
+    <div class="key-saved hidden" id="keySavedMsg">✅ Đã lưu!</div>
+    <div class="voice-chips" id="voiceChips">
+      <div class="chip active" onclick="setVoice('lannhi',this)">🌸 Lan Nhi</div>
+      <div class="chip" onclick="setVoice('linhsan',this)">💐 Linh San</div>
+      <div class="chip" onclick="setVoice('minhquang',this)">🎯 Minh Quang</div>
+      <div class="chip" onclick="setVoice('giahuy',this)">🚀 Gia Huy</div>
+    </div>
+    <p class="settings-link"><a href="https://fpt.ai/tts" target="_blank">Đăng ký key miễn phí →</a></p>
+  </div>
+</div>
+
+<div class="card auth-card">
+  <!-- FOX mascot -->
+  <svg class="mascot-wrap" width="110" height="114" viewBox="0 0 120 120">
+    <polygon points="30,40 20,6 50,34" fill="#f4742e"/><polygon points="90,40 100,6 70,34" fill="#f4742e"/>
+    <polygon points="31,38 24,12 46,32" fill="#fff3e0"/><polygon points="89,38 96,12 74,32" fill="#fff3e0"/>
+    <ellipse cx="60" cy="96" rx="32" ry="26" fill="#f4742e"/>
+    <circle cx="60" cy="54" r="36" fill="#f4742e"/>
+    <ellipse cx="60" cy="62" rx="24" ry="26" fill="#fff3e0"/>
+    <circle cx="46" cy="47" r="9" fill="#1a1a2e"/><circle cx="74" cy="47" r="9" fill="#1a1a2e"/>
+    <circle cx="49" cy="44" r="3" fill="white"/><circle cx="77" cy="44" r="3" fill="white"/>
+    <ellipse cx="60" cy="64" rx="6" ry="4" fill="#1a1a2e"/>
+    <path d="M54,69 Q60,76 66,69" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="39" cy="62" r="9" fill="#f48255" opacity="0.5"/>
+    <circle cx="81" cy="62" r="9" fill="#f48255" opacity="0.5"/>
+    <ellipse class="fox-tail" cx="14" cy="100" rx="14" ry="10" fill="#f4742e" transform="rotate(-30 14 100)"/>
+    <ellipse cx="11" cy="97" rx="7" ry="5" fill="white" opacity="0.7" transform="rotate(-30 11 97)"/>
+  </svg>
+
+  <h1>Tạo tài khoản</h1>
+  <p class="subtitle">Đăng ký để bé bắt đầu hành trình học tập! 🎉</p>
+
+  <div class="input-group"><span class="icon">📧</span><input id="email" type="email" placeholder="Email của bạn"></div>
+  <div class="input-group"><span class="icon">🔑</span><input id="password" type="password" placeholder="Mật khẩu (tối thiểu 6 ký tự)"></div>
+  <div class="auth-msg" id="authMsg"></div>
+  <button class="btn-auth" onclick="handleRegister()">🌟 Tạo tài khoản</button>
+  <div class="links"><a href="login.html">← Quay lại đăng nhập</a></div>
+</div>
+
+<script src="../firebase.js"></script>
+<script src="../shared.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>

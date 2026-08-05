@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quên mật khẩu – Kid Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="auth.css">
+<style>
+.auth-msg{display:none;margin-top:14px;padding:12px 18px;border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700}
+.auth-msg.error{background:#fff0f0;color:#c62828;border:2px solid #ffcdd2}
+.auth-msg.success{background:#e8f5e9;color:#2e7d32;border:2px solid #c8e6c9}
+</style>
+</head>
+<body>
+
+<div class="sky">
+  <div class="sun">
+    <div class="sun-ray" style="transform:rotate(0deg)"></div><div class="sun-ray" style="transform:rotate(45deg)"></div>
+    <div class="sun-ray" style="transform:rotate(90deg)"></div><div class="sun-ray" style="transform:rotate(135deg)"></div>
+    <div class="sun-ray" style="transform:rotate(180deg)"></div><div class="sun-ray" style="transform:rotate(225deg)"></div>
+    <div class="sun-ray" style="transform:rotate(270deg)"></div><div class="sun-ray" style="transform:rotate(315deg)"></div>
+  </div>
+  <div class="cloud c1"></div><div class="cloud c2"></div>
+  <div class="cloud c3"></div><div class="cloud c4"></div>
+</div>
+<div class="ground"></div>
+<div class="sprinkles" id="sprinkles"></div>
+<button id="musicBtn">🎵</button>
+<button id="settingsBtn">⚙️</button>
+<div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
+
+<div id="settingsModal">
+  <div class="settings-card">
+    <button class="settings-close" onclick="closeSettings()">×</button>
+    <h2>🎙️ Cài đặt giọng đọc</h2>
+    <div class="key-input-wrap">
+      <input class="key-input" id="fptKeyInput" type="password" placeholder="Paste FPT.AI API key...">
+      <button class="save-btn" onclick="saveKey()">💾 Lưu</button>
+    </div>
+    <div class="key-saved hidden" id="keySavedMsg">✅ Đã lưu!</div>
+    <div class="voice-chips" id="voiceChips">
+      <div class="chip active" onclick="setVoice('lannhi',this)">🌸 Lan Nhi</div>
+      <div class="chip" onclick="setVoice('linhsan',this)">💐 Linh San</div>
+      <div class="chip" onclick="setVoice('minhquang',this)">🎯 Minh Quang</div>
+      <div class="chip" onclick="setVoice('giahuy',this)">🚀 Gia Huy</div>
+    </div>
+  </div>
+</div>
+
+<div class="card auth-card">
+  <svg class="mascot-wrap" width="110" height="114" viewBox="0 0 120 120">
+    <ellipse cx="26" cy="82" rx="16" ry="22" fill="#6d4c1f" transform="rotate(-12 26 82)"/>
+    <ellipse cx="94" cy="82" rx="16" ry="22" fill="#6d4c1f" transform="rotate(12 94 82)"/>
+    <ellipse cx="60" cy="82" rx="30" ry="32" fill="#8d6e3f"/>
+    <circle cx="60" cy="44" r="30" fill="#8d6e3f"/>
+    <polygon points="36,20 28,4 48,18" fill="#6d4c1f"/><polygon points="84,20 92,4 72,18" fill="#6d4c1f"/>
+    <ellipse cx="60" cy="50" rx="21" ry="20" fill="#f5deb3"/>
+    <circle cx="49" cy="43" r="11" fill="white"/><circle cx="71" cy="43" r="11" fill="white"/>
+    <circle cx="49" cy="43" r="8" fill="#2255cc"/><circle cx="49" cy="43" r="5" fill="#0a1230"/><circle cx="52" cy="40" r="2" fill="white"/>
+    <circle cx="71" cy="43" r="8" fill="#2255cc"/><circle cx="71" cy="43" r="5" fill="#0a1230"/><circle cx="74" cy="40" r="2" fill="white"/>
+    <polygon points="60,52 55,61 65,61" fill="#e65100"/>
+    <text x="74" y="24" font-size="22" font-weight="800" fill="#ff6b6b" font-family="Arial">?</text>
+    <ellipse cx="60" cy="86" rx="16" ry="18" fill="#d2a679" opacity="0.5"/>
+    <ellipse cx="46" cy="110" rx="10" ry="5" fill="#e65100"/><ellipse cx="74" cy="110" rx="10" ry="5" fill="#e65100"/>
+  </svg>
+
+  <h1>Quên mật khẩu?</h1>
+  <p class="subtitle">Nhập email – chúng tôi sẽ gửi link đặt lại ngay 📧</p>
+
+  <div class="input-group"><span class="icon">📧</span><input id="email" type="email" placeholder="Email của bạn"></div>
+  <div class="auth-msg" id="authMsg"></div>
+  <button class="btn-auth" onclick="handleForgot()">📨 Gửi email đặt lại</button>
+  <div class="links"><a href="login.html">← Quay lại đăng nhập</a></div>
+</div>
+
+<script src="../firebase.js"></script>
+<script src="../shared.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>

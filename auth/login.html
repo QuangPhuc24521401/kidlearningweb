@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Đăng nhập – Kid Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+body{overflow:auto}
+.login-card{position:relative;z-index:10;background:rgba(255,255,255,.96);backdrop-filter:blur(24px);border-radius:42px;border:3px solid rgba(255,255,255,.9);width:500px;max-width:96vw;padding:36px 38px 40px;box-shadow:0 0 0 4px #fff,0 8px 0 4px #d0d8ff,0 24px 70px rgba(80,100,255,.18),0 50px 90px rgba(0,0,0,.08);animation:cardPop .55s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes cardPop{from{transform:scale(.68) translateY(50px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.login-logo{font-size:52px;display:block;text-align:center;margin-bottom:4px;animation:mascotFloat 3s ease-in-out infinite}
+@keyframes mascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.login-title{font-size:28px;font-weight:800;color:#2d3a8c;text-align:center;margin-bottom:4px}
+.login-sub{font-family:'Nunito',sans-serif;font-size:15px;color:#9b8abf;text-align:center;margin-bottom:24px}
+.role-label{font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;text-align:center}
+.role-row{display:flex;gap:12px;margin-bottom:20px}
+.role-btn{flex:1;padding:16px 12px;border:2.5px solid #e0e7ff;border-radius:20px;cursor:pointer;background:#f8f9ff;font-family:'Baloo 2',cursive;font-weight:700;font-size:16px;color:#3a2d6e;transition:all .2s cubic-bezier(.34,1.56,.64,1);display:flex;flex-direction:column;align-items:center;gap:6px}
+.role-btn .role-icon{font-size:36px;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.role-btn:hover{border-color:#6c8eff;background:#eef2ff;transform:translateY(-3px)}
+.role-btn.active.parent{border-color:#f5576c;background:linear-gradient(145deg,#fff0f3,#ffe8ec);color:#c0392b;box-shadow:0 6px 20px rgba(245,87,108,.2)}
+.role-btn.active.teacher{border-color:#9b59b6;background:linear-gradient(145deg,#f8f0ff,#f0e8ff);color:#6c3d9b;box-shadow:0 6px 20px rgba(155,89,182,.2)}
+.role-btn.active .role-icon{transform:scale(1.2) rotate(-5deg)}
+.input-group{display:flex;align-items:center;background:#f0f4ff;border-radius:18px;padding:0 20px;margin:12px 0;border:2.5px solid #dce4ff;height:60px;transition:border-color .2s,box-shadow .2s,background .2s}
+.input-group:focus-within{border-color:#6c8eff;box-shadow:0 0 0 4px rgba(108,142,255,.2);background:#fff}
+.input-group .icon{font-size:22px;margin-right:12px;flex-shrink:0}
+.input-group input{flex:1;border:none;outline:none;font-size:17px;font-family:'Nunito',sans-serif;background:transparent;color:#2d3a8c}
+.input-group input::placeholder{color:#b8c2e8}
+#teacherCodeWrap{display:none;animation:fadeUp .3s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.teacher-badge{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border:2px solid #c4b5fd;border-radius:14px;padding:10px 16px;margin-bottom:14px;display:none;font-family:'Nunito',sans-serif;font-size:13px;color:#5b21b6;font-weight:700;align-items:center;gap:8px}
+.teacher-badge.show{display:flex}
+.btn-login{width:100%;padding:18px;border:none;border-radius:20px;font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;cursor:pointer;position:relative;overflow:hidden;margin-top:14px;color:#fff;transition:transform .15s cubic-bezier(.34,1.56,.64,1),box-shadow .15s}
+.btn-login.parent-mode{background:linear-gradient(135deg,#f093fb,#f5576c);box-shadow:0 8px 0 #c0392b,0 14px 28px rgba(245,87,108,.3)}
+.btn-login.teacher-mode{background:linear-gradient(135deg,#a78bfa,#7c3aed);box-shadow:0 8px 0 #5b21b6,0 14px 28px rgba(124,58,237,.3)}
+.btn-login:hover{transform:translateY(-5px) scale(1.02)}
+.btn-login:active{transform:translateY(3px) scale(.97);box-shadow:none!important}
+.auth-msg{display:none;margin-top:12px;padding:12px 18px;border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;text-align:center}
+.auth-msg.error{background:#fff0f0;color:#c62828;border:2px solid #ffcdd2;display:block}
+.auth-msg.success{background:#e8f5e9;color:#2e7d32;border:2px solid #c8e6c9;display:block}
+.links{margin-top:20px;font-family:'Nunito',sans-serif;font-size:14px;color:#8a90bc;text-align:center}
+.links a{text-decoration:none;color:#6c8eff;font-weight:900;cursor:pointer}
+.links a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="sky">
+  <div class="sun"><div class="sun-ray" style="transform:rotate(0deg)"></div><div class="sun-ray" style="transform:rotate(45deg)"></div><div class="sun-ray" style="transform:rotate(90deg)"></div><div class="sun-ray" style="transform:rotate(135deg)"></div><div class="sun-ray" style="transform:rotate(180deg)"></div><div class="sun-ray" style="transform:rotate(225deg)"></div><div class="sun-ray" style="transform:rotate(270deg)"></div><div class="sun-ray" style="transform:rotate(315deg)"></div></div>
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="cloud c4"></div>
+</div>
+<div class="ground"></div>
+<div class="sprinkles" id="sprinkles"></div>
+
+<div class="login-card">
+  <span class="login-logo">🌟</span>
+  <div class="login-title">Kid Learning</div>
+  <div class="login-sub">Chọn vai trò và đăng nhập để bắt đầu!</div>
+
+  <div class="role-label">Bạn là ai?</div>
+  <div class="role-row">
+    <button class="role-btn parent active" id="roleParent" onclick="selectRole('parent')">
+      <span class="role-icon">👨‍👩‍👧</span>
+      Phụ huynh
+    </button>
+    <button class="role-btn teacher" id="roleTeacher" onclick="selectRole('teacher')">
+      <span class="role-icon">👩‍🏫</span>
+      Giáo viên
+    </button>
+  </div>
+
+  <div class="teacher-badge" id="teacherBadge">🔐 Giáo viên cần nhập mã lớp để xác nhận quyền truy cập</div>
+
+  <div class="input-group"><span class="icon">📧</span><input id="email" type="email" placeholder="Email của bạn"></div>
+  <div class="input-group"><span class="icon">🔑</span><input id="password" type="password" placeholder="Mật khẩu"></div>
+
+  <div id="teacherCodeWrap">
+    <div class="input-group"><span class="icon">🏫</span><input id="classCode" type="text" placeholder="Mã lớp (vd: LOPA2024)"></div>
+  </div>
+
+  <div class="auth-msg" id="authMsg"></div>
+
+  <button class="btn-login parent-mode" id="loginBtn" onclick="handleLogin()">🚀 Đăng nhập</button>
+
+  <div class="links">
+    Chưa có tài khoản? <a href="register.html">Đăng ký</a>
+    &nbsp;|&nbsp;
+    <a href="forgot.html">Quên mật khẩu?</a>
+  </div>
+</div>
+
+<script src="../firebase.js"></script>
+<script src="../shared.js"></script>
+<script>
+let currentRole = 'parent';
+
+function selectRole(role){
+  currentRole = role;
+  const pBtn = document.getElementById('roleParent');
+  const tBtn = document.getElementById('roleTeacher');
+  const loginBtn = document.getElementById('loginBtn');
+  const badge = document.getElementById('teacherBadge');
+  const codeWrap = document.getElementById('teacherCodeWrap');
+
+  pBtn.classList.remove('active','parent','teacher');
+  tBtn.classList.remove('active','parent','teacher');
+
+  if(role==='teacher'){
+    tBtn.classList.add('active','teacher');
+    loginBtn.className='btn-login teacher-mode';
+    loginBtn.innerHTML='👩‍🏫 Vào trang giáo viên';
+    badge.classList.add('show');
+    codeWrap.style.display='block';
+  } else {
+    pBtn.classList.add('active','parent');
+    loginBtn.className='btn-login parent-mode';
+    loginBtn.innerHTML='🚀 Đăng nhập';
+    badge.classList.remove('show');
+    codeWrap.style.display='none';
+  }
+  document.getElementById('authMsg').className='auth-msg';
+}
+
+function handleLogin(){
+  const email     = document.getElementById('email').value.trim();
+  const password  = document.getElementById('password').value;
+  const classCode = document.getElementById('classCode').value.trim().toUpperCase();
+
+  if(!email || !password){ showMsg('Vui lòng điền đầy đủ thông tin!','error'); return; }
+  if(currentRole==='teacher' && !classCode){ showMsg('Vui lòng nhập mã lớp!','error'); return; }
+
+  localStorage.setItem('userRole', currentRole);
+  if(currentRole==='teacher') localStorage.setItem('classRoom', classCode);
+
+  if(isFirebaseReady()){
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(()=> redirectByRole())
+      .catch(err=> showMsg(friendlyError(err.code),'error'));
+  } else {
+    showMsg('✅ Đăng nhập thành công! Đang chuyển...','success');
+    setTimeout(redirectByRole, 800);
+  }
+}
+
+function redirectByRole(){
+  window.location.href = currentRole==='teacher' ? '../mentor-teacher.html' : '../index.html';
+}
+
+function isFirebaseReady(){
+  try{ return firebase.apps.length>0 && firebase.app().options.apiKey && !firebase.app().options.apiKey.includes('YOUR_'); }
+  catch(e){ return false; }
+}
+
+function showMsg(msg, type){
+  const el = document.getElementById('authMsg');
+  el.textContent = msg; el.className = 'auth-msg ' + type;
+}
+
+function friendlyError(code){
+  const m={'auth/user-not-found':'Không tìm thấy tài khoản.','auth/wrong-password':'Mật khẩu không đúng!','auth/invalid-email':'Email không hợp lệ.','auth/too-many-requests':'Quá nhiều lần thử.'};
+  return m[code]||'Đã có lỗi, thử lại nhé!';
+}
+
+// Nếu đã đăng nhập → redirect luôn
+try{
+  if(isFirebaseReady()){
+    firebase.auth().onAuthStateChanged(user=>{
+      if(user) redirectByRole();
+    });
+  }
+}catch(e){}
+</script>
+</body>
+</html>

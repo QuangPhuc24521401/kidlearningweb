@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bài học – Kid Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="lesson.css">
+</head>
+<body>
+
+<div class="sky">
+  <div class="sun">
+    <div class="sun-ray" style="transform:rotate(0deg)"></div><div class="sun-ray" style="transform:rotate(45deg)"></div>
+    <div class="sun-ray" style="transform:rotate(90deg)"></div><div class="sun-ray" style="transform:rotate(135deg)"></div>
+    <div class="sun-ray" style="transform:rotate(180deg)"></div><div class="sun-ray" style="transform:rotate(225deg)"></div>
+    <div class="sun-ray" style="transform:rotate(270deg)"></div><div class="sun-ray" style="transform:rotate(315deg)"></div>
+  </div>
+  <div class="cloud c1"></div><div class="cloud c2"></div>
+  <div class="cloud c3"></div><div class="cloud c4"></div>
+</div>
+<div class="ground"></div>
+<div class="sprinkles" id="sprinkles"></div>
+<button id="musicBtn">🎵</button>
+<button id="settingsBtn">⚙️</button>
+<div id="ttsStatus"><div class="tts-dot" id="ttsDot"></div><span id="ttsMsg"></span></div>
+
+<!-- Settings modal -->
+<div id="settingsModal">
+  <div class="settings-card">
+    <button class="settings-close" onclick="closeSettings()">×</button>
+    <h2>🎙️ Cài đặt giọng đọc</h2>
+    <p>Dùng <strong>FPT.AI</strong> để có giọng Tiếng Việt tự nhiên nhất.<br>Miễn phí 2.000 lượt/ngày sau khi đăng ký.</p>
+    <div class="key-input-wrap">
+      <input class="key-input" id="fptKeyInput" type="password" placeholder="Paste FPT.AI API key vào đây...">
+      <button class="save-btn" onclick="saveKey()">💾 Lưu</button>
+    </div>
+    <div class="key-saved hidden" id="keySavedMsg">✅ API key đã được lưu!</div>
+    <p style="font-family:Nunito,sans-serif;font-size:14px;color:#555;margin:16px 0 6px"><strong>Chọn giọng đọc:</strong></p>
+    <div class="voice-chips" id="voiceChips">
+      <div class="chip active" onclick="setVoice('lannhi',this)">🌸 Lan Nhi (nữ Nam)</div>
+      <div class="chip" onclick="setVoice('linhsan',this)">💐 Linh San (nữ Bắc)</div>
+      <div class="chip" onclick="setVoice('minhquang',this)">🎯 Minh Quang (nam Bắc)</div>
+      <div class="chip" onclick="setVoice('giahuy',this)">🚀 Gia Huy (nam Nam)</div>
+    </div>
+    <p class="settings-link">Chưa có API key? <a href="https://fpt.ai/tts" target="_blank">Đăng ký miễn phí →</a></p>
+  </div>
+</div>
+
+<!-- Teach Bear modal -->
+<div id="teachModal">
+  <div class="teach-card">
+    <svg class="teach-bear" id="teachBearSvg" width="110" height="108" viewBox="0 0 130 120">
+      <circle cx="28" cy="28" r="18" fill="#c47a5a"/><circle cx="102" cy="28" r="18" fill="#c47a5a"/>
+      <circle cx="28" cy="28" r="11" fill="#b06040"/><circle cx="102" cy="28" r="11" fill="#b06040"/>
+      <ellipse cx="65" cy="98" rx="36" ry="26" fill="#d4956a"/>
+      <ellipse cx="65" cy="100" rx="22" ry="18" fill="#e8b880"/>
+      <circle cx="25" cy="88" r="16" fill="#d4956a"/><circle cx="105" cy="88" r="16" fill="#d4956a"/>
+      <circle cx="65" cy="52" r="40" fill="#d4956a"/>
+      <ellipse cx="65" cy="66" rx="18" ry="14" fill="#c47a5a"/>
+      <circle cx="50" cy="46" r="9" fill="#1a1a2e"/><circle cx="80" cy="46" r="9" fill="#1a1a2e"/>
+      <circle cx="48" cy="44" r="3" fill="white"/><circle cx="78" cy="44" r="3" fill="white"/>
+      <path d="M43,36 Q50,32 57,36" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M73,36 Q80,32 87,36" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="65" cy="62" rx="7" ry="5" fill="#1a1a2e"/>
+      <path d="M56,74 Q65,68 74,74" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="44" cy="58" rx="3" ry="5" fill="#64b5f6" opacity="0.8"/>
+      <ellipse cx="86" cy="58" rx="3" ry="5" fill="#64b5f6" opacity="0.8"/>
+    </svg>
+    <div class="teach-bubble" id="teachBubble">Ôi không! Gấu quên mất rồi 😢<br>Con dạy Gấu nhé — đáp án là:<br><span class="teach-keyword" id="teachKeyword">???</span></div>
+    <div class="voice-wave" id="voiceWave"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <button class="mic-btn" id="micBtn2" onclick="startListening()">🎤</button>
+    <div class="mic-label" id="micLabel">Bấm mic và nói to đáp án cho Gấu nghe!</div>
+    <div class="teach-result" id="teachResult"></div>
+    <div class="teach-skip" onclick="closeTeach()">Bỏ qua →</div>
+  </div>
+</div>
+
+<!-- Lesson card -->
+<div class="card lesson-card" id="lessonCard">
+  <div class="lesson-top">
+    <button class="home-btn" onclick="goHome()">🏠</button>
+    <div style="flex:1;margin:0 10px">
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    </div>
+    <div class="star-box" id="starBox">⭐ <span id="stars">0</span></div>
+  </div>
+  <div class="visual-area" id="visualArea"></div>
+  <h2 id="question"></h2>
+  <div id="answers" class="answers"></div>
+  <p id="status"></p>
+</div>
+
+<script src="../firebase.js"></script>
+<script src="../shared.js"></script>
+<script src="lesson.js"></script>
+</body>
+</html>
